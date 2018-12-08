@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.6.0 FATAL_ERROR)
 project(simpleSDL C CXX)
 
 #
@@ -16,7 +16,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${binDir}/${targetSystem}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${binDir}/${targetSystem}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${binDir}/${targetSystem}_debug")
 
-
 #
 # Dependencies:
 #   Using SDL as a subproject for simplicity.
@@ -31,12 +30,12 @@ add_subdirectory(${sdlDir} EXCLUDE_FROM_ALL)
 set(SDL2MAIN_LIBRARY SDL2main)
 set(SDL2_LIBRARY SDL2)
 
-
 #
 # Sources (relative to the project root dir).
 #
 file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
   "${sourceDir}/*.h"
+  "${sourceDir}/*.cpp"
   "${sourceDir}/*.c"
 )
 
@@ -45,14 +44,12 @@ set(projectIncludeDirs ${projectIncludeDirs}
   "${sdlDir}/include"
 )
 
-message("     Sources: ${projectSources}\n")
+message("Sources: ${projectSources}")
 message("Include dirs: ${projectIncludeDirs}\n")
-
 
 #
 # Platform dependent stuff.
 #
-
 if(NOT ANDROID)
   find_package(OpenGL REQUIRED)
 endif()
@@ -71,10 +68,15 @@ endif()
 if(EMSCRIPTEN)
   # This makes emscripten build a html page in addition to the js code.
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['Pointer_stringify']\" --embed-file ${projectDir}/data@/ -s FORCE_FILESYSTEM=1 -s ASSERTIONS=1 -std=c++1z")
 
   # Emscripten requires static linking.
   set(SDL2_LIBRARY SDL2-static)
 endif()
+
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+endif(MSVC)
 
 #
 # Build the binary.
@@ -97,4 +99,7 @@ target_include_directories(${targetName}
   PUBLIC ${projectIncludeDirs}
 )
 
+message("CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}")
 
+set_target_properties(SimpleExample PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/data")
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)

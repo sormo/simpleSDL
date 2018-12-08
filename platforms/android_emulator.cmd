@@ -1,0 +1,1 @@
+call C:\Users\sormo\AppData\Local\Android\sdk\tools\emulator.exe -avd test

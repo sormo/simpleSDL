@@ -22,7 +22,10 @@ LOCAL_C_INCLUDES +=  \
 
 # Source files
 LOCAL_SRC_FILES :=  \
-  ../../../source/main.c
+  ../../../source/main.cpp \
+  ../../../source/Common.cpp \
+  ../../../source/Application.cpp \
+  ../../../source/OpenGL.cpp
 
 
 # Linking options

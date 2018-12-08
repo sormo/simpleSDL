@@ -1,0 +1,47 @@
+#pragma once
+
+#if defined(ANDROID)
+#define GL_GLES_PROTOTYPES 1
+#define GL_GLEXT_PROTOTYPES 1
+#include <SDL_opengles2.h>
+#undef GL_GLES_PROTOTYPES
+#undef GL_GLEXT_PROTOTYPES
+
+#define glGenVertexArrays glGenVertexArraysOES
+#define glBindVertexArray glBindVertexArrayOES
+#define glDeleteVertexArrays glDeleteVertexArraysOES
+
+#else
+#include <SDL_opengl.h>
+
+extern PFNGLCREATESHADERPROC glCreateShader;
+extern PFNGLSHADERSOURCEPROC glShaderSource;
+extern PFNGLCOMPILESHADERPROC glCompileShader;
+extern PFNGLGETSHADERIVPROC glGetShaderiv;
+extern PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
+extern PFNGLDELETESHADERPROC glDeleteShader;
+extern PFNGLATTACHSHADERPROC glAttachShader;
+extern PFNGLCREATEPROGRAMPROC glCreateProgram;
+extern PFNGLLINKPROGRAMPROC glLinkProgram;
+extern PFNGLVALIDATEPROGRAMPROC glValidateProgram;
+extern PFNGLGETPROGRAMIVPROC glGetProgramiv;
+extern PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
+extern PFNGLUSEPROGRAMPROC glUseProgram;
+extern PFNGLDELETEPROGRAMPROC glDeleteProgram;
+extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
+extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
+extern PFNGLDRAWARRAYSEXTPROC glDrawArraysEXT;
+extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
+extern PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
+extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
+extern PFNGLGENBUFFERSPROC glGenBuffers;
+extern PFNGLBINDBUFFERPROC glBindBuffer;
+extern PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+extern PFNGLBUFFERDATAPROC glBufferData;
+extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
+extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+#endif
+
+bool InitOpenGL();
+void PrintOpenGlPointers();

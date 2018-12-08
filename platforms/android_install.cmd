@@ -1,0 +1,1 @@
+adb install -r ..\bin\android\simpleSDL-debug.apk
