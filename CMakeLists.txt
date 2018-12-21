@@ -31,6 +31,11 @@ set(SDL2MAIN_LIBRARY SDL2main)
 set(SDL2_LIBRARY SDL2)
 
 #
+# GLM include directory
+#
+include_directories("${sourceDir}")
+
+#
 # Sources (relative to the project root dir).
 #
 file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
