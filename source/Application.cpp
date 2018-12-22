@@ -10,7 +10,7 @@
 
 namespace Application
 {
-    static const GLfloat g_vertexBufferData[] =
+    static const GLfloat g_dataPositionCube[] =
     {
         -1.0f,-1.0f,-1.0f, // triangle 1 : begin
         -1.0f,-1.0f, 1.0f,
@@ -50,7 +50,7 @@ namespace Application
         1.0f,-1.0f, 1.0f
     };
 
-    static const GLfloat g_colorBufferData[] =
+    static const GLfloat g_dataColorCube[] =
     {
         0.583f,  0.771f,  0.014f,
         0.609f,  0.115f,  0.436f,
@@ -90,14 +90,34 @@ namespace Application
         0.982f,  0.099f,  0.879f
     };
 
+    static const GLfloat g_dataPositionTriangle[] =
+    {
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
+        0.0f,  1.0f, 0.0f
+    };
+
+    static const GLfloat g_dataColorTriangle[] =
+    {
+        0.673f,  0.211f,  0.457f,
+        0.820f,  0.883f,  0.371f,
+        0.982f,  0.099f,  0.879f
+
+    };
+
     GLuint g_program;
 
-    static const int32_t IDX_VERTEX = 0;
-    static const int32_t IDX_COLOR = 1;
-    static const int32_t IDX_MVP = 2;
-    GLuint g_buffers[2];
-    GLuint g_attribLocations[3];
-    glm::mat4 g_MVP;
+    GLuint g_locationPosition;
+    GLuint g_locationColor;
+    GLuint g_locationMVP;
+
+    GLuint g_bufferVertexCube;
+    GLuint g_bufferColorCube;
+    GLuint g_bufferVertexTriangle;
+    GLuint g_bufferColorTriangle;
+
+    glm::mat4 g_MVPCube;
+    glm::mat4 g_MVPTriangle;
 
     std::optional<GLuint> CompileShader(const char * fileName, GLenum type)
     {
@@ -198,61 +218,87 @@ namespace Application
         return program;
     }
 
-    void InitVertexData()
+    void InitLocations()
     {
-        glGenBuffers(2, g_buffers);
-        glBindBuffer(GL_ARRAY_BUFFER, g_buffers[IDX_VERTEX]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertexBufferData), g_vertexBufferData, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, g_buffers[IDX_COLOR]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_colorBufferData), g_colorBufferData, GL_STATIC_DRAW);
-
-        // get attribute indices
-        g_attribLocations[IDX_VERTEX] = glGetAttribLocation(g_program, "position");
-        g_attribLocations[IDX_COLOR] = glGetAttribLocation(g_program, "color");
+        g_locationPosition = glGetAttribLocation(g_program, "position");
+        g_locationColor = glGetAttribLocation(g_program, "color");
+        g_locationMVP = glGetUniformLocation(g_program, "MVP");
     }
 
-    void DrawVertexData()
+    void InitBuffers()
     {
-        glUniformMatrix4fv(g_attribLocations[IDX_MVP], 1, GL_FALSE, &g_MVP[0][0]);
+        glGenBuffers(1, &g_bufferVertexCube);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataPositionCube), g_dataPositionCube, GL_STATIC_DRAW);
 
-        glEnableVertexAttribArray(g_attribLocations[IDX_VERTEX]);
-        glBindBuffer(GL_ARRAY_BUFFER, g_buffers[IDX_VERTEX]);
-        glVertexAttribPointer(
-            g_attribLocations[IDX_VERTEX], // attribute index we want to configure
-            3,                             // size
-            GL_FLOAT,                      // type
-            GL_FALSE,                      // normalized?
-            0,                             // stride
-            (void*)0                       // array buffer offset
-        );
+        glGenBuffers(1, &g_bufferColorCube);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferColorCube);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataColorCube), g_dataColorCube, GL_STATIC_DRAW);
 
-        glEnableVertexAttribArray(g_attribLocations[IDX_COLOR]);
-        glBindBuffer(GL_ARRAY_BUFFER, g_buffers[IDX_COLOR]);
-        glVertexAttribPointer(g_attribLocations[IDX_COLOR], 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glGenBuffers(1, &g_bufferVertexTriangle);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexTriangle);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataPositionTriangle), g_dataPositionTriangle, GL_STATIC_DRAW);
+
+        glGenBuffers(1, &g_bufferColorTriangle);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferColorTriangle);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataColorTriangle), g_dataColorTriangle, GL_STATIC_DRAW);
+    }
+
+    void DrawCube()
+    {
+        glUniformMatrix4fv(g_locationMVP, 1, GL_FALSE, &g_MVPCube[0][0]);
+
+        glEnableVertexAttribArray(g_locationPosition);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
+        glVertexAttribPointer(g_locationPosition, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        glEnableVertexAttribArray(g_locationColor);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferColorCube);
+        glVertexAttribPointer(g_locationColor, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12 triangles, two for each of six sides
  
-        glDisableVertexAttribArray(g_attribLocations[IDX_VERTEX]);
-        glDisableVertexAttribArray(g_attribLocations[IDX_COLOR]);
+        glDisableVertexAttribArray(g_locationPosition);
+        glDisableVertexAttribArray(g_locationColor);
     }
 
-    void InitMVPMatrix()
+    void DrawTriangle()
+    {
+        glUniformMatrix4fv(g_locationMVP, 1, GL_FALSE, &g_MVPTriangle[0][0]);
+
+        glEnableVertexAttribArray(g_locationPosition);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexTriangle);
+        glVertexAttribPointer(g_locationPosition, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        glEnableVertexAttribArray(g_locationColor);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferColorTriangle);
+        glVertexAttribPointer(g_locationColor, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3); // single triangle
+
+        glDisableVertexAttribArray(g_locationPosition);
+        glDisableVertexAttribArray(g_locationColor);
+    }
+
+    void InitMatrices()
     {
         // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
         glm::mat4 projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
         // Camera matrix
-        glm::mat4 view = glm::lookAt(
-            glm::vec3(4, 3, -3), // Camera is at (4,3,-3), in World Space
+        glm::mat4 viewCube = glm::lookAt(
+            glm::vec3(3, 4, 3), // Camera is at (4,3,-3), in World Space
             glm::vec3(0, 0, 0), // and looks at the origin
             glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
         );
         // Model matrix : an identity matrix (model will be at the origin)
-        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 modelCube = glm::mat4(1.0f);
         // Our ModelViewProjection : multiplication of our 3 matrices
-        g_MVP = projection * view * model; // Remember, matrix multiplication is the other way around
+        g_MVPCube = projection * viewCube * modelCube; // Remember, matrix multiplication is the other way around
 
-        g_attribLocations[IDX_MVP] = glGetUniformLocation(g_program, "MVP");
+        // identity matrix for triangle
+        glm::mat4 viewTriangle = glm::lookAt(glm::vec3{ 0,0,4 }, glm::vec3{ 0,0,0 }, glm::vec3{ 0,1,0 });
+        glm::mat4 modelTriangle = glm::translate(glm::mat4(1.0), { 1.5, 1.0, 0.0 });
+        g_MVPTriangle = projection * viewTriangle * modelTriangle;
     }
 
     bool Init()
@@ -276,9 +322,10 @@ namespace Application
         // Accept fragment if it closer to the camera than the former one
         glDepthFunc(GL_LESS);
 
-        InitVertexData();
+        InitLocations();
+        InitBuffers();
 
-        InitMVPMatrix();
+        InitMatrices();
 
         return true;
     }
@@ -289,25 +336,57 @@ namespace Application
         return (double)currentTime / 1000.0f;
     }
 
+    void ReinitTriangleMatrix(double seconds)
+    {
+        glm::mat4 projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+        glm::mat4 view = glm::lookAt(glm::vec3{ 0,0,4 }, glm::vec3{ 0,0,0 }, glm::vec3{ 0,1,0 });
+        glm::mat4 model = glm::mat4(1.0); 
+    
+        static float rotate = 0.0f;
+        rotate += 0.01f;
+        model = glm::translate(glm::mat4(1.0), { 1.5, 1.0, 0.0 });
+        model = glm::rotate(model, rotate, { 0.0, 1.0, 0.0 });
+        
+        g_MVPTriangle = projection * view * model;
+    }
+
+    void ReloadTriangleColors(double seconds)
+    {
+        const GLfloat color[] = {(float)std::sin(seconds) * 0.5f + 0.5f,
+                                 (float)std::cos(seconds) * 0.5f + 0.5f,
+                                  0.0f};
+
+        GLfloat colorData[9] = { color[0], color[1], color[2],
+                                 color[0], color[1], color[2],
+                                 color[0], color[1], color[2] };
+
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferColorTriangle);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colorData), colorData, GL_STATIC_DRAW);
+    }
+
     bool MainLoop()
     {
-        //double seconds = GetCurrentTime();
+        double seconds = GetCurrentTime();
 
-        //const GLfloat color[] = {(float)std::sin(seconds) * 0.5f + 0.5f,
-        //                         (float)std::cos(seconds) * 0.5f + 0.5f,
-        //                          0.0f, 1.0f };
+        ReinitTriangleMatrix(seconds);
+        ReloadTriangleColors(seconds);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(g_program);
 
-        DrawVertexData();
+        DrawCube();
+        DrawTriangle();
 
         return true;
     }
 
     void Deinit()
     {
-        glDeleteBuffers(2, g_buffers);
+        glDeleteBuffers(1, &g_bufferVertexCube);
+        glDeleteBuffers(1, &g_bufferColorCube);
+        glDeleteBuffers(1, &g_bufferVertexTriangle);
+        glDeleteBuffers(1, &g_bufferColorTriangle);
         glDeleteProgram(g_program);
     }
 }
