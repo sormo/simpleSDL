@@ -41,6 +41,9 @@ extern PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 extern PFNGLBUFFERDATAPROC glBufferData;
 extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+extern PFNGLDETACHSHADERPROC glDetachShader;
+extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 #endif
 
 bool InitOpenGL();

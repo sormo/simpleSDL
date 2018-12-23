@@ -31,6 +31,9 @@ PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 PFNGLBUFFERDATAPROC glBufferData;
 PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+PFNGLDETACHSHADERPROC glDetachShader;
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 
 bool InitOpenGL()
 {
@@ -61,6 +64,9 @@ bool InitOpenGL()
     glBufferData = (PFNGLBUFFERDATAPROC)SDL_GL_GetProcAddress("glBufferData");
     glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)SDL_GL_GetProcAddress("glGetAttribLocation");
     glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)SDL_GL_GetProcAddress("glDisableVertexAttribArray");
+    glDetachShader = (PFNGLDETACHSHADERPROC)SDL_GL_GetProcAddress("glDetachShader");
+    glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress("glGetUniformLocation");
+    glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)SDL_GL_GetProcAddress("glUniformMatrix4fv");
 
 	return glCreateShader && glShaderSource && glCompileShader && glGetShaderiv &&
         glGetShaderInfoLog && glDeleteShader && glAttachShader && glCreateProgram &&
@@ -69,7 +75,8 @@ bool InitOpenGL()
         glDeleteVertexArrays && glDeleteProgram && glVertexAttribPointer &&
         glBindAttribLocation && glEnableVertexAttribArray && glBindBuffer &&
         glGenBuffers && glDeleteBuffers && glBufferData &&
-        glGetAttribLocation && glDisableVertexAttribArray;
+        glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
+        glGetUniformLocation && glUniformMatrix4fv;
 }
 
 void PrintOpenGlPointers()
@@ -81,7 +88,8 @@ void PrintOpenGlPointers()
         "glDeleteVertexArrays %p\nglDeleteProgram %p\nglVertexAttribPointer %p\n"
         "glBindAttribLocation %p\nglEnableVertexAttribArray %p\nglBindBuffer %p\n"
         "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
-        "glGetAttribLocation %p\nglDisableVertexAttribArray %p\n",
+        "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
+        "glGetUniformLocation %p\nglUniformMatrix4fv %p\n",
         glCreateShader, glShaderSource, glCompileShader, glGetShaderiv,
         glGetShaderInfoLog, glDeleteShader, glAttachShader, glCreateProgram,
         glLinkProgram, glValidateProgram, glGetProgramiv, glGetProgramInfoLog,
@@ -89,7 +97,8 @@ void PrintOpenGlPointers()
         glDeleteVertexArrays, glDeleteProgram, glVertexAttribPointer,
         glBindAttribLocation, glEnableVertexAttribArray, glBindBuffer,
         glGenBuffers, glDeleteBuffers, glBufferData,
-        glGetAttribLocation, glDisableVertexAttribArray);
+        glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
+        glGetUniformLocation, glUniformMatrix4fv);
 }
 #else
 bool InitOpenGL()
