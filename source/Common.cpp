@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdio>
 
+extern SDL_Window* g_window;
+
 namespace Common
 {
     std::vector<uint8_t> ReadFile(const char * name)
@@ -26,5 +28,14 @@ namespace Common
         SDL_RWclose(file);
 
         return result;
+    }
+
+    std::tuple<int32_t, int32_t> GetWindowSize()
+    {
+        int32_t width, height;
+
+        SDL_GetWindowSize(g_window, &width, &height);
+
+        return { width, height };
     }
 }

@@ -10,8 +10,9 @@
 #include "Common.h"
 
 static int g_done = 0;
-static SDL_Window* g_window = nullptr;
 static SDL_GLContext g_context = nullptr;
+// window is not static because it's used in common
+SDL_Window* g_window = nullptr;
 
 void release()
 {

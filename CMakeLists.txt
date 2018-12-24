@@ -31,13 +31,26 @@ set(SDL2MAIN_LIBRARY SDL2main)
 set(SDL2_LIBRARY SDL2)
 
 #
+# GLM include directory
+#
+include_directories("${sourceDir}")
+
+#
 # Sources (relative to the project root dir).
 #
 file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
   "${sourceDir}/*.h"
+  "${sourceDir}/*.hpp"
   "${sourceDir}/*.cpp"
   "${sourceDir}/*.c"
 )
+
+# magic to have directories in visual studio
+foreach(source IN LISTS projectSources)
+    get_filename_component(sourcePath "${source}" PATH)
+    string(REPLACE "/" "\\" sourcePathMsvc "${sourcePath}")
+    source_group("${sourcePathMsvc}" FILES "${source}")
+endforeach() 
 
 # Include dirs.
 set(projectIncludeDirs ${projectIncludeDirs}
@@ -68,7 +81,7 @@ endif()
 if(EMSCRIPTEN)
   # This makes emscripten build a html page in addition to the js code.
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['Pointer_stringify']\" --embed-file ${projectDir}/data@/ -s FORCE_FILESYSTEM=1 -s ASSERTIONS=1 -std=c++1z")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FULL_ES2=1 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['Pointer_stringify']\" --embed-file ${projectDir}/data@/ -s FORCE_FILESYSTEM=1 -s ASSERTIONS=1 -std=c++1z")
 
   # Emscripten requires static linking.
   set(SDL2_LIBRARY SDL2-static)
