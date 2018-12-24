@@ -12,10 +12,11 @@ namespace Common
         std::vector<uint8_t> result;
 
         SDL_RWops * file = SDL_RWFromFile(name, "rb");
+
         if (!file)
         {
-            printf("Error opening file %s", name);
-            abort();
+            printf("Error opening file %s\n", name);
+            return result;
         }
 
         Sint64 length = SDL_RWseek(file, 0, RW_SEEK_END);

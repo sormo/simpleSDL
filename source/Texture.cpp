@@ -84,6 +84,7 @@ std::optional<GLuint> LoadDDS(const char * imagePath)
     printf("Reading image %s\n", imagePath);
 
     std::vector<uint8_t> data = Common::ReadFile(imagePath);
+    
     if (data.empty())
     {
         printf("Error reading file %s", imagePath);
@@ -128,8 +129,7 @@ std::optional<GLuint> LoadDDS(const char * imagePath)
         format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
         break;
     default:
-        free(buffer);
-        return 0;
+        return std::nullopt;
     }
 
     // Create one OpenGL texture

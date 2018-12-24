@@ -5,10 +5,10 @@ precision mediump float;
 #endif
 
 attribute vec3 position;
-attribute vec3 color;
+attribute vec2 vertexUV;
 
 // Output data ; will be interpolated for each fragment.
-varying vec3 outputColor;
+varying vec2 UV;
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
 
@@ -16,5 +16,5 @@ void main(void)
 {
   gl_Position =  MVP * vec4(position,1);
 
-  outputColor = color;
+  UV = vertexUV;
 }
