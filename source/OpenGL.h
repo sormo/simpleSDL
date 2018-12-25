@@ -11,8 +11,20 @@
 #define glBindVertexArray glBindVertexArrayOES
 #define glDeleteVertexArrays glDeleteVertexArraysOES
 
+#define GL_BGR                            0x80E0
+
 #else
-#include <SDL_opengl.h>
+//#ifdef EMSCRIPTEN
+//#include <gl\glew.h>
+//#else
+//#include "glew\glew.h"
+//#endif
+
+#ifndef EMSCRIPTEN
+#include <Windows.h>
+#endif
+#include <gl\GL.h>
+#include <SDL_opengl_glext.h>
 
 extern PFNGLCREATESHADERPROC glCreateShader;
 extern PFNGLSHADERSOURCEPROC glShaderSource;
@@ -41,6 +53,18 @@ extern PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 extern PFNGLBUFFERDATAPROC glBufferData;
 extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+extern PFNGLDETACHSHADERPROC glDetachShader;
+extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
+extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
+extern PFNGLUNIFORM1IPROC glUniform1i;
+// opengl 1.2 and 1.3 is defined for emscripten
+// gl in windows SDK has only opengl 1.1
+#ifndef EMSCRIPTEN
+extern PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
+extern PFNGLACTIVETEXTUREPROC glActiveTexture;
+#endif
+
 #endif
 
 bool InitOpenGL();

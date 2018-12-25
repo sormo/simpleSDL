@@ -10,8 +10,9 @@
 #include "Common.h"
 
 static int g_done = 0;
-static SDL_Window* g_window = nullptr;
 static SDL_GLContext g_context = nullptr;
+// window is not static because it's used in common
+SDL_Window* g_window = nullptr;
 
 void release()
 {
@@ -61,8 +62,8 @@ bool init()
     }
 
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     g_context = SDL_GL_CreateContext(g_window);
     if (!g_context)

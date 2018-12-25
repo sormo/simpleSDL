@@ -31,9 +31,19 @@ PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 PFNGLBUFFERDATAPROC glBufferData;
 PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+PFNGLDETACHSHADERPROC glDetachShader;
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
+PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
+PFNGLUNIFORM1IPROC glUniform1i;
+#ifndef EMSCRIPTEN
+PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
+PFNGLACTIVETEXTUREPROC glActiveTexture;
+#endif
 
 bool InitOpenGL()
 {
+    //return glewInit() == GLEW_OK;
     glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
     glShaderSource = (PFNGLSHADERSOURCEPROC)SDL_GL_GetProcAddress("glShaderSource");
     glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress("glCompileShader");
@@ -61,7 +71,15 @@ bool InitOpenGL()
     glBufferData = (PFNGLBUFFERDATAPROC)SDL_GL_GetProcAddress("glBufferData");
     glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)SDL_GL_GetProcAddress("glGetAttribLocation");
     glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)SDL_GL_GetProcAddress("glDisableVertexAttribArray");
-
+    glDetachShader = (PFNGLDETACHSHADERPROC)SDL_GL_GetProcAddress("glDetachShader");
+    glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress("glGetUniformLocation");
+    glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)SDL_GL_GetProcAddress("glUniformMatrix4fv");
+    glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)SDL_GL_GetProcAddress("glGenerateMipmap");
+    glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
+#ifndef EMSCRIPTEN
+    glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
+    glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
+#endif
 	return glCreateShader && glShaderSource && glCompileShader && glGetShaderiv &&
         glGetShaderInfoLog && glDeleteShader && glAttachShader && glCreateProgram &&
         glLinkProgram && glValidateProgram && glGetProgramiv && glGetProgramInfoLog &&
@@ -69,7 +87,12 @@ bool InitOpenGL()
         glDeleteVertexArrays && glDeleteProgram && glVertexAttribPointer &&
         glBindAttribLocation && glEnableVertexAttribArray && glBindBuffer &&
         glGenBuffers && glDeleteBuffers && glBufferData &&
-        glGetAttribLocation && glDisableVertexAttribArray;
+        glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
+#ifndef EMSCRIPTEN
+        glCompressedTexImage2D && glActiveTexture &&
+#endif
+        glGetUniformLocation && glUniformMatrix4fv && glGenerateMipmap &&
+        glUniform1i;
 }
 
 void PrintOpenGlPointers()
@@ -81,7 +104,12 @@ void PrintOpenGlPointers()
         "glDeleteVertexArrays %p\nglDeleteProgram %p\nglVertexAttribPointer %p\n"
         "glBindAttribLocation %p\nglEnableVertexAttribArray %p\nglBindBuffer %p\n"
         "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
-        "glGetAttribLocation %p\nglDisableVertexAttribArray %p\n",
+        "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
+#ifndef EMSCRIPTEN
+        "glCompressedTexImage2D %p\nglActiveTexture %p\n"
+#endif
+        "glGetUniformLocation %p\nglUniformMatrix4fv %p\nglGenerateMipmap %p\n"
+        "glUniform1i %p\n",
         glCreateShader, glShaderSource, glCompileShader, glGetShaderiv,
         glGetShaderInfoLog, glDeleteShader, glAttachShader, glCreateProgram,
         glLinkProgram, glValidateProgram, glGetProgramiv, glGetProgramInfoLog,
@@ -89,7 +117,12 @@ void PrintOpenGlPointers()
         glDeleteVertexArrays, glDeleteProgram, glVertexAttribPointer,
         glBindAttribLocation, glEnableVertexAttribArray, glBindBuffer,
         glGenBuffers, glDeleteBuffers, glBufferData,
-        glGetAttribLocation, glDisableVertexAttribArray);
+        glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
+#ifndef EMSCRIPTEN
+        glCompressedTexImage2D, glActiveTexture,
+#endif
+        glGetUniformLocation, glUniformMatrix4fv, glGenerateMipmap,
+        glUniform1i);
 }
 #else
 bool InitOpenGL()

@@ -1,122 +1,169 @@
 #include "Application.h"
 #include "Common.h"
+#include "Shader.h"
+#include "Texture.h"
 #include <string>
 #include "OpenGL.h"
 #include <chrono>
 #include <cmath>
 #include <optional>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 namespace Application
 {
+    static const GLfloat g_dataPositionCube[] =
+    {
+        -1.0f,-1.0f,-1.0f, // triangle 1 : begin
+        -1.0f,-1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f, // triangle 1 : end
+        1.0f, 1.0f,-1.0f, // triangle 2 : begin
+        -1.0f,-1.0f,-1.0f,
+        -1.0f, 1.0f,-1.0f, // triangle 2 : end
+        1.0f,-1.0f, 1.0f,
+        -1.0f,-1.0f,-1.0f,
+        1.0f,-1.0f,-1.0f,
+        1.0f, 1.0f,-1.0f,
+        1.0f,-1.0f,-1.0f,
+        -1.0f,-1.0f,-1.0f,
+        -1.0f,-1.0f,-1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f,-1.0f,
+        1.0f,-1.0f, 1.0f,
+        -1.0f,-1.0f, 1.0f,
+        -1.0f,-1.0f,-1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f,-1.0f, 1.0f,
+        1.0f,-1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f,-1.0f,-1.0f,
+        1.0f, 1.0f,-1.0f,
+        1.0f,-1.0f,-1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f,-1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f,-1.0f,
+        -1.0f, 1.0f,-1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f,-1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f,-1.0f, 1.0f
+    };
+
+    static const GLfloat g_dataUVCube[] = {
+        0.000059f, 1.0f - 0.000004f,
+        0.000103f, 1.0f - 0.336048f,
+        0.335973f, 1.0f - 0.335903f,
+        1.000023f, 1.0f - 0.000013f,
+        0.667979f, 1.0f - 0.335851f,
+        0.999958f, 1.0f - 0.336064f,
+        0.667979f, 1.0f - 0.335851f,
+        0.336024f, 1.0f - 0.671877f,
+        0.667969f, 1.0f - 0.671889f,
+        1.000023f, 1.0f - 0.000013f,
+        0.668104f, 1.0f - 0.000013f,
+        0.667979f, 1.0f - 0.335851f,
+        0.000059f, 1.0f - 0.000004f,
+        0.335973f, 1.0f - 0.335903f,
+        0.336098f, 1.0f - 0.000071f,
+        0.667979f, 1.0f - 0.335851f,
+        0.335973f, 1.0f - 0.335903f,
+        0.336024f, 1.0f - 0.671877f,
+        1.000004f, 1.0f - 0.671847f,
+        0.999958f, 1.0f - 0.336064f,
+        0.667979f, 1.0f - 0.335851f,
+        0.668104f, 1.0f - 0.000013f,
+        0.335973f, 1.0f - 0.335903f,
+        0.667979f, 1.0f - 0.335851f,
+        0.335973f, 1.0f - 0.335903f,
+        0.668104f, 1.0f - 0.000013f,
+        0.336098f, 1.0f - 0.000071f,
+        0.000103f, 1.0f - 0.336048f,
+        0.000004f, 1.0f - 0.671870f,
+        0.336024f, 1.0f - 0.671877f,
+        0.000103f, 1.0f - 0.336048f,
+        0.336024f, 1.0f - 0.671877f,
+        0.335973f, 1.0f - 0.335903f,
+        0.667969f, 1.0f - 0.671889f,
+        1.000004f, 1.0f - 0.671847f,
+        0.667979f, 1.0f - 0.335851f
+    };
+
     GLuint g_program;
-    GLuint g_buffer;
-    GLuint g_vertexLocation;
 
-    static const GLfloat VERTICES[] = { 0.25f, -0.25f, 0.5f,
-                                       -0.25f, -0.25f, 0.5f,
-                                        0.25f,  0.25f, 0.5f };
+    GLuint g_locationPosition;
+    GLuint g_locationUV;
+    GLuint g_locationMVP;
+    GLuint g_locationTexture;
 
+    GLuint g_bufferVertexCube;
+    GLuint g_bufferUVCube;
 
-    std::optional<GLuint> CompileShader(const char * fileName, GLenum type)
+    glm::mat4 g_MVPCube;
+
+    GLuint g_texture;
+
+    void InitLocations()
     {
-        auto data = Common::ReadFile(fileName);
-        data.push_back('\0');
-        const GLchar * str = (const GLchar*)data.data();
-
-        GLuint result = glCreateShader(type);
-
-        glShaderSource(result, 1, &str, NULL);
-        glCompileShader(result);
-
-        //Check vertex shader for errors
-        GLint shaderCompiled = GL_FALSE;
-        glGetShaderiv(result, GL_COMPILE_STATUS, &shaderCompiled);
-        if (shaderCompiled != GL_TRUE)
-        {
-            GLint logLength;
-            glGetShaderiv(result, GL_INFO_LOG_LENGTH, &logLength);
-            if (logLength > 0)
-            {
-                std::vector<GLchar> buffer(logLength);
-                glGetShaderInfoLog(result, logLength, &logLength, buffer.data());
-                
-                printf("Shader compile log: %s\n", buffer.data());
-            }
-
-            glDeleteShader(result);
-
-            return std::nullopt;
-        }
-
-        return result;
+        g_locationPosition = glGetAttribLocation(g_program, "position");
+        g_locationUV = glGetAttribLocation(g_program, "vertexUV");
+        g_locationMVP = glGetUniformLocation(g_program, "MVP");
+        g_locationTexture = glGetUniformLocation(g_program, "textureValue");
     }
 
-    void PrintProgramInfo(GLuint program)
+    void InitBuffers()
     {
-        GLint logLen;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLen);
-        if (logLen > 0)
-        {
-            std::vector<GLchar> buffer(logLen);
-            // Show any errors as appropriate
-            glGetProgramInfoLog(program, logLen, &logLen, buffer.data());
+        glGenBuffers(1, &g_bufferVertexCube);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataPositionCube), g_dataPositionCube, GL_STATIC_DRAW);
 
-            printf("Program Info Log:\n%s\n", buffer.data());
-        }
+        glGenBuffers(1, &g_bufferUVCube);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferUVCube);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataUVCube), g_dataUVCube, GL_STATIC_DRAW);
     }
 
-    std::optional<GLuint> CreateProgram()
+    void DrawCube()
     {
-        auto vertexShader = CompileShader("shaderVertex.glsl", GL_VERTEX_SHADER);
-        auto fragmentShader = CompileShader("shaderFragment.glsl", GL_FRAGMENT_SHADER);
+        glUniformMatrix4fv(g_locationMVP, 1, GL_FALSE, &g_MVPCube[0][0]);
+        
+        // Bind our texture in Texture Unit 0
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_texture);
+        // Set our "myTextureSampler" sampler to user Texture Unit 0
+        glUniform1i(g_locationTexture, 0);
 
-        if (!vertexShader || !fragmentShader)
-            return std::nullopt;
+        glEnableVertexAttribArray(g_locationPosition);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
+        glVertexAttribPointer(g_locationPosition, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        // Create program, attach shaders to it, and link it
-        GLuint program = glCreateProgram();
+        glEnableVertexAttribArray(g_locationUV);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferUVCube);
+        glVertexAttribPointer(g_locationUV, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        glAttachShader(program, *vertexShader);
-        glAttachShader(program, *fragmentShader);
+        glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12 triangles, two for each of six sides
+ 
+        glDisableVertexAttribArray(g_locationPosition);
+        glDisableVertexAttribArray(g_locationUV);
+    }
 
-        glGenBuffers(1, &g_buffer);
+    void InitMatrices()
+    {
+        auto[width, height] = Common::GetWindowSize();
 
-        // Load the vertex data
-        glBindBuffer(GL_ARRAY_BUFFER, g_buffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(VERTICES), VERTICES, GL_STATIC_DRAW);
-
-        g_vertexLocation = 0;
-        glBindAttribLocation(program, g_vertexLocation, "position");
-        //g_vertexLocation = glGetAttribLocation(program, "position");
-
-        glLinkProgram(program);
-
-        GLint linked;
-        glGetProgramiv(program, GL_LINK_STATUS, &linked);
-        if (!linked)
-        {
-            PrintProgramInfo(program);
-
-            return std::nullopt;
-        }
-
-#ifdef _DEBUG
-        glValidateProgram(program);
-        GLint valid;
-        glGetProgramiv(program, GL_VALIDATE_STATUS, &valid);
-        if (!valid)
-        {
-            PrintProgramInfo(program);
-
-            return std::nullopt;
-        }
-#endif
-
-        // Delete the shaders as the program has them now
-        glDeleteShader(*vertexShader);
-        glDeleteShader(*fragmentShader);
-
-        return program;
+        // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+        glm::mat4 projection = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 100.0f);
+        // Camera matrix
+        glm::mat4 viewCube = glm::lookAt(
+            glm::vec3(3, 4, -3), // Camera is at (4,3,-3), in World Space
+            glm::vec3(0, 0, 0), // and looks at the origin
+            glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+        );
+        // Model matrix : an identity matrix (model will be at the origin)
+        glm::mat4 modelCube = glm::mat4(1.0f);
+        // Our ModelViewProjection : multiplication of our 3 matrices
+        g_MVPCube = projection * viewCube * modelCube; // Remember, matrix multiplication is the other way around
     }
 
     bool Init()
@@ -128,11 +175,32 @@ namespace Application
             return false;
         }
 
-        auto program = CreateProgram();
+        auto program = CreateProgram("shaderVertex.glsl", "shaderFragment.glsl");
         if (!program)
             return false;
 
         g_program = *program;
+
+        glClearColor(0,0,0,0);
+        // Enable depth test
+        glEnable(GL_DEPTH_TEST);
+        // Accept fragment if it closer to the camera than the former one
+        glDepthFunc(GL_LESS);
+
+        InitLocations();
+        InitBuffers();
+
+        InitMatrices();
+
+        // Load the texture using any two methods
+        auto texture = LoadBMP("uvtemplate.bmp");
+        //auto texture = LoadDDS("uvtemplate.dds");
+        if (!texture)
+        {
+            printf("Error loading texture.");
+            return false;
+        }
+        g_texture = *texture;
 
         return true;
     }
@@ -147,28 +215,20 @@ namespace Application
     {
         double seconds = GetCurrentTime();
 
-        const GLfloat color[] = {(float)std::sin(seconds) * 0.5f + 0.5f,
-                                 (float)std::cos(seconds) * 0.5f + 0.5f,
-                                  0.0f, 1.0f };
-        glClearColor(color[0], color[1], color[2], color[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(g_program);
 
-        glEnableVertexAttribArray(g_vertexLocation);
-        glBindBuffer(GL_ARRAY_BUFFER, g_buffer);
-        glVertexAttribPointer(g_vertexLocation, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glDisableVertexAttribArray(g_vertexLocation);
+        DrawCube();
 
         return true;
     }
 
     void Deinit()
     {
-        glDeleteBuffers(1, &g_buffer);
+        glDeleteBuffers(1, &g_bufferVertexCube);
+        glDeleteBuffers(1, &g_bufferUVCube);
         glDeleteProgram(g_program);
+        glDeleteTextures(1, &g_texture);
     }
 }
