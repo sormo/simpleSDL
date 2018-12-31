@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <cassert>
 #include <cstdio>
+#include <chrono>
 
 extern SDL_Window* g_window;
 
@@ -38,5 +39,11 @@ namespace Common
         SDL_GetWindowSize(g_window, &width, &height);
 
         return { width, height };
+    }
+
+    double GetCurrentTime()
+    {
+        double currentTime = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        return (double)currentTime / 1000.0f;
     }
 }

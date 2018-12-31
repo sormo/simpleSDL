@@ -9,31 +9,31 @@ std::optional<GLuint> LoadBMP(const char * imagePath)
     std::vector<uint8_t> data = Common::ReadFile(imagePath);
     if (data.empty())
     {
-        printf("Error reading file %s", imagePath);
+        printf("Error reading file %s.\n", imagePath);
         return std::nullopt;
     }
 
     if (data.size() < 54)
     {
-        printf("Error, size of BMP file is only %u", data.size());
+        printf("Error, size of BMP file is only %u.\n", data.size());
         return std::nullopt;
     }
 
     // A BMP files always begins with "BM"
     if (data[0] != 'B' || data[1] != 'M') {
-        printf("Not a correct BMP file");
+        printf("Incorrect first two bytes in BMP file.\n");
         return std::nullopt;
     }
 
     // Make sure this is a 24bpp file
     if (*(int32_t*)&(data[0x1E]) != 0)
     {
-        printf("Not a correct BMP file\n");
+        printf("BMP file is not a 24bpp file (1).\n");
         return std::nullopt;
     }
     if (*(int32_t*)&(data[0x1C]) != 24)
     {
-        printf("Not a correct BMP file\n");
+        printf("BMP file is not a 24bpp file (2).\n");
         return std::nullopt;
     }
 
@@ -53,12 +53,15 @@ std::optional<GLuint> LoadBMP(const char * imagePath)
     GLuint textureID;
     glGenTextures(1, &textureID);
 
+    //glActiveTexture(GL_TEXTURE0);
+
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, textureID);
 
     GLvoid * BMPData = (GLvoid*)(data.data() + dataPos);
     // Give the image to OpenGL
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, BMPData);
+    // TODO this should be GL_BGR but es 2.0 do not have bgr ):
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, BMPData);
 
     // Poor filtering, or ...
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

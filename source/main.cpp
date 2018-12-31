@@ -109,6 +109,8 @@ void mainLoop()
             printf("Event: SDL_QUIT\n");
             g_done = true;
         }
+
+        Application::Dispatch(event);
     }
 
     renderFrame();

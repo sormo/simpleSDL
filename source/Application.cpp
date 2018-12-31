@@ -2,13 +2,14 @@
 #include "Common.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Camera.h"
 #include <string>
 #include "OpenGL.h"
-#include <chrono>
 #include <cmath>
 #include <optional>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <inttypes.h>
 
 namespace Application
 {
@@ -105,6 +106,8 @@ namespace Application
 
     GLuint g_texture;
 
+    CameraRotate g_camera;
+
     void InitLocations()
     {
         g_locationPosition = glGetAttribLocation(g_program, "position");
@@ -130,16 +133,22 @@ namespace Application
         
         // Bind our texture in Texture Unit 0
         glActiveTexture(GL_TEXTURE0);
+
         glBindTexture(GL_TEXTURE_2D, g_texture);
+
         // Set our "myTextureSampler" sampler to user Texture Unit 0
         glUniform1i(g_locationTexture, 0);
 
         glEnableVertexAttribArray(g_locationPosition);
+
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
+
         glVertexAttribPointer(g_locationPosition, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glEnableVertexAttribArray(g_locationUV);
+
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferUVCube);
+
         glVertexAttribPointer(g_locationUV, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12 triangles, two for each of six sides
@@ -148,22 +157,15 @@ namespace Application
         glDisableVertexAttribArray(g_locationUV);
     }
 
-    void InitMatrices()
+    void RecomputeMVPMatrix()
     {
-        auto[width, height] = Common::GetWindowSize();
+        //g_camera.RecomputeMatrices();
 
-        // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-        glm::mat4 projection = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 100.0f);
-        // Camera matrix
-        glm::mat4 viewCube = glm::lookAt(
-            glm::vec3(3, 4, -3), // Camera is at (4,3,-3), in World Space
-            glm::vec3(0, 0, 0), // and looks at the origin
-            glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-        );
-        // Model matrix : an identity matrix (model will be at the origin)
-        glm::mat4 modelCube = glm::mat4(1.0f);
+        glm::mat4 projection = g_camera.GetProjectionMatrix();
+        glm::mat4 view = g_camera.GetViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
         // Our ModelViewProjection : multiplication of our 3 matrices
-        g_MVPCube = projection * viewCube * modelCube; // Remember, matrix multiplication is the other way around
+        g_MVPCube = projection * view * model; // Remember, matrix multiplication is the other way around
     }
 
     bool Init()
@@ -190,30 +192,24 @@ namespace Application
         InitLocations();
         InitBuffers();
 
-        InitMatrices();
-
         // Load the texture using any two methods
         auto texture = LoadBMP("uvtemplate.bmp");
         //auto texture = LoadDDS("uvtemplate.dds");
         if (!texture)
         {
-            printf("Error loading texture.");
+            printf("Error loading texture.\n");
             return false;
         }
         g_texture = *texture;
 
-        return true;
-    }
+        g_camera.Init();
 
-    double GetCurrentTime()
-    {
-        double currentTime = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        return (double)currentTime / 1000.0f;
+        return true;
     }
 
     bool MainLoop()
     {
-        double seconds = GetCurrentTime();
+        RecomputeMVPMatrix();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -222,6 +218,46 @@ namespace Application
         DrawCube();
 
         return true;
+    }
+
+    void Dispatch(const SDL_Event & event)
+    {
+        // touch events
+        if (event.type == SDL_FINGERDOWN)
+        {
+            auto[width, height] = Common::GetWindowSize();
+            g_camera.Press({ event.tfinger.x * (float)width, event.tfinger.y * (float)height }, event.tfinger.fingerId);
+        }
+        else if (event.type == SDL_FINGERUP)
+        {
+            auto[width, height] = Common::GetWindowSize();
+            g_camera.Release({ event.tfinger.x * (float)width, event.tfinger.y * (float)height }, event.tfinger.fingerId);
+        }
+        else if (event.type == SDL_FINGERMOTION)
+        {
+            auto[width, height] = Common::GetWindowSize();
+            g_camera.Move({ event.tfinger.x * (float)width, event.tfinger.y * (float)height }, event.tfinger.fingerId);
+        }
+#if !defined(__ANDROID__)
+        // looks like mouse events are sent also on android for some reason
+        else if (event.type == SDL_MOUSEWHEEL)
+        {
+            //g_camera.ModifyFoV(event.wheel.y);
+            g_camera.Wheel(event.wheel.y);
+        }
+        else if (event.type == SDL_MOUSEBUTTONDOWN)
+        {
+            g_camera.Press({ (float)event.button.x, (float)event.button.y }, 0);
+        }
+        else if (event.type == SDL_MOUSEBUTTONUP)
+        {
+            g_camera.Release({ (float)event.button.x, (float)event.button.y }, 0);
+        }
+        else if (event.type == SDL_MOUSEMOTION)
+        {
+            g_camera.Move({ (float)event.motion.x, (float)event.motion.y }, 0);
+        }
+#endif
     }
 
     void Deinit()

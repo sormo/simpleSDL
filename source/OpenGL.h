@@ -11,8 +11,6 @@
 #define glBindVertexArray glBindVertexArrayOES
 #define glDeleteVertexArrays glDeleteVertexArraysOES
 
-#define GL_BGR                            0x80E0
-
 #else
 //#ifdef EMSCRIPTEN
 //#include <gl\glew.h>
