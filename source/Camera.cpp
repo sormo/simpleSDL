@@ -130,8 +130,10 @@ void CameraRotate::Move(const glm::vec2 & position, int64_t id)
         glm::vec2 delta = position - it->second;
         it->second = position;
 
-        m_horizontalAngle -= MOUSE_SPEED * delta.x;
-        m_verticalAngle += MOUSE_SPEED * delta.y;
+        auto[width, height] = Common::GetWindowSize();
+
+        m_horizontalAngle -= (delta.x / width) * m_distance;
+        m_verticalAngle += (delta.y / height) * m_distance;
 
         if (m_verticalAngle < -3.14f / 2.0f)
             m_verticalAngle = -3.14f / 2.0f;
@@ -217,8 +219,10 @@ void Camera2D::Move(const glm::vec2 & position, int64_t id)
         glm::vec2 delta = position - it->second;
         it->second = position;
 
-        m_position.x -= MOUSE_SPEED * delta.x;
-        m_position.y += MOUSE_SPEED * delta.y;
+        auto[width, height] = Common::GetWindowSize();
+
+        m_position.x -= (delta.x / width) * m_distance;
+        m_position.y += (delta.y / height) * m_distance;
     }
     else if (m_positions.size() == 2)
     {
