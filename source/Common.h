@@ -15,4 +15,13 @@ namespace Common
     std::tuple<int32_t, int32_t> GetWindowSize();
     // seconds since epoch
     double GetCurrentTime();
+
+    // reading integral types from buffer
+    template<class T>
+    T BufferRead(const std::vector<uint8_t> & data, uint32_t offset)
+    {
+        T value = 0;
+        memcpy(&value, &(data[offset]), sizeof(T));
+        return value;
+    }
 }

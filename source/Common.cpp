@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdio>
 #include <chrono>
+#include <inttypes.h>
 
 extern SDL_Window* g_window;
 
@@ -22,6 +23,8 @@ namespace Common
 
         Sint64 length = SDL_RWseek(file, 0, RW_SEEK_END);
         SDL_RWseek(file, 0, RW_SEEK_SET);
+
+        printf("Reading file %s length %" PRId64 "\n", name, length);
 
         result.resize(length);
         auto bytesRead = SDL_RWread(file, result.data(), 1, result.size());

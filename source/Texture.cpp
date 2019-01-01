@@ -4,6 +4,14 @@
 
 std::optional<GLuint> LoadBMP(const char * imagePath)
 {
+    static const uint32_t BPP_CHECK_OFFSET_1 = 0x1e;
+    static const uint32_t BPP_CHECK_OFFSET_2 = 0x1c;
+    static const uint32_t DATA_POSITION_OFFSET = 0x0a;
+    static const uint32_t DATA_POSITION_OFFSET_DEFAULT = 54;
+    static const uint32_t IMAGE_SIZE_OFFSET = 0x22;
+    static const uint32_t WIDTH_OFFSET = 0x12;
+    static const uint32_t HEIGHT_OFFSET = 0x16;
+
     printf("Reading image %s\n", imagePath);
 
     std::vector<uint8_t> data = Common::ReadFile(imagePath);
@@ -26,28 +34,38 @@ std::optional<GLuint> LoadBMP(const char * imagePath)
     }
 
     // Make sure this is a 24bpp file
-    if (*(int32_t*)&(data[0x1E]) != 0)
+    if (Common::BufferRead<uint32_t>(data, BPP_CHECK_OFFSET_1) != 0)
     {
-        printf("BMP file is not a 24bpp file (1).\n");
+        printf("BMP file is not a 24bpp file (1)(%d)(%d).\n", *(int32_t*)&(data[0x1E]), data[0x1E]);
+
+        for (size_t i = 0; i < 0x30; ++i)
+        {
+            if (i == 0x10 || i == 0x20)
+                printf("\n");
+            printf("%02X(%02X) ", data[i], i);
+        }
+        printf("\n");
+
         return std::nullopt;
     }
-    if (*(int32_t*)&(data[0x1C]) != 24)
+
+    if (Common::BufferRead<uint32_t>(data, BPP_CHECK_OFFSET_2) != 24)
     {
         printf("BMP file is not a 24bpp file (2).\n");
         return std::nullopt;
     }
 
     // Read the information about the image
-    int32_t dataPos = *(int32_t*)&(data[0x0A]);
-    int32_t imageSize = *(int32_t*)&(data[0x22]);
-    int32_t width = *(int32_t*)&(data[0x12]);
-    int32_t height = *(int32_t*)&(data[0x16]);
+    int32_t dataPos = Common::BufferRead<uint32_t>(data, DATA_POSITION_OFFSET);
+    int32_t imageSize = Common::BufferRead<uint32_t>(data, IMAGE_SIZE_OFFSET);
+    int32_t width = Common::BufferRead<uint32_t>(data, WIDTH_OFFSET);
+    int32_t height = Common::BufferRead<uint32_t>(data, HEIGHT_OFFSET);
 
     // Some BMP files are misformatted, guess missing information
     if (imageSize == 0)
         imageSize = width * height * 3; // 3 : one byte for each Red, Green and Blue component
     if (dataPos == 0)
-        dataPos = 54; // The BMP header is done that way
+        dataPos = DATA_POSITION_OFFSET_DEFAULT; // The BMP header is done that way
 
     // Create one OpenGL texture
     GLuint textureID;
