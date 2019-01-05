@@ -17,27 +17,37 @@ namespace Application
     GLuint g_program;
 
     GLuint g_locationPosition;
+    GLuint g_locationNormal;
     GLuint g_locationUV;
     GLuint g_locationMVP;
+    GLuint g_locationM;
+    GLuint g_locationV;
     GLuint g_locationTexture;
+    GLuint g_locationLightPosition;
 
-    GLuint g_bufferVertexCube;
-    GLuint g_bufferUVCube;
+    GLuint g_bufferVertex;
+    GLuint g_bufferNormal;
+    GLuint g_bufferUV;
 
-    glm::mat4 g_MVPCube;
+    glm::mat4 g_MVP;
+    glm::mat4 g_M;
+    glm::mat4 g_V;
+    glm::vec3 g_lightPositionWorldSpace;
 
     GLuint g_verticesCount;
-
     GLuint g_texture;
-
     CameraRotate g_camera;
 
     void InitLocations()
     {
-        g_locationPosition = glGetAttribLocation(g_program, "position");
+        g_locationPosition = glGetAttribLocation(g_program, "positionModelSpace");
+        g_locationNormal = glGetAttribLocation(g_program, "normalModelSpace");
         g_locationUV = glGetAttribLocation(g_program, "vertexUV");
         g_locationMVP = glGetUniformLocation(g_program, "MVP");
+        g_locationM = glGetUniformLocation(g_program, "M");
+        g_locationV = glGetUniformLocation(g_program, "V");
         g_locationTexture = glGetUniformLocation(g_program, "textureValue");
+        g_locationLightPosition = glGetUniformLocation(g_program, "lightPositionWorldSpace");
     }
 
     // return number of vertices initialized
@@ -47,50 +57,58 @@ namespace Application
         std::vector<glm::vec2> uvs;
         std::vector<glm::vec3> normals; // Won't be used at the moment.
 
-        if (!LoadObj("cube.obj", vertices, uvs, normals))
+        if (!LoadObj("suzanne.obj", vertices, uvs, normals))
         {
             printf("Error loading cube.obj.");
             return 0;
         }
 
-        glGenBuffers(1, &g_bufferVertexCube);
-        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
+        glGenBuffers(1, &g_bufferVertex);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertex);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 
-        glGenBuffers(1, &g_bufferUVCube);
-        glBindBuffer(GL_ARRAY_BUFFER, g_bufferUVCube);
+        glGenBuffers(1, &g_bufferUV);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferUV);
         glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+
+        glGenBuffers(1, &g_bufferNormal);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferNormal);
+        glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 
         return vertices.size();
     }
 
-    void DrawCube()
+    void DrawModel()
     {
-        glUniformMatrix4fv(g_locationMVP, 1, GL_FALSE, &g_MVPCube[0][0]);
-        
+        glUniformMatrix4fv(g_locationMVP, 1, GL_FALSE, &g_MVP[0][0]);
+        glUniformMatrix4fv(g_locationM, 1, GL_FALSE, &g_M[0][0]);
+        glUniformMatrix4fv(g_locationV, 1, GL_FALSE, &g_V[0][0]);
+
+        glm::vec3 lightPosition = glm::vec3(4, 4, 4);
+        glUniform3f(g_locationLightPosition, lightPosition.x, lightPosition.y, lightPosition.z);
+
         // Bind our texture in Texture Unit 0
         glActiveTexture(GL_TEXTURE0);
-
         glBindTexture(GL_TEXTURE_2D, g_texture);
-
-        // Set our "myTextureSampler" sampler to user Texture Unit 0
+        // Set our "textureValue" sampler to user Texture Unit 0
         glUniform1i(g_locationTexture, 0);
 
         glEnableVertexAttribArray(g_locationPosition);
-
-        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
-
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertex);
         glVertexAttribPointer(g_locationPosition, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+        glEnableVertexAttribArray(g_locationNormal);
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferNormal);
+        glVertexAttribPointer(g_locationNormal, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
         glEnableVertexAttribArray(g_locationUV);
-
-        glBindBuffer(GL_ARRAY_BUFFER, g_bufferUVCube);
-
+        glBindBuffer(GL_ARRAY_BUFFER, g_bufferUV);
         glVertexAttribPointer(g_locationUV, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glDrawArrays(GL_TRIANGLES, 0, g_verticesCount);
  
         glDisableVertexAttribArray(g_locationPosition);
+        glDisableVertexAttribArray(g_locationNormal);
         glDisableVertexAttribArray(g_locationUV);
     }
 
@@ -99,10 +117,10 @@ namespace Application
         //g_camera.RecomputeMatrices();
 
         glm::mat4 projection = g_camera.GetProjectionMatrix();
-        glm::mat4 view = g_camera.GetViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
+        g_V = g_camera.GetViewMatrix();
+        g_M = glm::mat4(1.0f);
         // Our ModelViewProjection : multiplication of our 3 matrices
-        g_MVPCube = projection * view * model; // Remember, matrix multiplication is the other way around
+        g_MVP = projection * g_V * g_M; // Remember, matrix multiplication is the other way around
     }
 
     bool Init()
@@ -132,8 +150,8 @@ namespace Application
             return false;
 
         // Load the texture using any two methods
-        auto texture = LoadBMP("cube.bmp");
-        //auto texture = LoadDDS("cube.dds");
+        auto texture = LoadBMP("suzanne.bmp");
+        //auto texture = LoadDDS("suzanne.dds");
         if (!texture)
         {
             printf("Error loading texture.\n");
@@ -154,7 +172,7 @@ namespace Application
 
         glUseProgram(g_program);
 
-        DrawCube();
+        DrawModel();
 
         return true;
     }
@@ -201,8 +219,9 @@ namespace Application
 
     void Deinit()
     {
-        glDeleteBuffers(1, &g_bufferVertexCube);
-        glDeleteBuffers(1, &g_bufferUVCube);
+        glDeleteBuffers(1, &g_bufferVertex);
+        glDeleteBuffers(1, &g_bufferNormal);
+        glDeleteBuffers(1, &g_bufferUV);
         glDeleteProgram(g_program);
         glDeleteTextures(1, &g_texture);
     }

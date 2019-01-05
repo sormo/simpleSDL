@@ -56,6 +56,7 @@ extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 extern PFNGLUNIFORM1IPROC glUniform1i;
+extern PFNGLUNIFORM3FPROC glUniform3f;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN
