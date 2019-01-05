@@ -28,7 +28,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/OpenGL.cpp \
   ../../../source/Shader.cpp \
   ../../../source/Texture.cpp \
-  ../../../source/Camera.cpp
+  ../../../source/Camera.cpp \
+  ../../../source/ObjLoader.cpp
 
 
 # Linking options

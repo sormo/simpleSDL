@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "ObjLoader.h"
 #include <string>
 #include "OpenGL.h"
 #include <cmath>
@@ -13,85 +14,6 @@
 
 namespace Application
 {
-    static const GLfloat g_dataPositionCube[] =
-    {
-        -1.0f,-1.0f,-1.0f, // triangle 1 : begin
-        -1.0f,-1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f, // triangle 1 : end
-        1.0f, 1.0f,-1.0f, // triangle 2 : begin
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f,-1.0f, // triangle 2 : end
-        1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f,-1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f,-1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f
-    };
-
-    static const GLfloat g_dataUVCube[] = {
-        0.000059f, 1.0f - 0.000004f,
-        0.000103f, 1.0f - 0.336048f,
-        0.335973f, 1.0f - 0.335903f,
-        1.000023f, 1.0f - 0.000013f,
-        0.667979f, 1.0f - 0.335851f,
-        0.999958f, 1.0f - 0.336064f,
-        0.667979f, 1.0f - 0.335851f,
-        0.336024f, 1.0f - 0.671877f,
-        0.667969f, 1.0f - 0.671889f,
-        1.000023f, 1.0f - 0.000013f,
-        0.668104f, 1.0f - 0.000013f,
-        0.667979f, 1.0f - 0.335851f,
-        0.000059f, 1.0f - 0.000004f,
-        0.335973f, 1.0f - 0.335903f,
-        0.336098f, 1.0f - 0.000071f,
-        0.667979f, 1.0f - 0.335851f,
-        0.335973f, 1.0f - 0.335903f,
-        0.336024f, 1.0f - 0.671877f,
-        1.000004f, 1.0f - 0.671847f,
-        0.999958f, 1.0f - 0.336064f,
-        0.667979f, 1.0f - 0.335851f,
-        0.668104f, 1.0f - 0.000013f,
-        0.335973f, 1.0f - 0.335903f,
-        0.667979f, 1.0f - 0.335851f,
-        0.335973f, 1.0f - 0.335903f,
-        0.668104f, 1.0f - 0.000013f,
-        0.336098f, 1.0f - 0.000071f,
-        0.000103f, 1.0f - 0.336048f,
-        0.000004f, 1.0f - 0.671870f,
-        0.336024f, 1.0f - 0.671877f,
-        0.000103f, 1.0f - 0.336048f,
-        0.336024f, 1.0f - 0.671877f,
-        0.335973f, 1.0f - 0.335903f,
-        0.667969f, 1.0f - 0.671889f,
-        1.000004f, 1.0f - 0.671847f,
-        0.667979f, 1.0f - 0.335851f
-    };
-
     GLuint g_program;
 
     GLuint g_locationPosition;
@@ -103,6 +25,8 @@ namespace Application
     GLuint g_bufferUVCube;
 
     glm::mat4 g_MVPCube;
+
+    GLuint g_verticesCount;
 
     GLuint g_texture;
 
@@ -116,15 +40,28 @@ namespace Application
         g_locationTexture = glGetUniformLocation(g_program, "textureValue");
     }
 
-    void InitBuffers()
+    // return number of vertices initialized
+    uint32_t InitBuffers()
     {
+        std::vector<glm::vec3> vertices;
+        std::vector<glm::vec2> uvs;
+        std::vector<glm::vec3> normals; // Won't be used at the moment.
+
+        if (!LoadObj("cube.obj", vertices, uvs, normals))
+        {
+            printf("Error loading cube.obj.");
+            return 0;
+        }
+
         glGenBuffers(1, &g_bufferVertexCube);
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertexCube);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataPositionCube), g_dataPositionCube, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 
         glGenBuffers(1, &g_bufferUVCube);
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferUVCube);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_dataUVCube), g_dataUVCube, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+
+        return vertices.size();
     }
 
     void DrawCube()
@@ -151,7 +88,7 @@ namespace Application
 
         glVertexAttribPointer(g_locationUV, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12 triangles, two for each of six sides
+        glDrawArrays(GL_TRIANGLES, 0, g_verticesCount);
  
         glDisableVertexAttribArray(g_locationPosition);
         glDisableVertexAttribArray(g_locationUV);
@@ -190,11 +127,13 @@ namespace Application
         glDepthFunc(GL_LESS);
 
         InitLocations();
-        InitBuffers();
+        g_verticesCount = InitBuffers();
+        if (g_verticesCount == 0)
+            return false;
 
         // Load the texture using any two methods
-        auto texture = LoadBMP("uvtemplate.bmp");
-        //auto texture = LoadDDS("uvtemplate.dds");
+        auto texture = LoadBMP("cube.bmp");
+        //auto texture = LoadDDS("cube.dds");
         if (!texture)
         {
             printf("Error loading texture.\n");

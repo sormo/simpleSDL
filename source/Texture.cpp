@@ -1,6 +1,7 @@
 #include "Texture.h"
 #include "Common.h"
 #include <vector>
+#include <string>
 
 std::optional<GLuint> LoadBMP(const char * imagePath)
 {
@@ -100,6 +101,41 @@ std::optional<GLuint> LoadBMP(const char * imagePath)
 #define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII
 #define FOURCC_DXT5 0x35545844 // Equivalent to "DXT5" in ASCII
 
+bool ValidateCompressedTextureFormat(uint32_t format)
+{
+    printf("Compressed texture format being used: %d\n", format);
+
+    // check for texture formats:
+    GLint numFormats = 0;
+    glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &numFormats);
+
+    if (numFormats == 0)
+    {
+        printf("No compressed texture formats are supported.");
+        return false;
+    }
+
+    std::vector<GLint> formats(numFormats);
+    glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, formats.data());
+    for (GLint f : formats)
+    {
+        if (f == format)
+            return true;
+    }
+
+    printf("Compressed texture format not supported.\n");
+
+    std::string formatsStr;
+    for (GLint f : formats)
+    {
+        formatsStr.append(std::to_string(f) + " ");
+    }
+
+    printf("Only following format are supported: %s", formatsStr.c_str());
+
+    return false;
+}
+
 std::optional<GLuint> LoadDDS(const char * imagePath)
 {
     printf("Reading image %s\n", imagePath);
@@ -152,6 +188,9 @@ std::optional<GLuint> LoadDDS(const char * imagePath)
     default:
         return std::nullopt;
     }
+
+    if (!ValidateCompressedTextureFormat(format))
+        return std::nullopt;
 
     // Create one OpenGL texture
     GLuint textureID;
