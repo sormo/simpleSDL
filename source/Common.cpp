@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <chrono>
 #include <inttypes.h>
+#include <cmath>
 
 extern SDL_Window* g_window;
 
@@ -44,9 +45,14 @@ namespace Common
         return { width, height };
     }
 
-    double GetCurrentTime()
+    double GetCurrentTimeInSeconds()
     {
         double currentTime = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         return (double)currentTime / 1000.0f;
+    }
+
+    bool IsNear(float a, float b, float sigma)
+    {
+        return std::fabs(a - b) < sigma;
     }
 }

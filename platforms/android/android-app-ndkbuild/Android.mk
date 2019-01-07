@@ -29,7 +29,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Shader.cpp \
   ../../../source/Texture.cpp \
   ../../../source/Camera.cpp \
-  ../../../source/ObjLoader.cpp
+  ../../../source/ObjLoader.cpp \
+  ../../../source/VboIndexer.cpp
 
 
 # Linking options

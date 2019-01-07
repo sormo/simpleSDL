@@ -14,7 +14,7 @@ namespace Common
     std::vector<uint8_t> ReadFile(const char * name);
     std::tuple<int32_t, int32_t> GetWindowSize();
     // seconds since epoch
-    double GetCurrentTime();
+    double GetCurrentTimeInSeconds();
 
     // reading integral types from buffer
     template<class T>
@@ -24,4 +24,7 @@ namespace Common
         memcpy(&value, &(data[offset]), sizeof(T));
         return value;
     }
+
+    static const float DEFAULT_SIGMA = 0.01f;
+    bool IsNear(float a, float b, float sigma = DEFAULT_SIGMA);
 }

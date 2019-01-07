@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "ObjLoader.h"
+#include "VboIndexer.h"
 #include <string>
 #include "OpenGL.h"
 #include <cmath>
@@ -11,6 +12,11 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <inttypes.h>
+
+//#define TEST_OBJ_FILE "suzanne.obj"
+//#define TEST_BMP_FILE "suzanne.bmp"
+#define TEST_OBJ_FILE "suzanne.obj"
+#define TEST_BMP_FILE "suzanne.bmp"
 
 namespace Application
 {
@@ -28,6 +34,7 @@ namespace Application
     GLuint g_bufferVertex;
     GLuint g_bufferNormal;
     GLuint g_bufferUV;
+    GLuint g_bufferIndex;
 
     glm::mat4 g_MVP;
     glm::mat4 g_M;
@@ -55,27 +62,33 @@ namespace Application
     {
         std::vector<glm::vec3> vertices;
         std::vector<glm::vec2> uvs;
-        std::vector<glm::vec3> normals; // Won't be used at the moment.
+        std::vector<glm::vec3> normals;
 
-        if (!LoadObj("suzanne.obj", vertices, uvs, normals))
+        if (!LoadObj(TEST_OBJ_FILE, vertices, uvs, normals))
         {
-            printf("Error loading cube.obj.");
+            printf("Error loading obj file.");
             return 0;
         }
 
+        auto indexed = VboIndex(vertices, uvs, normals);
+
         glGenBuffers(1, &g_bufferVertex);
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferVertex);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, indexed.vertices.size() * sizeof(glm::vec3), &indexed.vertices[0], GL_STATIC_DRAW);
 
         glGenBuffers(1, &g_bufferUV);
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferUV);
-        glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, indexed.uvs.size() * sizeof(glm::vec2), &indexed.uvs[0], GL_STATIC_DRAW);
 
         glGenBuffers(1, &g_bufferNormal);
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferNormal);
-        glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, indexed.normals.size() * sizeof(glm::vec3), &indexed.normals[0], GL_STATIC_DRAW);
 
-        return vertices.size();
+        glGenBuffers(1, &g_bufferIndex);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_bufferIndex);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexed.indices.size() * sizeof(uint16_t), &indexed.indices[0], GL_STATIC_DRAW);
+
+        return indexed.indices.size();
     }
 
     void DrawModel()
@@ -105,7 +118,12 @@ namespace Application
         glBindBuffer(GL_ARRAY_BUFFER, g_bufferUV);
         glVertexAttribPointer(g_locationUV, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        glDrawArrays(GL_TRIANGLES, 0, g_verticesCount);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_bufferIndex);
+
+        glDrawElements(GL_TRIANGLES,      // mode
+                       g_verticesCount,   // count
+                       GL_UNSIGNED_SHORT, // type
+                       (void*)0);         // element array buffer offset
  
         glDisableVertexAttribArray(g_locationPosition);
         glDisableVertexAttribArray(g_locationNormal);
@@ -150,7 +168,7 @@ namespace Application
             return false;
 
         // Load the texture using any two methods
-        auto texture = LoadBMP("suzanne.bmp");
+        auto texture = LoadBMP(TEST_BMP_FILE);
         //auto texture = LoadDDS("suzanne.dds");
         if (!texture)
         {
@@ -164,8 +182,26 @@ namespace Application
         return true;
     }
 
+    void PrintMillisecondsPerFrame()
+    {
+        static double lastTime = Common::GetCurrentTimeInSeconds();
+        static uint32_t numberOfFrames = 0;
+
+        double currentTime = Common::GetCurrentTimeInSeconds();
+        numberOfFrames++;
+
+        if (currentTime - lastTime >= 1.0)
+        {
+            printf("%f ms/frame\n", 1000.0 / (double)numberOfFrames);
+            numberOfFrames = 0;
+            lastTime += 1.0;
+        }
+    }
+
     bool MainLoop()
     {
+        //PrintMillisecondsPerFrame();
+
         RecomputeMVPMatrix();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -222,6 +258,7 @@ namespace Application
         glDeleteBuffers(1, &g_bufferVertex);
         glDeleteBuffers(1, &g_bufferNormal);
         glDeleteBuffers(1, &g_bufferUV);
+        glDeleteBuffers(1, &g_bufferIndex);
         glDeleteProgram(g_program);
         glDeleteTextures(1, &g_texture);
     }

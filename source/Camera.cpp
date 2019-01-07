@@ -16,10 +16,10 @@ void CameraKeyboard::Init()
 void CameraKeyboard::RecomputeMatrices()
 {
     // glfwGetTime is called only once, the first time this function is called
-    static double lastTime = Common::GetCurrentTime();
+    static double lastTime = Common::GetCurrentTimeInSeconds();
 
     // Compute time difference between current and last frame
-    double currentTime = Common::GetCurrentTime();
+    double currentTime = Common::GetCurrentTimeInSeconds();
     float deltaTime = float(currentTime - lastTime);
 
     // Get mouse position
