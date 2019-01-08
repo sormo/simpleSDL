@@ -55,4 +55,5 @@ void main(void)
 		diffuseColor * lightColor * lightPower * cosTheta / (distance * distance) + 
 		// Specular : reflective highlight, like a mirror
     	specularColor * lightColor * lightPower * pow(cosAlpha, 5.0) / (distance * distance);
+    gl_FragColor.a = 0.3;
 }
