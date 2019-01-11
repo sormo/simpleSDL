@@ -27,4 +27,7 @@ namespace Common
 
     static const float DEFAULT_SIGMA = 0.01f;
     bool IsNear(float a, float b, float sigma = DEFAULT_SIGMA);
+
+    std::vector<uint8_t> ConvertBGRToRGB(const uint8_t * data, uint32_t count);
+    std::vector<uint8_t> ConvertARGBToRGBA(const uint8_t * data, uint32_t count);
 }

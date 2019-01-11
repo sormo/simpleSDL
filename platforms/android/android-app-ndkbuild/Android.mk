@@ -30,7 +30,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Texture.cpp \
   ../../../source/Camera.cpp \
   ../../../source/ObjLoader.cpp \
-  ../../../source/VboIndexer.cpp
+  ../../../source/VboIndexer.cpp \
+  ../../../source/Text2D.cpp
 
 
 # Linking options

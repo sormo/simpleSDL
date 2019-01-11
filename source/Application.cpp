@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "ObjLoader.h"
 #include "VboIndexer.h"
+#include "Text2D.h"
 #include <string>
 #include "OpenGL.h"
 #include <cmath>
@@ -120,11 +121,18 @@ namespace Application
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_bufferIndex);
 
+        // enable blending
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
         glDrawElements(GL_TRIANGLES,      // mode
                        g_verticesCount,   // count
                        GL_UNSIGNED_SHORT, // type
                        (void*)0);         // element array buffer offset
- 
+
+        glDisable(GL_BLEND);
+
         glDisableVertexAttribArray(g_locationPosition);
         glDisableVertexAttribArray(g_locationNormal);
         glDisableVertexAttribArray(g_locationUV);
@@ -161,9 +169,6 @@ namespace Application
         glEnable(GL_DEPTH_TEST);
         // Accept fragment if it closer to the camera than the former one
         glDepthFunc(GL_LESS);
-        // enable blending
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         InitLocations();
         g_verticesCount = InitBuffers();
@@ -181,6 +186,12 @@ namespace Application
         g_texture = *texture;
 
         g_camera.Init();
+
+        if (!Text2DInitFont("text2d-32bpp.bmp"))
+        {
+            printf("Error initializing font.\n");
+            return false;
+        }
 
         return true;
     }
@@ -212,6 +223,8 @@ namespace Application
         glUseProgram(g_program);
 
         DrawModel();
+
+        Text2DPrint("Hello World.", 100, 100, 40);
 
         return true;
     }
@@ -264,5 +277,6 @@ namespace Application
         glDeleteBuffers(1, &g_bufferIndex);
         glDeleteProgram(g_program);
         glDeleteTextures(1, &g_texture);
+        Text2DCleanup();
     }
 }

@@ -5,14 +5,6 @@
 
 std::optional<GLuint> LoadBMP(const char * imagePath)
 {
-    static const uint32_t BPP_CHECK_OFFSET_1 = 0x1e;
-    static const uint32_t BPP_CHECK_OFFSET_2 = 0x1c;
-    static const uint32_t DATA_POSITION_OFFSET = 0x0a;
-    static const uint32_t DATA_POSITION_OFFSET_DEFAULT = 54;
-    static const uint32_t IMAGE_SIZE_OFFSET = 0x22;
-    static const uint32_t WIDTH_OFFSET = 0x12;
-    static const uint32_t HEIGHT_OFFSET = 0x16;
-
     printf("Reading image %s\n", imagePath);
 
     std::vector<uint8_t> data = Common::ReadFile(imagePath);
@@ -34,39 +26,35 @@ std::optional<GLuint> LoadBMP(const char * imagePath)
         return std::nullopt;
     }
 
-    // Make sure this is a 24bpp file
-    if (Common::BufferRead<uint32_t>(data, BPP_CHECK_OFFSET_1) != 0)
-    {
-        printf("BMP file is not a 24bpp file (1)(%d)(%d).\n", *(int32_t*)&(data[0x1E]), data[0x1E]);
-
-        for (size_t i = 0; i < 0x30; ++i)
-        {
-            if (i == 0x10 || i == 0x20)
-                printf("\n");
-            printf("%02X(%02X) ", data[i], i);
-        }
-        printf("\n");
-
-        return std::nullopt;
-    }
-
-    if (Common::BufferRead<uint32_t>(data, BPP_CHECK_OFFSET_2) != 24)
-    {
-        printf("BMP file is not a 24bpp file (2).\n");
-        return std::nullopt;
-    }
-
     // Read the information about the image
-    int32_t dataPos = Common::BufferRead<uint32_t>(data, DATA_POSITION_OFFSET);
-    int32_t imageSize = Common::BufferRead<uint32_t>(data, IMAGE_SIZE_OFFSET);
-    int32_t width = Common::BufferRead<uint32_t>(data, WIDTH_OFFSET);
-    int32_t height = Common::BufferRead<uint32_t>(data, HEIGHT_OFFSET);
+    uint32_t fileSize = Common::BufferRead<uint32_t>(data, 0x02);
+    uint32_t dataPosition = Common::BufferRead<uint32_t>(data, 0x0a);
+    uint32_t dibHeaderSize = Common::BufferRead<uint32_t>(data, 0x0e);
+
+    static const uint32_t BITMAPV4HEADER = 0x6c;
+    static const uint32_t BITMAPV5HEADER = 0x7c;
+    static const uint32_t BITMAPINFOHEADER = 0x28;
+
+    if (dibHeaderSize != BITMAPV4HEADER && dibHeaderSize != BITMAPV5HEADER && dibHeaderSize != BITMAPINFOHEADER)
+    {
+        printf("Unsupported DIB header size %d.\n", dibHeaderSize);
+        return std::nullopt;
+    }
+
+    uint32_t bitmapWidth = Common::BufferRead<uint32_t>(data, 0x12);
+    uint32_t bitmapHeight = Common::BufferRead<uint32_t>(data, 0x16);
+    uint16_t bitmapBpp = Common::BufferRead<uint16_t>(data, 0x1c);
+    uint32_t bitmapSize = Common::BufferRead<uint32_t>(data, 0x22);
+
+    if (bitmapBpp != 24 && bitmapBpp != 32)
+    {
+        printf("Unsupported BMP bpp %d.\n", bitmapBpp);
+        return std::nullopt;
+    }
 
     // Some BMP files are misformatted, guess missing information
-    if (imageSize == 0)
-        imageSize = width * height * 3; // 3 : one byte for each Red, Green and Blue component
-    if (dataPos == 0)
-        dataPos = DATA_POSITION_OFFSET_DEFAULT; // The BMP header is done that way
+    if (bitmapSize == 0)
+        bitmapSize = bitmapWidth * bitmapHeight * (bitmapBpp / 4); // this may not be correct
 
     // Create one OpenGL texture
     GLuint textureID;
@@ -77,10 +65,22 @@ std::optional<GLuint> LoadBMP(const char * imagePath)
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    GLvoid * BMPData = (GLvoid*)(data.data() + dataPos);
-    // Give the image to OpenGL
-    // TODO this should be GL_BGR but es 2.0 do not have bgr ):
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, BMPData);
+    // TODO: row of bitmap file must be multiple of 4, if it's not, there can be padding
+
+    std::vector<uint8_t> bitmapData;
+    GLenum format;
+    if (bitmapBpp == 24)
+    {
+        format = GL_RGB;
+        bitmapData = Common::ConvertBGRToRGB(data.data() + dataPosition, bitmapWidth * bitmapHeight);
+    }
+    else if (bitmapBpp == 32)
+    {
+        format = GL_RGBA;
+        bitmapData = Common::ConvertARGBToRGBA(data.data() + dataPosition, bitmapWidth * bitmapHeight);
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, bitmapWidth, bitmapHeight, 0, format, GL_UNSIGNED_BYTE, bitmapData.data());
 
     // Poor filtering, or ...
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

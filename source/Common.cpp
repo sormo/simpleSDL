@@ -55,4 +55,33 @@ namespace Common
     {
         return std::fabs(a - b) < sigma;
     }
+
+    std::vector<uint8_t> ConvertBGRToRGB(const uint8_t * data, uint32_t count)
+    {
+        std::vector<uint8_t> result(count * 3);
+
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            result[i * 3 + 0] = data[i * 3 + 2];
+            result[i * 3 + 1] = data[i * 3 + 1];
+            result[i * 3 + 2] = data[i * 3 + 0];
+        }
+
+        return result;
+    }
+
+    std::vector<uint8_t> ConvertARGBToRGBA(const uint8_t * data, uint32_t count)
+    {
+        std::vector<uint8_t> result(count * 4);
+        memcpy(result.data(), data, count * 4);
+
+        const uint8_t * current = data;
+
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            result[i * 4] = data[i * 4 + 3];
+        }
+
+        return result;
+    }
 }
