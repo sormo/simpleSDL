@@ -37,6 +37,7 @@ PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 PFNGLUNIFORM1IPROC glUniform1i;
 PFNGLUNIFORM3FPROC glUniform3f;
+PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -78,6 +79,7 @@ bool InitOpenGL()
     glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)SDL_GL_GetProcAddress("glGenerateMipmap");
     glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
     glUniform3f = (PFNGLUNIFORM3FPROC)SDL_GL_GetProcAddress("glUniform3f");
+    glUniformMatrix3fv = (PFNGLUNIFORMMATRIX3FVPROC)SDL_GL_GetProcAddress("glUniformMatrix3fv");
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
@@ -94,7 +96,7 @@ bool InitOpenGL()
         glCompressedTexImage2D && glActiveTexture &&
 #endif
         glGetUniformLocation && glUniformMatrix4fv && glGenerateMipmap &&
-        glUniform1i && glUniform3f;
+        glUniform1i && glUniform3f && glUniformMatrix3fv;
 }
 
 void PrintOpenGlPointers()
@@ -111,7 +113,7 @@ void PrintOpenGlPointers()
         "glCompressedTexImage2D %p\nglActiveTexture %p\n"
 #endif
         "glGetUniformLocation %p\nglUniformMatrix4fv %p\nglGenerateMipmap %p\n"
-        "glUniform1i %p\nglUniform3f %p\n",
+        "glUniform1i %p\nglUniform3f %p\nglUniformMatrix3fv %p\n",
         glCreateShader, glShaderSource, glCompileShader, glGetShaderiv,
         glGetShaderInfoLog, glDeleteShader, glAttachShader, glCreateProgram,
         glLinkProgram, glValidateProgram, glGetProgramiv, glGetProgramInfoLog,
@@ -124,7 +126,7 @@ void PrintOpenGlPointers()
         glCompressedTexImage2D, glActiveTexture,
 #endif
         glGetUniformLocation, glUniformMatrix4fv, glGenerateMipmap,
-        glUniform1i, glUniform3f);
+        glUniform1i, glUniform3f, glUniformMatrix3fv);
 }
 #else
 bool InitOpenGL()

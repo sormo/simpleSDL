@@ -3,6 +3,7 @@
 #if defined(ANDROID)
 #define GL_GLES_PROTOTYPES 1
 #define GL_GLEXT_PROTOTYPES 1
+#include <SDL_opengles.h>
 #include <SDL_opengles2.h>
 #undef GL_GLES_PROTOTYPES
 #undef GL_GLEXT_PROTOTYPES
@@ -57,6 +58,7 @@ extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLUNIFORM3FPROC glUniform3f;
+extern PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN

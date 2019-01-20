@@ -30,7 +30,11 @@ std::optional<uint16_t> GetSimilarVertexIndex(
     return std::nullopt;
 }
 
-IndexingResult VboIndex(const std::vector<glm::vec3> & vertices, const std::vector<glm::vec2> & uvs, const std::vector<glm::vec3> & normals)
+IndexingResult VboIndex(const std::vector<glm::vec3> & vertices,
+                        const std::vector<glm::vec2> & uvs,
+                        const std::vector<glm::vec3> & normals,
+                        const std::vector<glm::vec3> & tangents,
+                        const std::vector<glm::vec3> & bitangents)
 {
     IndexingResult result;
 
@@ -41,6 +45,10 @@ IndexingResult VboIndex(const std::vector<glm::vec3> & vertices, const std::vect
         {
             // A similar vertex is already in the VBO, use it instead !
             result.indices.push_back(*found);
+
+            // Average the tangents and the bitangents
+            result.tangents[*found] += tangents[i];
+            result.bitangents[*found] += bitangents[i];
         }
         else
         {
@@ -48,6 +56,8 @@ IndexingResult VboIndex(const std::vector<glm::vec3> & vertices, const std::vect
             result.vertices.push_back(vertices[i]);
             result.uvs.push_back(uvs[i]);
             result.normals.push_back(normals[i]);
+            result.tangents.push_back(tangents[i]);
+            result.bitangents.push_back(bitangents[i]);
             result.indices.push_back((uint16_t)result.vertices.size() - 1);
         }
     }

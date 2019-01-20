@@ -39,7 +39,7 @@ void Text2DReadWidthFactors(const char * path)
 bool Text2DInitFont(const char * path)
 {
     // Initialize texture
-    auto texture = LoadBMP(path);
+    auto texture = Texture::Load(path);
     if (!texture)
         return false;
     g_texture = *texture;
