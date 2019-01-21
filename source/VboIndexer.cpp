@@ -64,3 +64,43 @@ IndexingResult VboIndex(const std::vector<glm::vec3> & vertices,
 
     return result;
 }
+
+std::optional<uint16_t> GetSimilarVertexIndex(const glm::vec3 & vertex, const std::vector<glm::vec3> & vertices)
+{
+    // Lame linear search
+    for (size_t i = 0; i < vertices.size(); i++)
+    {
+        if (Common::IsNear(vertex.x, vertices[i].x) &&
+            Common::IsNear(vertex.y, vertices[i].y) &&
+            Common::IsNear(vertex.z, vertices[i].z))
+        {
+            return static_cast<uint16_t>(i);
+        }
+    }
+    // No other vertex could be used instead.
+    // Looks like we'll have to add it to the VBO.
+    return std::nullopt;
+}
+
+IndexingResult VboIndex(const std::vector<glm::vec3> & vertices)
+{
+    IndexingResult result;
+
+    // For each input vertex
+    for (size_t i = 0; i < vertices.size(); i++)
+    {
+        if (auto found = GetSimilarVertexIndex(vertices[i], result.vertices))
+        {
+            // A similar vertex is already in the VBO, use it instead !
+            result.indices.push_back(*found);
+        }
+        else
+        {
+            // If not, it needs to be added in the output data.
+            result.vertices.push_back(vertices[i]);
+            result.indices.push_back((uint16_t)result.vertices.size() - 1);
+        }
+    }
+
+    return result;
+}

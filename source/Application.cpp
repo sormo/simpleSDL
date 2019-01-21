@@ -14,6 +14,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <inttypes.h>
 #include "Cylinder.h"
+#include "Light.h"
 
 namespace Application
 {
@@ -22,6 +23,7 @@ namespace Application
     CameraRotate g_camera;
 
     std::unique_ptr<Cylinder> g_cylinder;
+    std::unique_ptr<Light> g_light;
 
     void DrawModel()
     {
@@ -30,6 +32,12 @@ namespace Application
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         g_cylinder->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace);
+
+        glm::mat4 lightModel = glm::mat4(1.0f);
+        lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
+        lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
+
+        g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         glDisable(GL_BLEND);
     }
@@ -67,6 +75,7 @@ namespace Application
         }
 
         g_cylinder.reset(new Cylinder());
+        g_light.reset(new Light());
 
         return true;
     }
@@ -92,6 +101,11 @@ namespace Application
         //PrintMillisecondsPerFrame();
 
         RecomputeMVPMatrix();
+
+        // rotate light
+        glm::mat4 rotationMatrix(1.0f);
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(1.0f), glm::vec3(0.0, 1.0, 0.0));
+        g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
