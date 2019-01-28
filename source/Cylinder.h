@@ -2,7 +2,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Common.h"
-#include "ObjLoader.h"
+#include "ModelLoader.h"
 #include "VboIndexer.h"
 
 class Cylinder
@@ -68,7 +68,7 @@ private:
         std::vector<glm::vec2> uvs;
         std::vector<glm::vec3> normals;
 
-        if (!LoadObj("cylinder.obj", vertices, uvs, normals))
+        if (!LoadObj("models/cylinder/cylinder.obj", vertices, uvs, normals))
         {
             printf("Error loading obj file.");
             return 0;
@@ -110,7 +110,7 @@ private:
 
     bool LoadTextures()
     {
-        auto textureDiffuse = Texture::Load("cylinderDiffuse.bmp");
+        auto textureDiffuse = Texture::Load("models/cylinder/cylinderDiffuse.bmp");
         if (!textureDiffuse)
         {
             printf("Error loading texture cylinderDiffuse.bmp.\n");
@@ -118,7 +118,7 @@ private:
         }
         m_textureDiffuse = *textureDiffuse;
 
-        auto textureNormal = Texture::Load("cylinderNormal.bmp");
+        auto textureNormal = Texture::Load("models/cylinder/cylinderNormal.bmp");
         if (!textureNormal)
         {
             printf("Error loading texture cylinderNormal.bmp.\n");

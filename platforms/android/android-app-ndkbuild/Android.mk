@@ -17,7 +17,9 @@ LOCAL_MODULE := libSimpleExample
 LOCAL_C_INCLUDES +=  \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/SDL/include \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/SDL_image \
-  $(LOCAL_PATH)/../../../source
+  $(LOCAL_PATH)/../../../source \
+  $(LOCAL_PATH)/../../../modelConvert/include \
+  $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/flatbuffers/include
 
 
 # Source files
@@ -29,9 +31,10 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Shader.cpp \
   ../../../source/Texture.cpp \
   ../../../source/Camera.cpp \
-  ../../../source/ObjLoader.cpp \
+  ../../../source/ModelLoader.cpp \
   ../../../source/VboIndexer.cpp \
-  ../../../source/Text2D.cpp
+  ../../../source/Text2D.cpp \
+  ../../../source/Model.cpp
 
 
 # Linking options

@@ -36,10 +36,10 @@ void Text2DReadWidthFactors(const char * path)
     }
 }
 
-bool Text2DInitFont(const char * path)
+bool Text2DInitFont()
 {
     // Initialize texture
-    auto texture = Texture::Load(path);
+    auto texture = Texture::Load("text2d/text2d-32bpp.bmp");
     if (!texture)
         return false;
     g_texture = *texture;
@@ -49,7 +49,7 @@ bool Text2DInitFont(const char * path)
     glGenBuffers(1, &g_bufferUV);
 
     // Initialize Shader
-    auto program = CreateProgram("shaderVertexText.glsl", "shaderFragmentText.glsl");
+    auto program = CreateProgram("shaders/vertText.glsl", "shaders/fragText.glsl");
     if (!program)
         return false;
     g_program = *program;
@@ -61,7 +61,7 @@ bool Text2DInitFont(const char * path)
     // Initialize uniforms' IDs
     g_locationTexture = glGetUniformLocation(g_program, "textureValue");
 
-    Text2DReadWidthFactors("text2d-widths.txt");
+    Text2DReadWidthFactors("text2d/text2d-widths.txt");
 
     return true;
 }

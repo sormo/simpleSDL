@@ -298,7 +298,7 @@ GLuint Shader::GetLocation(const char * locationName, LocationType type)
 
     if (newLocation == -1)
     {
-        printf("Requested invalid location in shader: %s", locationName);
+        printf("Requested invalid location in shader: %s\n", locationName);
         throw std::runtime_error("Requested invalid location in shader.");
     }
 

@@ -1,0 +1,40 @@
+namespace ModelData;
+
+struct Vec3
+{
+    x:float;
+    y:float;
+    z:float;
+}
+
+struct Vec2 
+{
+    x:float;
+    y:float;
+}
+
+enum TextureType:byte { Diffuse = 0, Specular, Normal, Height, Ambient }
+
+table Texture
+{
+    type:TextureType;
+    path:string;
+}
+
+table Mesh
+{
+    positions:[Vec3];
+    normals:[Vec3];
+    texCoords:[Vec2];
+    tangents:[Vec3];
+    bitangents:[Vec3];
+    indices:[uint16];
+    textures:[Texture];
+}
+
+table Model
+{
+    meshes:[Mesh];
+}
+
+root_type Model;

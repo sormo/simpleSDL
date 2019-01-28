@@ -3,7 +3,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Camera.h"
-#include "ObjLoader.h"
+#include "ModelLoader.h"
 #include "VboIndexer.h"
 #include "Text2D.h"
 #include <string>
@@ -15,6 +15,8 @@
 #include <inttypes.h>
 #include "Cylinder.h"
 #include "Light.h"
+#include "Model.h"
+#include "Shader.h"
 
 namespace Application
 {
@@ -22,24 +24,49 @@ namespace Application
     
     CameraRotate g_camera;
 
-    std::unique_ptr<Cylinder> g_cylinder;
+    //std::unique_ptr<Cylinder> g_cylinder;
+    std::unique_ptr<Model> g_model;
+    std::unique_ptr<Shader> g_modelShader;
     std::unique_ptr<Light> g_light;
 
-    void DrawModel()
+    void DrawModel(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
     {
-        // enable blending
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glm::mat4 MVP = projection * view * model;
+        g_modelShader->SetUniform(MVP, "MVP");
+        g_modelShader->SetUniform(model, "M");
+        g_modelShader->SetUniform(g_lightPositionWorldSpace, "lightWorldSpace");
+        
+        // TODO maybe do this more clever
+        glm::vec3 cameraTranslation(glm::inverse(g_camera.GetViewMatrix())[3]);
+        //glm::vec3 cameraTranslation(g_camera.GetViewMatrix()[3]);
 
-        g_cylinder->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace);
+        g_modelShader->SetUniform(cameraTranslation, "cameraWorldSpace");
+
+        g_model->Draw(*g_modelShader);
+    }
+
+    void Draw()
+    {
+        // drawing single model
+        g_modelShader->Begin();
+
+        // enable blending
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        //model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+        //model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+        DrawModel(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+
+        //g_cylinder->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace);
 
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
         lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
-
         g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-        glDisable(GL_BLEND);
+        //glDisable(GL_BLEND);
     }
 
     void RecomputeMVPMatrix()
@@ -61,20 +88,30 @@ namespace Application
         glEnable(GL_DEPTH_TEST);
         // Accept fragment if it closer to the camera than the former one
         glDepthFunc(GL_LESS);
-
+        // Enabel backface culling.
         glEnable(GL_CULL_FACE);
 
         g_camera.Init();
 
         g_lightPositionWorldSpace = glm::vec3(4.0f, 0.0f, 0.0f);
 
-        if (!Text2DInitFont("text2d-32bpp.bmp"))
+        //if (!Text2DInitFont())
+        //{
+        //    printf("Error initializing font.\n");
+        //    return false;
+        //}
+
+        //g_cylinder.reset(new Cylinder());
+        //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
+        g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecNorm.glsl", "shaders/fragDiffuseLightSpecNorm.glsl"));
+        if (!(*g_modelShader))
         {
-            printf("Error initializing font.\n");
+            printf("Error loading shaders.\n");
             return false;
         }
 
-        g_cylinder.reset(new Cylinder());
+        //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
+        g_model.reset(new Model("models/cylinder/cylinder.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal));
         g_light.reset(new Light());
 
         return true;
@@ -104,14 +141,14 @@ namespace Application
 
         // rotate light
         glm::mat4 rotationMatrix(1.0f);
-        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(1.0f), glm::vec3(0.0, 1.0, 0.0));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(0.1f), glm::vec3(0.0, 1.0, 0.0));
         g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        DrawModel();
+        Draw();
 
-        Text2DPrint("Hello World.", 100, 100, 40);
+        //Text2DPrint("Hello World.", 100, 100, 40);
 
         return true;
     }
@@ -158,6 +195,6 @@ namespace Application
 
     void Deinit()
     {
-        Text2DCleanup();
+        //Text2DCleanup();
     }
 }

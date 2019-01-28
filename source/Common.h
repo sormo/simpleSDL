@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "glm/glm.hpp"
 
 #if defined(ANDROID)
@@ -16,6 +17,9 @@ namespace Common
     std::tuple<int32_t, int32_t> GetWindowSize();
     // seconds since epoch
     double GetCurrentTimeInSeconds();
+
+    // directory if not empty, will be delimited with '/'
+    std::string GetDirectoryFromFilePath(const std::string & filePath);
 
     // reading integral types from buffer
     template<class T>

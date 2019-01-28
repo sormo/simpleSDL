@@ -76,6 +76,13 @@ bool init()
         return false;
     }
 
+#if defined(_DEBUG)
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG) != 0)
+    {
+        printf("Error setting debug flag to opengl context.\n");
+    }
+#endif
+
     if (!Application::Init())
     {
         printf("Initializing application failed.\n");

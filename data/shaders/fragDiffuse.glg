@@ -1,0 +1,14 @@
+#version 100
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+varying vec2 UV;
+uniform sampler2D textureDiffuse0;
+
+void main(void)
+{
+	gl_FragColor = texture2D(textureDiffuse0, UV);
+	gl_FragColor.a = 1.0;
+}

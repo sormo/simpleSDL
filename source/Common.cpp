@@ -135,4 +135,11 @@ namespace Common
         }
     }
 
+    std::string GetDirectoryFromFilePath(const std::string & filePath)
+    {
+        auto pos = filePath.find_last_of("\\/");
+        if (pos == std::string::npos)
+            return "";
+        return filePath.substr(0, pos) + "/";
+    }
 }

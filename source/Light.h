@@ -1,14 +1,14 @@
 #pragma once
 #include "glm/glm.hpp"
 #include "Shader.h"
-#include "ObjLoader.h"
+#include "ModelLoader.h"
 #include "VboIndexer.h"
 
 class Light
 {
 public:
     Light()
-        : m_shader("shaderVertexLight.glsl", "shaderFragmentLight.glsl")
+        : m_shader("shaders/vertLight.glsl", "shaders/fragLight.glsl")
     {
         m_verticesCount = InitBuffers();
         if (m_verticesCount == 0)
@@ -47,7 +47,7 @@ private:
         std::vector<glm::vec2> uvs;
         std::vector<glm::vec3> normals;
 
-        if (!LoadObj("cube.obj", vertices, uvs, normals))
+        if (!LoadObj("models/cube/cube.obj", vertices, uvs, normals))
         {
             printf("Error loading obj file.");
             return 0;

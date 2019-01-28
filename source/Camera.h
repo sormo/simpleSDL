@@ -54,7 +54,7 @@ private:
     std::map<int64_t, glm::vec2> m_positions;
 
     float m_distance = 5.0f;
-    float m_horizontalAngle = 3.14f;
+    float m_horizontalAngle = 0.0f;
     float m_verticalAngle = 0.0f;
 };
 

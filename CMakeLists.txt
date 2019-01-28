@@ -31,11 +31,6 @@ set(SDL2MAIN_LIBRARY SDL2main)
 set(SDL2_LIBRARY SDL2)
 
 #
-# GLM include directory
-#
-include_directories("${sourceDir}")
-
-#
 # Sources (relative to the project root dir).
 #
 file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
@@ -52,9 +47,19 @@ foreach(source IN LISTS projectSources)
     source_group("${sourcePathMsvc}" FILES "${source}")
 endforeach() 
 
+set(flatbuffersDir "${projectDir}/contrib/flatbuffers")
+set(modelConvertDir "${projectDir}/modelConvert")
+#
+# GLM include directory
+#
+set(includeForGlm "${sourceDir}")
+
 # Include dirs.
 set(projectIncludeDirs ${projectIncludeDirs}
   "${sdlDir}/include"
+  "${flatbuffersDir}/include"
+  "${modelConvertDir}/include"
+  "${includeForGlm}"
 )
 
 message("Sources: ${projectSources}")
