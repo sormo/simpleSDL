@@ -101,17 +101,6 @@ std::optional<GLuint> CreateProgram(const char * vertexFile, const char * fragme
     return program;
 }
 
-void CheckGlError(const char * function)
-{
-#ifdef _DEBUG
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-    {
-        printf("OpenGl error calling function %s (%d)", function, error);
-        throw std::runtime_error("OpenGl error");
-    }
-#endif
-}
-
 Shader::Shader(const char * vertexFile, const char * fragmentFile)
 {
     m_program = CreateProgram(vertexFile, fragmentFile);
@@ -154,7 +143,7 @@ void Shader::BindBuffer<glm::vec3>(GLuint buffer, GLuint location, uint32_t offs
     glVertexAttribPointer(location, 3, GL_FLOAT, GL_FALSE, stride, (void*)offset);
     CheckGlError("glVertexAttribPointer");
 
-    m_currentLocations.push_back(location);
+    m_boundLocations.push_back(location);
 }
 
 template<>
@@ -177,7 +166,7 @@ void Shader::BindBuffer<glm::vec2>(GLuint buffer, GLuint location, uint32_t offs
     glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, stride, (void*)offset);
     CheckGlError("glVertexAttribPointer");
 
-    m_currentLocations.push_back(location);
+    m_boundLocations.push_back(location);
 }
 
 template<>
@@ -276,11 +265,15 @@ void Shader::Begin()
     CheckGlError("glUseProgram");
 }
 
-void Shader::End()
+void Shader::End(bool disableLocations)
 {
-    for (const auto & v : m_currentLocations)
-        glDisableVertexAttribArray(v);
+    if (disableLocations)
+    {
+        for (auto location : m_boundLocations)
+            glDisableVertexAttribArray(location);
+    }
 
+    m_boundLocations.clear();
     m_currentTexture = 0;
 }
 

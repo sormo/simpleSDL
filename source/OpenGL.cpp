@@ -2,6 +2,9 @@
 #include <SDL.h>
 #include "Common.h"
 #include <cstdio>
+#include <vector>
+#include <string>
+#include <sstream>
 
 #ifndef ANDROID
 PFNGLCREATESHADERPROC glCreateShader;
@@ -38,6 +41,7 @@ PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 PFNGLUNIFORM1IPROC glUniform1i;
 PFNGLUNIFORM3FPROC glUniform3f;
 PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
+PFNGLGETSTRINGIPROC glGetStringi;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -83,6 +87,7 @@ bool InitOpenGL()
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
+    glGetStringi = (PFNGLGETSTRINGIPROC)SDL_GL_GetProcAddress("glGetStringi");
 #endif
 	return glCreateShader && glShaderSource && glCompileShader && glGetShaderiv &&
         glGetShaderInfoLog && glDeleteShader && glAttachShader && glCreateProgram &&
@@ -93,7 +98,7 @@ bool InitOpenGL()
         glGenBuffers && glDeleteBuffers && glBufferData &&
         glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
 #ifndef EMSCRIPTEN
-        glCompressedTexImage2D && glActiveTexture &&
+        glCompressedTexImage2D && glActiveTexture && glGetStringi &&
 #endif
         glGetUniformLocation && glUniformMatrix4fv && glGenerateMipmap &&
         glUniform1i && glUniform3f && glUniformMatrix3fv;
@@ -110,7 +115,7 @@ void PrintOpenGlPointers()
         "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
         "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
 #ifndef EMSCRIPTEN
-        "glCompressedTexImage2D %p\nglActiveTexture %p\n"
+        "glCompressedTexImage2D %p\nglActiveTexture %p\n glGetStringi %p\n"
 #endif
         "glGetUniformLocation %p\nglUniformMatrix4fv %p\nglGenerateMipmap %p\n"
         "glUniform1i %p\nglUniform3f %p\nglUniformMatrix3fv %p\n",
@@ -123,7 +128,7 @@ void PrintOpenGlPointers()
         glGenBuffers, glDeleteBuffers, glBufferData,
         glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
 #ifndef EMSCRIPTEN
-        glCompressedTexImage2D, glActiveTexture,
+        glCompressedTexImage2D, glActiveTexture, glGetStringi,
 #endif
         glGetUniformLocation, glUniformMatrix4fv, glGenerateMipmap,
         glUniform1i, glUniform3f, glUniformMatrix3fv);
@@ -139,3 +144,57 @@ void PrintOpenGlPointers()
 
 }
 #endif
+
+bool IsOpenGlExtensionSupported(const char * extension)
+{
+    static std::vector<std::string> extensions;
+
+#if defined(ANDROID) || defined(EMSCRIPTEN)
+    const GLubyte * extensionNames = glGetString(GL_EXTENSIONS);
+
+    std::stringstream extensionsStream((const char *)extensionNames);
+    while (extensionsStream)
+    {
+        std::string name;
+        extensionsStream >> name;
+        extensions.push_back(std::move(name));
+    }
+#else
+    if (extensions.empty())
+    {
+        GLint numberOfExtensions;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &numberOfExtensions);
+
+        for (GLint i = 0; i < numberOfExtensions; i++)
+        {
+            const GLubyte * extensionName = glGetStringi(GL_EXTENSIONS, i);
+            extensions.push_back((const char*)extensionName);
+        }
+    }
+#endif
+    auto it = std::find(std::begin(extensions), std::end(extensions), extension);
+    return it != std::end(extensions);
+
+}
+
+bool IsVAOSupported()
+{
+#if defined(ANDROID) || defined(EMSCRIPTEN)
+#define VAO_EXTENSION_NAME "GL_OES_vertex_array_object"
+#else
+#define VAO_EXTENSION_NAME "GL_ARB_vertex_array_object"
+#endif
+
+    return IsOpenGlExtensionSupported(VAO_EXTENSION_NAME);
+}
+
+void CheckGlError(const char * function)
+{
+#ifdef _DEBUG
+    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+    {
+        printf("OpenGl error calling function %s (%d)", function, error);
+        throw std::runtime_error("OpenGl error");
+    }
+#endif
+}

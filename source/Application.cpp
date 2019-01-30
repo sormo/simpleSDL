@@ -26,7 +26,7 @@ namespace Application
 
     //std::unique_ptr<Cylinder> g_cylinder;
     std::unique_ptr<Model> g_model;
-    std::unique_ptr<Shader> g_modelShader;
+    std::shared_ptr<Shader> g_modelShader;
     std::unique_ptr<Light> g_light;
 
     void DrawModel(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
@@ -42,7 +42,7 @@ namespace Application
 
         g_modelShader->SetUniform(cameraTranslation, "cameraWorldSpace");
 
-        g_model->Draw(*g_modelShader);
+        g_model->Draw();
     }
 
     void Draw()
@@ -111,7 +111,7 @@ namespace Application
         }
 
         //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
-        g_model.reset(new Model("models/cylinder/cylinder.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal));
+        g_model.reset(new Model("models/cylinder/cylinder.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal, g_modelShader));
         g_light.reset(new Light());
 
         return true;

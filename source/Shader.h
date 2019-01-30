@@ -16,6 +16,7 @@ public:
 
     enum class LocationType { Attrib, Uniform };
     std::vector<GLuint> GetLocations(const std::vector<std::tuple<std::string, LocationType>> & locations);
+    GLuint GetLocation(const char * locationName, LocationType type);
 
     template<class T>
     void BindBuffer(GLuint buffer, const char * locationName, uint32_t offset = 0, uint32_t stride = 0);
@@ -33,20 +34,21 @@ public:
     void BindTexture(GLuint texture, GLuint location);
 
     void Begin();
-    void End();
+    void End(bool disableLocations = false);
 
     operator bool();
 
 private:
 
-    GLuint GetLocation(const char * locationName, LocationType type);
-
     std::unordered_map<std::string, GLuint> m_locations;
     std::optional<GLuint> m_program;
 
     GLuint m_currentTexture = 0;
-    std::vector<GLuint> m_currentLocations;
+    // TODO this is good only for non-vao drawing maybe it's not worth it
+    std::vector<GLuint> m_boundLocations;
 };
+
+using ShaderPtr = std::shared_ptr<Shader>;
 
 //extern template void Shader::BindBuffer<glm::vec3>(GLuint buffer, const char * location, uint32_t offset, uint32_t stride);
 //extern template void Shader::BindBuffer<glm::vec2>(GLuint buffer, const char * location, uint32_t offset, uint32_t stride);

@@ -7,12 +7,10 @@
 #include "Shader.h"
 #include "Common.h"
 
-Mesh::Mesh(const ModelData::MeshT & mesh, const std::string & root, uint32_t flags)
+Mesh::Mesh(const ModelData::MeshT & mesh, const std::string & root, Shader & shader, uint32_t flags)
         : m_flags(flags)
 {
-    printf("Mesh constructor\n");
-
-    InitBuffers(mesh.positions, mesh.normals, mesh.texCoords, mesh.tangents, mesh.bitangents, mesh.indices);
+    InitBuffers(mesh.positions, mesh.normals, mesh.texCoords, mesh.tangents, mesh.bitangents, mesh.indices, shader);
     if (!InitTextures(mesh.textures, root))
     {
         throw std::runtime_error("Error initializing textures.");
@@ -21,20 +19,23 @@ Mesh::Mesh(const ModelData::MeshT & mesh, const std::string & root, uint32_t fla
 
 Mesh::~Mesh()
 {
-    glDeleteBuffers(1, &m_bufferPositions);
-    glDeleteBuffers(1, &m_bufferIndices);
+    glDeleteBuffers(1, &m_positions.vbo);
+    glDeleteBuffers(1, &m_vboIndices);
 
     if (m_flags & Model::FlagNormal)
-        glDeleteBuffers(1, &m_bufferNormals);
+        glDeleteBuffers(1, &m_normals.vbo);
 
     if (m_flags & Model::FlagTextureDiffuse || m_flags & Model::FlagTextureNormal || m_flags & Model::FlagTextureSpecular)
-        glDeleteBuffers(1, &m_bufferTexCoords);
+        glDeleteBuffers(1, &m_texCoords.vbo);
 
     if (m_flags & Model::FlagTextureNormal)
     {
-        glDeleteBuffers(1, &m_bufferTangents);
-        glDeleteBuffers(1, &m_bufferBitangents);
+        glDeleteBuffers(1, &m_tangents.vbo);
+        glDeleteBuffers(1, &m_bitangents.vbo);
     }
+
+    if (m_flags & Model::FlagVAO)
+        glDeleteVertexArrays(1, &m_vao);
 
     glDeleteTextures(m_textureDiffuse.size(), m_textureDiffuse.data());
     glDeleteTextures(m_textureNormal.size(), m_textureNormal.data());
@@ -70,78 +71,111 @@ void Mesh::Draw(Shader & shader)
     //BindTextures(m_textureAmbient, "textureAmbient", shader);
     //BindTextures(m_textureHeight, "textureHeight", shader);
 
-    shader.BindBuffer<glm::vec3>(m_bufferPositions, "positionModelSpace");
-
-    if (m_flags & Model::FlagNormal)
-        shader.BindBuffer<glm::vec3>(m_bufferNormals, "normalModelSpace");
-
-    if (m_flags & Model::FlagTextureDiffuse || m_flags & Model::FlagTextureNormal)
-        shader.BindBuffer<glm::vec2>(m_bufferTexCoords, "vertexUV");
-
-    if (m_flags & Model::FlagTextureNormal)
+    if (m_flags & Model::FlagVAO)
     {
-        shader.BindBuffer<glm::vec3>(m_bufferTangents, "tangentModelSpace");
-        shader.BindBuffer<glm::vec3>(m_bufferBitangents, "bitangentModelSpace");
+        glBindVertexArray(m_vao);
+    }
+    else
+    {
+        shader.BindBuffer<glm::vec3>(m_positions.vbo, m_positions.index);
+
+        if (m_flags & Model::FlagNormal)
+            shader.BindBuffer<glm::vec3>(m_normals.vbo, m_normals.index);
+
+        if (m_flags & Model::FlagTextureDiffuse || m_flags & Model::FlagTextureNormal)
+            shader.BindBuffer<glm::vec2>(m_texCoords.vbo, m_texCoords.index);
+
+        if (m_flags & Model::FlagTextureNormal)
+        {
+            shader.BindBuffer<glm::vec3>(m_tangents.vbo, m_tangents.index);
+            shader.BindBuffer<glm::vec3>(m_bitangents.vbo, m_bitangents.index);
+        }
     }
 
-    shader.BindElementBuffer(m_bufferIndices);
+    shader.BindElementBuffer(m_vboIndices);
 
-    glDrawElements(GL_TRIANGLES,      // mode
-        m_verticesCount,   // count
-        GL_UNSIGNED_SHORT, // type
-        (void*)0);         // element array buffer offset
+    glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
+    CheckGlError("glDrawElements");
 
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+    shader.End(!(m_flags & Model::FlagVAO));
+
+    // cleanup
+    // TODO buffers are bound in 
+    if (m_flags & Model::FlagVAO)
     {
-        printf("OpenGl error calling function glDrawElements (%d)", error);
-        throw std::runtime_error("OpenGl error");
+        glBindVertexArray(0);
     }
 
-    // TODO end here???
-    shader.End();
-    //glBindVertexArray(0);
-    //// always good practice to set everything back to defaults once configured.
-    //glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
 }
- 
+
+template<class T, uint32_t N>
+Mesh::VBO CreateFloatVBO(GLuint index, const std::vector<T> & data, bool isVaoBinded)
+{
+    GLuint vbo;
+
+    glGenBuffers(1, &vbo);
+    CheckGlError("glGenBuffers");
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    CheckGlError("glBindBuffer");
+
+    glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(T), &data[0], GL_STATIC_DRAW);
+    CheckGlError("glBufferData");
+
+    if (isVaoBinded)
+    {
+        glEnableVertexAttribArray(index);
+        CheckGlError("glEnableVertexAttribArray");
+
+        glVertexAttribPointer(index, N, GL_FLOAT, GL_FALSE, 0, nullptr);
+        CheckGlError("glVertexAttribPointer");
+    }
+
+    return { vbo, index };
+}
+
 void Mesh::InitBuffers(const std::vector<ModelData::Vec3> & positions,
     const std::vector<ModelData::Vec3> & normals,
     const std::vector<ModelData::Vec2> & texCoords,
     const std::vector<ModelData::Vec3> & tangents,
     const std::vector<ModelData::Vec3> & bitangents,
-    const std::vector<uint16_t> & indices)
+    const std::vector<uint16_t> & indices,
+    Shader & shader)
 {
-    glGenBuffers(1, &m_bufferPositions);
-    glBindBuffer(GL_ARRAY_BUFFER, m_bufferPositions);
-    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), &positions[0], GL_STATIC_DRAW);
+    bool bindVAO = m_flags & Model::FlagVAO;
+
+    // prepare and bind VAO if possible
+    if (bindVAO)
+    {
+        glGenVertexArrays(1, &m_vao);
+        CheckGlError("glGenVertexArrays");
+
+        glBindVertexArray(m_vao);
+        CheckGlError("glBindVertexArray");
+    }
+
+    m_positions = CreateFloatVBO<ModelData::Vec3, 3>(shader.GetLocation("positionModelSpace", Shader::LocationType::Attrib), positions, bindVAO);
+
+    if (m_flags & Model::FlagNormal)
+        m_normals = CreateFloatVBO<ModelData::Vec3, 3>(shader.GetLocation("normalModelSpace", Shader::LocationType::Attrib), normals, bindVAO);
 
     if (m_flags & Model::FlagTextureDiffuse)
     {
-        glGenBuffers(1, &m_bufferTexCoords);
-        glBindBuffer(GL_ARRAY_BUFFER, m_bufferTexCoords);
-        glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(glm::vec2), &texCoords[0], GL_STATIC_DRAW);
-    }
-
-    if (m_flags & Model::FlagNormal)
-    {
-        glGenBuffers(1, &m_bufferNormals);
-        glBindBuffer(GL_ARRAY_BUFFER, m_bufferNormals);
-        glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
+        m_texCoords = CreateFloatVBO<ModelData::Vec2, 2>(shader.GetLocation("vertexUV", Shader::LocationType::Attrib), texCoords, bindVAO);
     }
 
     if (m_flags & Model::FlagTextureNormal)
     {
-        glGenBuffers(1, &m_bufferTangents);
-        glBindBuffer(GL_ARRAY_BUFFER, m_bufferTangents);
-        glBufferData(GL_ARRAY_BUFFER, tangents.size() * sizeof(glm::vec3), &tangents[0], GL_STATIC_DRAW);
-
-        glGenBuffers(1, &m_bufferBitangents);
-        glBindBuffer(GL_ARRAY_BUFFER, m_bufferBitangents);
-        glBufferData(GL_ARRAY_BUFFER, bitangents.size() * sizeof(glm::vec3), &bitangents[0], GL_STATIC_DRAW);
+        m_tangents = CreateFloatVBO<ModelData::Vec3, 3>(shader.GetLocation("tangentModelSpace", Shader::LocationType::Attrib), tangents, bindVAO);
+        m_bitangents = CreateFloatVBO<ModelData::Vec3, 3>(shader.GetLocation("bitangentModelSpace", Shader::LocationType::Attrib), bitangents, bindVAO);
     }
 
-    glGenBuffers(1, &m_bufferIndices);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufferIndices);
+    glBindVertexArray(0);
+
+    // TODO can be element buffer binded to vao ???
+    glGenBuffers(1, &m_vboIndices);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vboIndices);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint16_t), &indices[0], GL_STATIC_DRAW);
 
     m_verticesCount = indices.size();
@@ -183,21 +217,25 @@ bool Mesh::InitTextures(const std::vector<std::unique_ptr<ModelData::TextureT>> 
     return true;
 }
 
-Model::Model(const char * path, uint32_t flags)
+Model::Model(const char * path, uint32_t flags, ShaderPtr & shader)
+    : m_shader(shader)
 {
     auto data = Common::ReadFile(path);
     auto model = ModelData::UnPackModel(data.data());
     auto root = Common::GetDirectoryFromFilePath(path);
 
+    if (IsVAOSupported())
+        flags |= FlagVAO;
+
     for (size_t i = 0; i < model->meshes.size(); ++i)
     {
         // TODO check is mesh constructed successfully
-        m_meshes.push_back(std::make_unique<Mesh>(*(model->meshes[i].get()), root, flags));
+        m_meshes.push_back(std::make_unique<Mesh>(*(model->meshes[i].get()), root, *m_shader, flags));
     }
 }
 
-void Model::Draw(Shader & shader)
+void Model::Draw()
 {
     for (auto & mesh : m_meshes)
-        mesh->Draw(shader);
+        mesh->Draw(*m_shader);
 }

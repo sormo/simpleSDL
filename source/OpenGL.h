@@ -8,6 +8,7 @@
 #undef GL_GLES_PROTOTYPES
 #undef GL_GLEXT_PROTOTYPES
 
+// extension for VAO on opengl ES
 #define glGenVertexArrays glGenVertexArraysOES
 #define glBindVertexArray glBindVertexArrayOES
 #define glDeleteVertexArrays glDeleteVertexArraysOES
@@ -59,6 +60,7 @@ extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLUNIFORM3FPROC glUniform3f;
 extern PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
+extern PFNGLGETSTRINGIPROC glGetStringi;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN
@@ -70,3 +72,8 @@ extern PFNGLACTIVETEXTUREPROC glActiveTexture;
 
 bool InitOpenGL();
 void PrintOpenGlPointers();
+
+void CheckGlError(const char * function);
+
+bool IsOpenGlExtensionSupported(const char * extension);
+bool IsVAOSupported();

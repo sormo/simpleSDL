@@ -9,7 +9,7 @@
 class Mesh
 {
 public:
-    Mesh(const ModelData::MeshT & mesh, const std::string & root, uint32_t flags);
+    Mesh(const ModelData::MeshT & mesh, const std::string & root, Shader & shader, uint32_t flags);
     ~Mesh();
 
     void BindTextures(const std::vector<GLuint> & textures, const char * name, Shader & shader);
@@ -21,19 +21,32 @@ private:
         const std::vector<ModelData::Vec2> & texCoords,
         const std::vector<ModelData::Vec3> & tangents,
         const std::vector<ModelData::Vec3> & bitangents,
-        const std::vector<uint16_t> & indices);
+        const std::vector<uint16_t> & indices,
+        Shader & shader);
 
     std::vector<GLuint> & GetTextureContainer(ModelData::TextureType type);
     bool InitTextures(const std::vector<std::unique_ptr<ModelData::TextureT>> & textures, const std::string & root);
 
     const uint32_t m_flags;
 
-    GLuint m_bufferPositions;
-    GLuint m_bufferNormals;
-    GLuint m_bufferTexCoords;
-    GLuint m_bufferTangents;
-    GLuint m_bufferBitangents;
-    GLuint m_bufferIndices;
+    GLuint m_vao;
+
+    struct VBO
+    {
+        GLuint vbo;
+        GLuint index; // or location
+    };
+
+    template<class T, uint32_t N>
+    friend Mesh::VBO CreateFloatVBO(GLuint index, const std::vector<T> & data, bool isVaoBinded);
+
+    VBO m_positions;
+    VBO m_normals;
+    VBO m_texCoords;
+    VBO m_tangents;
+    VBO m_bitangents;
+
+    GLuint m_vboIndices;
 
     std::vector<GLuint> m_textureDiffuse;
     std::vector<GLuint> m_textureNormal;
@@ -51,10 +64,13 @@ public:
     static const uint32_t FlagTextureNormal = 0x0002;
     static const uint32_t FlagTextureSpecular = 0x0004;
     static const uint32_t FlagNormal = 0x0008;
+    static const uint32_t FlagVAO = 0x0010;
 
-    Model(const char * path, uint32_t flags);
-    void Draw(Shader & shader);
+    Model(const char * path, uint32_t flags, ShaderPtr & shader);
+    void Draw();
 
 private:
     std::vector<std::unique_ptr<Mesh>> m_meshes;
+
+    ShaderPtr m_shader;
 };
