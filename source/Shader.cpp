@@ -239,6 +239,20 @@ void Shader::SetUniform<glm::vec3>(const glm::vec3 & value, const char * locatio
     SetUniform<glm::vec3>(value, location);
 }
 
+template<>
+void Shader::SetUniform<float>(const float & value, GLuint location)
+{
+    glUniform1f(location, value);
+    CheckGlError("glUniform1f");
+}
+
+template<>
+void Shader::SetUniform<float>(const float & value, const char * locationName)
+{
+    GLuint location = GetLocation(locationName, LocationType::Uniform);
+    SetUniform<float>(value, location);
+}
+
 void Shader::BindTexture(GLuint texture, GLuint location)
 {
     glActiveTexture(GL_TEXTURE0 + m_currentTexture);

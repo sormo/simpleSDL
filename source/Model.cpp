@@ -218,7 +218,7 @@ bool Mesh::InitTextures(const std::vector<std::unique_ptr<ModelData::TextureT>> 
 }
 
 Model::Model(const char * path, uint32_t flags, ShaderPtr & shader)
-    : m_shader(shader)
+    : m_shader(shader), m_flags(flags)
 {
     auto data = Common::ReadFile(path);
     auto model = ModelData::UnPackModel(data.data());
@@ -234,8 +234,30 @@ Model::Model(const char * path, uint32_t flags, ShaderPtr & shader)
     }
 }
 
-void Model::Draw()
+void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light, const Material & material)
 {
+    if (m_flags & FlagMaterial)
+    {
+        m_shader->SetUniform(material.ambient, "material.ambient");
+        m_shader->SetUniform(material.diffuse, "material.diffuse");
+        m_shader->SetUniform(material.specular, "material.specular");
+        m_shader->SetUniform(material.shininess, "material.shininess");
+    }
+
+    Draw(model, view, projection, cameraPosition, light);
+}
+
+void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light)
+{
+    glm::mat4 MVP = projection * view * model;
+    m_shader->SetUniform(MVP, "MVP");
+    m_shader->SetUniform(model, "M");
+    m_shader->SetUniform(cameraPosition, "cameraWorldSpace");
+    m_shader->SetUniform(light.position, "light.position");
+    m_shader->SetUniform(light.ambient, "light.ambient");
+    m_shader->SetUniform(light.diffuse, "light.diffuse");
+    m_shader->SetUniform(light.specular, "light.specular");
+
     for (auto & mesh : m_meshes)
         mesh->Draw(*m_shader);
 }

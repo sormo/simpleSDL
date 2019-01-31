@@ -61,6 +61,7 @@ extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLUNIFORM3FPROC glUniform3f;
 extern PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
 extern PFNGLGETSTRINGIPROC glGetStringi;
+extern PFNGLUNIFORM1FPROC glUniform1f;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN

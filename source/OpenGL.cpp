@@ -41,10 +41,11 @@ PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 PFNGLUNIFORM1IPROC glUniform1i;
 PFNGLUNIFORM3FPROC glUniform3f;
 PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
-PFNGLGETSTRINGIPROC glGetStringi;
+PFNGLUNIFORM1FPROC glUniform1f;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
+PFNGLGETSTRINGIPROC glGetStringi;
 #endif
 
 bool InitOpenGL()
@@ -84,6 +85,7 @@ bool InitOpenGL()
     glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
     glUniform3f = (PFNGLUNIFORM3FPROC)SDL_GL_GetProcAddress("glUniform3f");
     glUniformMatrix3fv = (PFNGLUNIFORMMATRIX3FVPROC)SDL_GL_GetProcAddress("glUniformMatrix3fv");
+    glUniform1f = (PFNGLUNIFORM1FPROC)SDL_GL_GetProcAddress("glUniform1f");
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
@@ -97,6 +99,7 @@ bool InitOpenGL()
         glBindAttribLocation && glEnableVertexAttribArray && glBindBuffer &&
         glGenBuffers && glDeleteBuffers && glBufferData &&
         glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
+        glUniform1f &&
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&
 #endif
@@ -114,6 +117,7 @@ void PrintOpenGlPointers()
         "glBindAttribLocation %p\nglEnableVertexAttribArray %p\nglBindBuffer %p\n"
         "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
         "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
+        "glUniform1f %p\n"
 #ifndef EMSCRIPTEN
         "glCompressedTexImage2D %p\nglActiveTexture %p\n glGetStringi %p\n"
 #endif
@@ -127,6 +131,7 @@ void PrintOpenGlPointers()
         glBindAttribLocation, glEnableVertexAttribArray, glBindBuffer,
         glGenBuffers, glDeleteBuffers, glBufferData,
         glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
+        glUniform1f,
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D, glActiveTexture, glGetStringi,
 #endif

@@ -31,18 +31,23 @@ namespace Application
 
     void DrawModel(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
     {
-        glm::mat4 MVP = projection * view * model;
-        g_modelShader->SetUniform(MVP, "MVP");
-        g_modelShader->SetUniform(model, "M");
-        g_modelShader->SetUniform(g_lightPositionWorldSpace, "lightWorldSpace");
-        
         // TODO maybe do this more clever
         glm::vec3 cameraTranslation(glm::inverse(g_camera.GetViewMatrix())[3]);
         //glm::vec3 cameraTranslation(g_camera.GetViewMatrix()[3]);
 
-        g_modelShader->SetUniform(cameraTranslation, "cameraWorldSpace");
+        Model::Light light;
+        light.position = g_lightPositionWorldSpace;
+        light.ambient = { 0.5f, 0.5f, 0.5f };
+        light.diffuse = { 0.9f, 0.9f, 0.9f };
+        light.specular = { 0.1f, 0.1f, 0.1f };
 
-        g_model->Draw();
+        Model::Material material;
+        material.ambient = { 0.05f, 0.05f, 0.0f };
+        material.diffuse = { 0.5f, 0.5f, 0.4f };
+        material.specular = { 0.7f, 0.7f, 0.04f };
+        material.shininess = 10.0f;
+
+        g_model->Draw(model, view, projection, cameraTranslation, light, material);
     }
 
     void Draw()
@@ -103,7 +108,7 @@ namespace Application
 
         //g_cylinder.reset(new Cylinder());
         //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
-        g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecNorm.glsl", "shaders/fragDiffuseLightSpecNorm.glsl"));
+        g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecColor.glsl", "shaders/fragDiffuseLightSpecColor.glsl"));
         if (!(*g_modelShader))
         {
             printf("Error loading shaders.\n");
@@ -111,7 +116,7 @@ namespace Application
         }
 
         //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
-        g_model.reset(new Model("models/cylinder/cylinder.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal, g_modelShader));
+        g_model.reset(new Model("models/cube/cube.model", Model::FlagNormal | Model::FlagMaterial, g_modelShader));
         g_light.reset(new Light());
 
         return true;

@@ -60,17 +60,38 @@ private:
 class Model
 {
 public:
+    struct Material
+    {
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+        float shininess;
+    };
+
+    struct Light
+    {
+        glm::vec3 position;
+
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+    };
+
     static const uint32_t FlagTextureDiffuse = 0x0001;
     static const uint32_t FlagTextureNormal = 0x0002;
     static const uint32_t FlagTextureSpecular = 0x0004;
     static const uint32_t FlagNormal = 0x0008;
     static const uint32_t FlagVAO = 0x0010;
+    static const uint32_t FlagMaterial = 0x0020;
 
     Model(const char * path, uint32_t flags, ShaderPtr & shader);
-    void Draw();
+    // camera and light positions should be in world space
+    void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light);
+    void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light, const Material & material);
 
 private:
     std::vector<std::unique_ptr<Mesh>> m_meshes;
 
     ShaderPtr m_shader;
+    const uint32_t m_flags;
 };
