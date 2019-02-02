@@ -7,6 +7,7 @@ project(ModelConvert C CXX)
 string(TOLOWER "${CMAKE_SYSTEM_NAME}" targetSystem)
 set(projectDir     "${CMAKE_CURRENT_LIST_DIR}")
 set(sourceDir      "${projectDir}/source")
+set(sourceCommonDir "${projectDir}/../sourceCommon")
 set(targetName     "ModelConvert")
 set(binDir         "${projectDir}/bin")
 set(assimpBuildDir "${projectDir}/build/assimp")
@@ -42,12 +43,31 @@ file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
   "${sourceDir}/*.c"
 )
 
+file(GLOB_RECURSE projectCommonSources RELATIVE ${projectDir}
+  "${sourceCommonDir}/*.h"
+  "${sourceCommonDir}/*.hpp"
+  "${sourceCommonDir}/*.cpp"
+  "${sourceCommonDir}/*.c"
+)
+
+list(APPEND projectSources ${projectCommonSources})
+
 # magic to have directories in visual studio
 foreach(source IN LISTS projectSources)
     get_filename_component(sourcePath "${source}" PATH)
     string(REPLACE "/" "\\" sourcePathMsvc "${sourcePath}")
     source_group("${sourcePathMsvc}" FILES "${source}")
 endforeach() 
+
+#
+# GLM include directory
+#
+set(includeForGlm "${sourceCommonDir}")
+
+# Include dirs.
+set(projectIncludeDirs ${projectIncludeDirs}
+  "${includeForGlm}"
+)
 
 message("Sources: ${projectSources}")
 message("Include dirs: ${projectIncludeDirs}\n")

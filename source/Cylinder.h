@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "ModelLoader.h"
 #include "VboIndexer.h"
+#include "TangentSpace.h"
 
 class Cylinder
 {
@@ -77,7 +78,7 @@ private:
         std::vector<glm::vec3> tangents;
         std::vector<glm::vec3> bitangents;
 
-        Common::ComputeTangentsAndBitangents(vertices, uvs, tangents, bitangents);
+        ComputeTangentsAndBitangents(vertices, uvs, tangents, bitangents);
 
         auto indexed = VboIndex(vertices, uvs, normals, tangents, bitangents);
 

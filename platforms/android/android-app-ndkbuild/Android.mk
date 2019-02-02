@@ -17,7 +17,7 @@ LOCAL_MODULE := libSimpleExample
 LOCAL_C_INCLUDES +=  \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/SDL/include \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/SDL_image \
-  $(LOCAL_PATH)/../../../source \
+  $(LOCAL_PATH)/../../../sourceCommon \
   $(LOCAL_PATH)/../../../modelConvert/include \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/flatbuffers/include
 
@@ -32,7 +32,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Texture.cpp \
   ../../../source/Camera.cpp \
   ../../../source/ModelLoader.cpp \
-  ../../../source/VboIndexer.cpp \
+  ../../../sourceCommon/VboIndexer.cpp \
+  ../../../sourceCommon/TangentSpace.cpp \
   ../../../source/Text2D.cpp \
   ../../../source/Model.cpp
 

@@ -7,6 +7,7 @@ project(simpleSDL C CXX)
 string(TOLOWER "${CMAKE_SYSTEM_NAME}" targetSystem)
 set(projectDir  "${CMAKE_CURRENT_LIST_DIR}")
 set(sourceDir   "${projectDir}/source")
+set(sourceCommonDir   "${projectDir}/sourceCommon")
 set(targetName  "SimpleExample")
 set(binDir      "${projectDir}/bin")
 
@@ -40,6 +41,15 @@ file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
   "${sourceDir}/*.c"
 )
 
+file(GLOB_RECURSE projectCommonSources RELATIVE ${projectDir}
+  "${sourceCommonDir}/*.h"
+  "${sourceCommonDir}/*.hpp"
+  "${sourceCommonDir}/*.cpp"
+  "${sourceCommonDir}/*.c"
+)
+
+list(APPEND projectSources ${projectCommonSources})
+
 # magic to have directories in visual studio
 foreach(source IN LISTS projectSources)
     get_filename_component(sourcePath "${source}" PATH)
@@ -52,7 +62,7 @@ set(modelConvertDir "${projectDir}/modelConvert")
 #
 # GLM include directory
 #
-set(includeForGlm "${sourceDir}")
+set(includeForGlm "${sourceCommonDir}")
 
 # Include dirs.
 set(projectIncludeDirs ${projectIncludeDirs}

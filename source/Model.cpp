@@ -243,6 +243,11 @@ void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat
         m_shader->SetUniform(material.specular, "material.specular");
         m_shader->SetUniform(material.shininess, "material.shininess");
     }
+    else
+    {
+        // hm. I am not sure about this
+        m_shader->SetUniform(material.shininess, "shininess");
+    }
 
     Draw(model, view, projection, cameraPosition, light);
 }

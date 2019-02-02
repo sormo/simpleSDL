@@ -35,7 +35,4 @@ namespace Common
 
     std::vector<uint8_t> ConvertBGRToRGB(const uint8_t * data, uint32_t count);
     std::vector<uint8_t> ConvertARGBToRGBA(const uint8_t * data, uint32_t count);
-
-    void ComputeTangentsAndBitangents(const std::vector<glm::vec3> & vertices, const std::vector<glm::vec2> & uvs,
-                                      std::vector<glm::vec3> & tangents, std::vector<glm::vec3> & bitangents);
 }

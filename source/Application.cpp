@@ -37,15 +37,15 @@ namespace Application
 
         Model::Light light;
         light.position = g_lightPositionWorldSpace;
-        light.ambient = { 0.5f, 0.5f, 0.5f };
-        light.diffuse = { 0.9f, 0.9f, 0.9f };
-        light.specular = { 0.1f, 0.1f, 0.1f };
+        light.ambient = { 0.1f, 0.1f, 0.1f };
+        light.diffuse = { 1.0f, 1.0f, 1.0f };
+        light.specular = { 1.0f, 1.0f, 1.0f };
 
         Model::Material material;
         material.ambient = { 0.05f, 0.05f, 0.0f };
         material.diffuse = { 0.5f, 0.5f, 0.4f };
         material.specular = { 0.7f, 0.7f, 0.04f };
-        material.shininess = 10.0f;
+        material.shininess = 32.0f;
 
         g_model->Draw(model, view, projection, cameraTranslation, light, material);
     }
@@ -93,8 +93,10 @@ namespace Application
         glEnable(GL_DEPTH_TEST);
         // Accept fragment if it closer to the camera than the former one
         glDepthFunc(GL_LESS);
-        // Enabel backface culling.
+        // Enable backface culling.
         glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
 
         g_camera.Init();
 
@@ -108,7 +110,7 @@ namespace Application
 
         //g_cylinder.reset(new Cylinder());
         //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
-        g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecColor.glsl", "shaders/fragDiffuseLightSpecColor.glsl"));
+        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMap.glsl"));
         if (!(*g_modelShader))
         {
             printf("Error loading shaders.\n");
@@ -116,7 +118,7 @@ namespace Application
         }
 
         //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
-        g_model.reset(new Model("models/cube/cube.model", Model::FlagNormal | Model::FlagMaterial, g_modelShader));
+        g_model.reset(new Model("models/cube/cubeMap.model", Model::FlagNormal | Model::FlagTextureDiffuse | Model::FlagTextureSpecular, g_modelShader));
         g_light.reset(new Light());
 
         return true;
