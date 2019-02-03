@@ -46,19 +46,26 @@ namespace Application
 
     void BindModel()
     {
-        Model::LightDirectional light;
-        light.direction = -g_lightPositionWorldSpace;
-        light.ambient = { 0.1f, 0.1f, 0.1f };
-        light.diffuse = { 1.0f, 1.0f, 1.0f };
-        light.specular = { 1.0f, 1.0f, 1.0f };
-
         //Model::Material material;
         //material.ambient = { 1.0f, 1.0f, 1.0f };
         //material.diffuse = { 1.0f, 0.0f, 0.0f };
         //material.specular = { 0.0f, 1.0f, 0.0f };
         //material.shininess = 32.0f;
 
-        g_model->Bind(g_camera.GetPosition(), light);
+        g_modelShader->Begin();
+        g_modelShader->SetUniform(g_camera.GetPosition(), "cameraWorldSpace");
+        g_modelShader->SetUniform(10.0f, "shininess");
+
+        Model::LightPoint light;
+        light.position = g_lightPositionWorldSpace;
+        light.ambient = { 0.1f, 0.1f, 0.1f };
+        light.diffuse = { 1.0f, 1.0f, 1.0f };
+        light.specular = { 1.0f, 1.0f, 1.0f };
+        light.constant = 1.0f;
+        light.linear = 0.09f;
+        light.quadratic = 0.032f;
+
+        light.Bind(*g_modelShader.get());
     }
 
     void Draw()
@@ -78,7 +85,6 @@ namespace Application
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            BindModel();
             g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
         }
 
@@ -118,7 +124,7 @@ namespace Application
 
         g_camera.Init();
 
-        g_lightPositionWorldSpace = glm::vec3(10.0f, 0.0f, 0.0f);
+        g_lightPositionWorldSpace = glm::vec3(5.0f, 0.0f, 0.0f);
 
         //if (!Text2DInitFont())
         //{
@@ -128,7 +134,7 @@ namespace Application
 
         //g_cylinder.reset(new Cylinder());
         //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
-        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMapDirectional.glsl"));
+        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMapPoint.glsl"));
         if (!(*g_modelShader))
         {
             printf("Error loading shaders.\n");

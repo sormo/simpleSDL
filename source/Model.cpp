@@ -224,44 +224,40 @@ Model::Model(const char * path, uint32_t flags, ShaderPtr & shader)
     }
 }
 
-void Model::Bind(const glm::vec3 & cameraPosition, const Light & light)
+void Model::Light::Bind(Shader & shader)
 {
-    m_shader->Begin();
-
-    m_shader->SetUniform(cameraPosition, "cameraWorldSpace");
-    m_shader->SetUniform(light.position, "light.position");
-    m_shader->SetUniform(light.ambient, "light.ambient");
-    m_shader->SetUniform(light.diffuse, "light.diffuse");
-    m_shader->SetUniform(light.specular, "light.specular");
-
-    m_shader->SetUniform(10.0f, "shininess");
+    shader.SetUniform(position, "light.position");
+    shader.SetUniform(ambient, "light.ambient");
+    shader.SetUniform(diffuse, "light.diffuse");
+    shader.SetUniform(specular, "light.specular");
 }
 
-void Model::Bind(const glm::vec3 & cameraPosition, const LightDirectional & light)
+void Model::LightDirectional::Bind(Shader & shader)
 {
-    m_shader->Begin();
-
-    m_shader->SetUniform(cameraPosition, "cameraWorldSpace");
-    m_shader->SetUniform(light.direction, "light.direction");
-    m_shader->SetUniform(light.ambient, "light.ambient");
-    m_shader->SetUniform(light.diffuse, "light.diffuse");
-    m_shader->SetUniform(light.specular, "light.specular");
-
-    m_shader->SetUniform(10.0f, "shininess");
+    shader.SetUniform(direction, "light.direction");
+    shader.SetUniform(ambient, "light.ambient");
+    shader.SetUniform(diffuse, "light.diffuse");
+    shader.SetUniform(specular, "light.specular");
 }
 
-void Model::Bind(const glm::vec3 & cameraPosition, const Light & light, const Material & material)
+void Model::LightPoint::Bind(Shader & shader)
 {
-    m_shader->Begin();
+    shader.SetUniform(position, "light.position");
+    shader.SetUniform(ambient, "light.ambient");
+    shader.SetUniform(diffuse, "light.diffuse");
+    shader.SetUniform(specular, "light.specular");
 
-    assert(m_flags & FlagMaterial);
+    shader.SetUniform(constant, "light.constant");
+    shader.SetUniform(linear, "light.linear");
+    shader.SetUniform(quadratic, "light.quadratic");
+}
 
-    m_shader->SetUniform(material.ambient, "material.ambient");
-    m_shader->SetUniform(material.diffuse, "material.diffuse");
-    m_shader->SetUniform(material.specular, "material.specular");
-    m_shader->SetUniform(material.shininess, "material.shininess");
-
-    Bind(cameraPosition, light);
+void Model::Material::Bind(Shader & shader)
+{
+    shader.SetUniform(ambient, "material.ambient");
+    shader.SetUniform(diffuse, "material.diffuse");
+    shader.SetUniform(specular, "material.specular");
+    shader.SetUniform(shininess, "material.shininess");
 }
 
 void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
