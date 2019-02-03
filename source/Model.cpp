@@ -252,6 +252,22 @@ void Model::LightPoint::Bind(Shader & shader)
     shader.SetUniform(quadratic, "light.quadratic");
 }
 
+void Model::LightSpot::Bind(Shader & shader)
+{
+    shader.SetUniform(position, "light.position");
+    shader.SetUniform(direction, "light.direction");
+    shader.SetUniform(cutOff, "light.cutOff");
+    shader.SetUniform(outerCutOff, "light.outerCutOff");
+
+    shader.SetUniform(ambient, "light.ambient");
+    shader.SetUniform(diffuse, "light.diffuse");
+    shader.SetUniform(specular, "light.specular");
+
+    shader.SetUniform(constant, "light.constant");
+    shader.SetUniform(linear, "light.linear");
+    shader.SetUniform(quadratic, "light.quadratic");
+}
+
 void Model::Material::Bind(Shader & shader)
 {
     shader.SetUniform(ambient, "material.ambient");

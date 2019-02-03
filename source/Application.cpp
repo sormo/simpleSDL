@@ -56,8 +56,12 @@ namespace Application
         g_modelShader->SetUniform(g_camera.GetPosition(), "cameraWorldSpace");
         g_modelShader->SetUniform(10.0f, "shininess");
 
-        Model::LightPoint light;
+        Model::LightSpot light;
         light.position = g_lightPositionWorldSpace;
+        light.direction = -g_lightPositionWorldSpace;
+        light.cutOff = glm::cos(glm::radians(12.5f));
+        light.outerCutOff = glm::cos(glm::radians(17.5f));
+
         light.ambient = { 0.1f, 0.1f, 0.1f };
         light.diffuse = { 1.0f, 1.0f, 1.0f };
         light.specular = { 1.0f, 1.0f, 1.0f };
@@ -134,7 +138,7 @@ namespace Application
 
         //g_cylinder.reset(new Cylinder());
         //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
-        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMapPoint.glsl"));
+        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMapSpot.glsl"));
         if (!(*g_modelShader))
         {
             printf("Error loading shaders.\n");

@@ -107,6 +107,24 @@ public:
         void Bind(Shader & shader);
     };
 
+    struct LightSpot
+    {
+        glm::vec3 position;
+        glm::vec3 direction;
+        float cutOff;
+        float outerCutOff;
+
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+
+        float constant;
+        float linear;
+        float quadratic;
+
+        void Bind(Shader & shader);
+    };
+
     static const uint32_t FlagTextureDiffuse = 0x0001;
     static const uint32_t FlagTextureNormal = 0x0002;
     static const uint32_t FlagTextureSpecular = 0x0004;
