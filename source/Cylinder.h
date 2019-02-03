@@ -58,7 +58,7 @@ public:
                        GL_UNSIGNED_SHORT, // type
                        (void*)0);         // element array buffer offset
 
-        m_shader.End();
+        m_shader.CleanUp();
     }
 
 private:

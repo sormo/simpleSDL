@@ -58,8 +58,6 @@ void Mesh::BindTextures(const std::vector<GLuint> & textures, const char * name,
 // render the mesh
 void Mesh::Draw(Shader & shader)
 {
-    shader.Begin();
-
     if (m_flags & Model::FlagTextureDiffuse)
         BindTextures(m_textureDiffuse, "textureDiffuse", shader);
 
@@ -73,7 +71,7 @@ void Mesh::Draw(Shader & shader)
 
     if (m_flags & Model::FlagVAO)
     {
-        glBindVertexArray(m_vao);
+        shader.BindVAO(m_vao);
     }
     else
     {
@@ -92,21 +90,13 @@ void Mesh::Draw(Shader & shader)
         }
     }
 
+    // TODO can be bound to VAO ???
     shader.BindElementBuffer(m_vboIndices);
 
     glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
     CheckGlError("glDrawElements");
 
-    shader.End(!(m_flags & Model::FlagVAO));
-
-    // cleanup
-    // TODO buffers are bound in 
-    if (m_flags & Model::FlagVAO)
-    {
-        glBindVertexArray(0);
-    }
-
-    glActiveTexture(GL_TEXTURE0);
+    shader.CleanUp();
 }
 
 template<class T, uint32_t N>
@@ -234,8 +224,21 @@ Model::Model(const char * path, uint32_t flags, ShaderPtr & shader)
     }
 }
 
-void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light, const Material & material)
+void Model::Bind(const glm::vec3 & cameraPosition, const Light & light)
 {
+    m_shader->Begin();
+
+    m_shader->SetUniform(cameraPosition, "cameraWorldSpace");
+    m_shader->SetUniform(light.position, "light.position");
+    m_shader->SetUniform(light.ambient, "light.ambient");
+    m_shader->SetUniform(light.diffuse, "light.diffuse");
+    m_shader->SetUniform(light.specular, "light.specular");
+}
+
+void Model::Bind(const glm::vec3 & cameraPosition, const Light & light, const Material & material)
+{
+    m_shader->Begin();
+
     if (m_flags & FlagMaterial)
     {
         m_shader->SetUniform(material.ambient, "material.ambient");
@@ -249,19 +252,14 @@ void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat
         m_shader->SetUniform(material.shininess, "shininess");
     }
 
-    Draw(model, view, projection, cameraPosition, light);
+    Bind(cameraPosition, light);
 }
 
-void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light)
+void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
 {
     glm::mat4 MVP = projection * view * model;
     m_shader->SetUniform(MVP, "MVP");
     m_shader->SetUniform(model, "M");
-    m_shader->SetUniform(cameraPosition, "cameraWorldSpace");
-    m_shader->SetUniform(light.position, "light.position");
-    m_shader->SetUniform(light.ambient, "light.ambient");
-    m_shader->SetUniform(light.diffuse, "light.diffuse");
-    m_shader->SetUniform(light.specular, "light.specular");
 
     for (auto & mesh : m_meshes)
         mesh->Draw(*m_shader);

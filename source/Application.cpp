@@ -23,18 +23,29 @@ namespace Application
     glm::vec3 g_lightPositionWorldSpace;
     
     CameraRotate g_camera;
+    //CameraKeyboard g_camera;
 
     //std::unique_ptr<Cylinder> g_cylinder;
     std::unique_ptr<Model> g_model;
     std::shared_ptr<Shader> g_modelShader;
     std::unique_ptr<Light> g_light;
 
-    void DrawModel(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
-    {
-        // TODO maybe do this more clever
-        glm::vec3 cameraTranslation(glm::inverse(g_camera.GetViewMatrix())[3]);
-        //glm::vec3 cameraTranslation(g_camera.GetViewMatrix()[3]);
+    // positions all containers
+    glm::vec3 g_cubePositions[] = {
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
 
+    void BindModel()
+    {
         Model::Light light;
         light.position = g_lightPositionWorldSpace;
         light.ambient = { 0.1f, 0.1f, 0.1f };
@@ -42,27 +53,34 @@ namespace Application
         light.specular = { 1.0f, 1.0f, 1.0f };
 
         Model::Material material;
-        material.ambient = { 0.05f, 0.05f, 0.0f };
-        material.diffuse = { 0.5f, 0.5f, 0.4f };
-        material.specular = { 0.7f, 0.7f, 0.04f };
+        material.ambient = { 1.0f, 1.0f, 1.0f };
+        material.diffuse = { 1.0f, 0.0f, 0.0f };
+        material.specular = { 0.0f, 1.0f, 0.0f };
         material.shininess = 32.0f;
 
-        g_model->Draw(model, view, projection, cameraTranslation, light, material);
+        g_model->Bind(g_camera.GetPosition(), light, material);
     }
 
     void Draw()
     {
         // drawing single model
-        g_modelShader->Begin();
+        BindModel();
 
         // enable blending
         //glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
-        glm::mat4 model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-        //model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-        DrawModel(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        for (uint32_t i = 0; i < 10; i++)
+        {
+            // calculate the model matrix for each object and pass it to shader before drawing
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, g_cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+            BindModel();
+            g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        }
 
         //g_cylinder->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace);
 

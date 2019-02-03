@@ -13,6 +13,11 @@ void CameraKeyboard::Init()
     ModifyFoV(0.0f);
 }
 
+const glm::vec3 & CameraKeyboard::GetPosition()
+{
+    return m_position;
+}
+
 void CameraKeyboard::RecomputeMatrices()
 {
     // glfwGetTime is called only once, the first time this function is called
@@ -109,6 +114,11 @@ void CameraRotate::Init()
     RecomputeViewMatrix();
 }
 
+const glm::vec3 & CameraRotate::GetPosition()
+{
+    return m_position;
+}
+
 void CameraRotate::Press(const glm::vec2 & position, int64_t id)
 {
     m_positions[id] = position;
@@ -171,13 +181,13 @@ void CameraRotate::Wheel(float value)
 
 void CameraRotate::RecomputeViewMatrix()
 {
-    glm::vec3 position(
+    m_position = glm::vec3(
         m_distance * std::cos(m_verticalAngle) * std::sin(m_horizontalAngle),
         m_distance * std::sin(m_verticalAngle),
         m_distance * std::cos(m_verticalAngle) * std::cos(m_horizontalAngle)
     );
 
-    m_viewMatrix = glm::lookAt(position, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f });
+    m_viewMatrix = glm::lookAt(m_position, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f });
 }
 
 const glm::mat4 & CameraRotate::GetViewMatrix()

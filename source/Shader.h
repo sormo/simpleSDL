@@ -18,6 +18,9 @@ public:
     std::vector<GLuint> GetLocations(const std::vector<std::tuple<std::string, LocationType>> & locations);
     GLuint GetLocation(const char * locationName, LocationType type);
 
+    void BindVAO(GLuint vao);
+
+    // helper functions which has not much meaning here
     template<class T>
     void BindBuffer(GLuint buffer, const char * locationName, uint32_t offset = 0, uint32_t stride = 0);
     template<class T>
@@ -34,7 +37,8 @@ public:
     void BindTexture(GLuint texture, GLuint location);
 
     void Begin();
-    void End(bool disableLocations = false);
+    // cleanup after draw
+    void CleanUp(bool disableLocations = false);
 
     operator bool();
 
@@ -46,6 +50,8 @@ private:
     GLuint m_currentTexture = 0;
     // TODO this is good only for non-vao drawing maybe it's not worth it
     std::vector<GLuint> m_boundLocations;
+
+    bool m_boundVAO = false;
 };
 
 using ShaderPtr = std::shared_ptr<Shader>;

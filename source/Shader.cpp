@@ -117,6 +117,12 @@ Shader::operator bool()
     return (bool)m_program;
 }
 
+void Shader::BindVAO(GLuint vao)
+{
+    glBindVertexArray(vao);
+    m_boundVAO = true;
+}
+
 template<class T>
 void Shader::BindBuffer(GLuint buffer, const char * locationName, uint32_t offset, uint32_t stride)
 {
@@ -279,15 +285,20 @@ void Shader::Begin()
     CheckGlError("glUseProgram");
 }
 
-void Shader::End(bool disableLocations)
+void Shader::CleanUp(bool disableLocations)
 {
-    if (disableLocations)
+    if (m_boundVAO)
+    {
+        glBindVertexArray(0);
+    }
+    else
     {
         for (auto location : m_boundLocations)
             glDisableVertexAttribArray(location);
+        m_boundLocations.clear();
     }
 
-    m_boundLocations.clear();
+    glActiveTexture(GL_TEXTURE0);
     m_currentTexture = 0;
 }
 

@@ -85,9 +85,14 @@ public:
     static const uint32_t FlagMaterial = 0x0020;
 
     Model(const char * path, uint32_t flags, ShaderPtr & shader);
+
+    // bind must be called before drawing
     // camera and light positions should be in world space
-    void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light);
-    void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light & light, const Material & material);
+    // TODO all meshes are drawn with same shader ?
+    void Bind(const glm::vec3 & cameraPosition, const Light & light);
+    void Bind(const glm::vec3 & cameraPosition, const Light & light, const Material & material);
+    
+    void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
 
 private:
     std::vector<std::unique_ptr<Mesh>> m_meshes;

@@ -14,6 +14,8 @@ public:
     const glm::mat4 & GetViewMatrix();
     const glm::mat4 & GetProjectionMatrix();
 
+    const glm::vec3 & GetPosition();
+
     void ModifyFoV(float value);
 
 private:
@@ -45,6 +47,9 @@ public:
 
     const glm::mat4 & GetViewMatrix();
     const glm::mat4 & GetProjectionMatrix();
+
+    const glm::vec3 & GetPosition();
+
 private:
     void RecomputeViewMatrix();
 
@@ -56,6 +61,8 @@ private:
     float m_distance = 5.0f;
     float m_horizontalAngle = 0.0f;
     float m_verticalAngle = 0.0f;
+
+    glm::vec3 m_position;
 };
 
 class Camera2D

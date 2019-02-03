@@ -40,7 +40,7 @@ void main(void)
 
 	// specular
 	vec3 cameraDirectionWorldSpace = normalize(cameraWorldSpace - positionWorldSpace);
-	vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalWorldSpace);
+	vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalize(normalWorldSpace));
 	float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), material.shininess);
 	vec3 specular = light.specular * (specularFactor * material.specular);
 
