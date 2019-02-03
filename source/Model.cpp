@@ -233,24 +233,33 @@ void Model::Bind(const glm::vec3 & cameraPosition, const Light & light)
     m_shader->SetUniform(light.ambient, "light.ambient");
     m_shader->SetUniform(light.diffuse, "light.diffuse");
     m_shader->SetUniform(light.specular, "light.specular");
+
+    m_shader->SetUniform(10.0f, "shininess");
+}
+
+void Model::Bind(const glm::vec3 & cameraPosition, const LightDirectional & light)
+{
+    m_shader->Begin();
+
+    m_shader->SetUniform(cameraPosition, "cameraWorldSpace");
+    m_shader->SetUniform(light.direction, "light.direction");
+    m_shader->SetUniform(light.ambient, "light.ambient");
+    m_shader->SetUniform(light.diffuse, "light.diffuse");
+    m_shader->SetUniform(light.specular, "light.specular");
+
+    m_shader->SetUniform(10.0f, "shininess");
 }
 
 void Model::Bind(const glm::vec3 & cameraPosition, const Light & light, const Material & material)
 {
     m_shader->Begin();
 
-    if (m_flags & FlagMaterial)
-    {
-        m_shader->SetUniform(material.ambient, "material.ambient");
-        m_shader->SetUniform(material.diffuse, "material.diffuse");
-        m_shader->SetUniform(material.specular, "material.specular");
-        m_shader->SetUniform(material.shininess, "material.shininess");
-    }
-    else
-    {
-        // hm. I am not sure about this
-        m_shader->SetUniform(material.shininess, "shininess");
-    }
+    assert(m_flags & FlagMaterial);
+
+    m_shader->SetUniform(material.ambient, "material.ambient");
+    m_shader->SetUniform(material.diffuse, "material.diffuse");
+    m_shader->SetUniform(material.specular, "material.specular");
+    m_shader->SetUniform(material.shininess, "material.shininess");
 
     Bind(cameraPosition, light);
 }

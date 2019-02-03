@@ -46,19 +46,19 @@ namespace Application
 
     void BindModel()
     {
-        Model::Light light;
-        light.position = g_lightPositionWorldSpace;
+        Model::LightDirectional light;
+        light.direction = -g_lightPositionWorldSpace;
         light.ambient = { 0.1f, 0.1f, 0.1f };
         light.diffuse = { 1.0f, 1.0f, 1.0f };
         light.specular = { 1.0f, 1.0f, 1.0f };
 
-        Model::Material material;
-        material.ambient = { 1.0f, 1.0f, 1.0f };
-        material.diffuse = { 1.0f, 0.0f, 0.0f };
-        material.specular = { 0.0f, 1.0f, 0.0f };
-        material.shininess = 32.0f;
+        //Model::Material material;
+        //material.ambient = { 1.0f, 1.0f, 1.0f };
+        //material.diffuse = { 1.0f, 0.0f, 0.0f };
+        //material.specular = { 0.0f, 1.0f, 0.0f };
+        //material.shininess = 32.0f;
 
-        g_model->Bind(g_camera.GetPosition(), light, material);
+        g_model->Bind(g_camera.GetPosition(), light);
     }
 
     void Draw()
@@ -118,7 +118,7 @@ namespace Application
 
         g_camera.Init();
 
-        g_lightPositionWorldSpace = glm::vec3(4.0f, 0.0f, 0.0f);
+        g_lightPositionWorldSpace = glm::vec3(10.0f, 0.0f, 0.0f);
 
         //if (!Text2DInitFont())
         //{
@@ -128,7 +128,7 @@ namespace Application
 
         //g_cylinder.reset(new Cylinder());
         //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
-        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMap.glsl"));
+        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMapDirectional.glsl"));
         if (!(*g_modelShader))
         {
             printf("Error loading shaders.\n");

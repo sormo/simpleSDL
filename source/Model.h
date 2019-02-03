@@ -77,6 +77,15 @@ public:
         glm::vec3 specular;
     };
 
+    struct LightDirectional
+    {
+        glm::vec3 direction;
+
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+    };
+
     static const uint32_t FlagTextureDiffuse = 0x0001;
     static const uint32_t FlagTextureNormal = 0x0002;
     static const uint32_t FlagTextureSpecular = 0x0004;
@@ -90,6 +99,7 @@ public:
     // camera and light positions should be in world space
     // TODO all meshes are drawn with same shader ?
     void Bind(const glm::vec3 & cameraPosition, const Light & light);
+    void Bind(const glm::vec3 & cameraPosition, const LightDirectional & light);
     void Bind(const glm::vec3 & cameraPosition, const Light & light, const Material & material);
     
     void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
