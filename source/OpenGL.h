@@ -62,6 +62,8 @@ extern PFNGLUNIFORM3FPROC glUniform3f;
 extern PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
 extern PFNGLGETSTRINGIPROC glGetStringi;
 extern PFNGLUNIFORM1FPROC glUniform1f;
+extern PFNGLBUFFERSUBDATAPROC glBufferSubData;
+extern PFNGLUNIFORM2FPROC glUniform2f;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN
@@ -74,7 +76,7 @@ extern PFNGLACTIVETEXTUREPROC glActiveTexture;
 bool InitOpenGL();
 void PrintOpenGlPointers();
 
-void CheckGlError(const char * function);
+void CheckGlError(const char * function, const char * file = __FILE__, const int line = __LINE__);
 
 bool IsOpenGlExtensionSupported(const char * extension);
 bool IsVAOSupported();

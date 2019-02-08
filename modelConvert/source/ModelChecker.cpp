@@ -22,6 +22,48 @@ void ValidateWindingOrders(glm::vec3 * positions, glm::vec3 * normals, std::vect
     }
 }
 
+void UnIndexMesh(ModelData::MeshT & mesh)
+{
+    size_t size = mesh.indices.size();
+
+    if (size == 0)
+        return;
+
+    std::vector<ModelData::Vec3> positions(size);
+    std::vector<ModelData::Vec3> normals(size);
+    std::vector<ModelData::Vec2> texCoords(size);
+    std::vector<ModelData::Vec3> tangents(size);
+    std::vector<ModelData::Vec3> bitangents(size);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        positions[i] = mesh.positions[mesh.indices[i]];
+        normals[i] = mesh.normals[mesh.indices[i]];
+
+        if (!mesh.texCoords.empty())
+            texCoords[i] = mesh.texCoords[mesh.indices[i]];
+
+        if (!mesh.tangents.empty())
+        {
+            tangents[i] = mesh.tangents[mesh.indices[i]];
+            bitangents[i] = mesh.bitangents[mesh.indices[i]];
+        }
+    }
+
+    mesh.positions = positions;
+    mesh.normals = normals;
+
+    if (!mesh.texCoords.empty())
+        mesh.texCoords = texCoords;
+
+    if (!mesh.tangents.empty())
+    {
+        mesh.tangents = tangents;
+        mesh.bitangents = bitangents;
+    }
+    mesh.indices.clear();
+}
+
 void ComputeTangentSpace(ModelData::MeshT & mesh)
 {
     size_t dataSize = mesh.positions.size();
@@ -85,8 +127,7 @@ bool CheckModel(ModelData::ModelT & model)
             if (!it->get()->texCoords.empty())
             {
                 std::cout << "No tangent space. Recompute ..." << std::endl;
-                // TODO this will crash if mesh already indexed
-                assert(it->get()->indices.empty());
+                UnIndexMesh(*it->get());
                 ComputeTangentSpace(*it->get());
             }
         }

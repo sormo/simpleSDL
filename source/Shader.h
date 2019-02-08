@@ -5,8 +5,10 @@
 #include <vector>
 #include <unordered_map>
 #include "glm/glm.hpp"
+#include <functional>
 
-std::optional<GLuint> CreateProgram(const char * vertexFile, const char * fragmentFile);
+std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback = nullptr);
+std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char * fragmentData, std::function<void(GLuint)> bindCallback = nullptr);
 
 class Shader
 {
@@ -17,6 +19,7 @@ public:
     enum class LocationType { Attrib, Uniform };
     std::vector<GLuint> GetLocations(const std::vector<std::tuple<std::string, LocationType>> & locations);
     GLuint GetLocation(const char * locationName, LocationType type);
+    GLuint GetLocation(const std::string & locationName, LocationType type);
 
     void BindVAO(GLuint vao);
 

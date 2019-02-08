@@ -42,6 +42,8 @@ PFNGLUNIFORM1IPROC glUniform1i;
 PFNGLUNIFORM3FPROC glUniform3f;
 PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
 PFNGLUNIFORM1FPROC glUniform1f;
+PFNGLBUFFERSUBDATAPROC glBufferSubData;
+PFNGLUNIFORM2FPROC glUniform2f;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -86,6 +88,8 @@ bool InitOpenGL()
     glUniform3f = (PFNGLUNIFORM3FPROC)SDL_GL_GetProcAddress("glUniform3f");
     glUniformMatrix3fv = (PFNGLUNIFORMMATRIX3FVPROC)SDL_GL_GetProcAddress("glUniformMatrix3fv");
     glUniform1f = (PFNGLUNIFORM1FPROC)SDL_GL_GetProcAddress("glUniform1f");
+    glBufferSubData = (PFNGLBUFFERSUBDATAPROC)SDL_GL_GetProcAddress("glBufferSubData");
+    glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
@@ -99,7 +103,7 @@ bool InitOpenGL()
         glBindAttribLocation && glEnableVertexAttribArray && glBindBuffer &&
         glGenBuffers && glDeleteBuffers && glBufferData &&
         glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
-        glUniform1f &&
+        glUniform1f && glBufferSubData && glUniform2f &&
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&
 #endif
@@ -117,7 +121,7 @@ void PrintOpenGlPointers()
         "glBindAttribLocation %p\nglEnableVertexAttribArray %p\nglBindBuffer %p\n"
         "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
         "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
-        "glUniform1f %p\n"
+        "glUniform1f %p\n glBufferSubData %p\n glUniform2f &p\n"
 #ifndef EMSCRIPTEN
         "glCompressedTexImage2D %p\nglActiveTexture %p\n glGetStringi %p\n"
 #endif
@@ -131,7 +135,7 @@ void PrintOpenGlPointers()
         glBindAttribLocation, glEnableVertexAttribArray, glBindBuffer,
         glGenBuffers, glDeleteBuffers, glBufferData,
         glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
-        glUniform1f,
+        glUniform1f, glBufferSubData, glUniform2f,
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D, glActiveTexture, glGetStringi,
 #endif
@@ -193,12 +197,28 @@ bool IsVAOSupported()
     return IsOpenGlExtensionSupported(VAO_EXTENSION_NAME);
 }
 
-void CheckGlError(const char * function)
+const char * ErrorToString(const GLenum errorCode)
+{
+    switch (errorCode)
+    {
+    case GL_NO_ERROR: return "GL_NO_ERROR";
+    case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
+    case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
+    case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+    case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
+    case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW"; // Legacy; not used on GL3+
+    case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";  // Legacy; not used on GL3+
+    default: return "Unknown GL error";
+    } // switch (errorCode)
+}
+
+
+void CheckGlError(const char * function, const char * file, const int line)
 {
 #ifdef _DEBUG
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
     {
-        printf("OpenGl error calling function %s (%d)", function, error);
+        printf("OpenGl error calling function %s, file %s [%d] - %s(0x%X)", function, file, line, ErrorToString(error), error);
         throw std::runtime_error("OpenGl error");
     }
 #endif

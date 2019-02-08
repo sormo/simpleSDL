@@ -2,15 +2,11 @@
 #include "Common.h"
 #include <vector>
 
-std::optional<GLuint> CompileShader(const char * fileName, GLenum type)
+std::optional<GLuint> CompileShader(const char * data, GLenum type)
 {
-    auto data = Common::ReadFile(fileName);
-    data.push_back('\0');
-    const GLchar * str = (const GLchar*)data.data();
-
     GLuint result = glCreateShader(type);
 
-    glShaderSource(result, 1, &str, NULL);
+    glShaderSource(result, 1, &data, NULL);
     glCompileShader(result);
 
     //Check vertex shader for errors
@@ -50,10 +46,10 @@ void PrintProgramInfo(GLuint program)
     }
 }
 
-std::optional<GLuint> CreateProgram(const char * vertexFile, const char * fragmentFile)
+std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char * fragmentData, std::function<void(GLuint)> bindCallback)
 {
-    auto vertexShader = CompileShader(vertexFile, GL_VERTEX_SHADER);
-    auto fragmentShader = CompileShader(fragmentFile, GL_FRAGMENT_SHADER);
+    auto vertexShader = CompileShader(vertexData, GL_VERTEX_SHADER);
+    auto fragmentShader = CompileShader(fragmentData, GL_FRAGMENT_SHADER);
 
     if (!vertexShader || !fragmentShader)
         return std::nullopt;
@@ -64,9 +60,9 @@ std::optional<GLuint> CreateProgram(const char * vertexFile, const char * fragme
     glAttachShader(program, *vertexShader);
     glAttachShader(program, *fragmentShader);
 
-    //// must be done before linking
-    //glBindAttribLocation(program, VERTEX_INDEX, "position");
-    //glBindAttribLocation(program, COLOR_INDEX, "color");
+    // bind locations before linking
+    if (bindCallback)
+        bindCallback(program);
 
     glLinkProgram(program);
 
@@ -101,9 +97,20 @@ std::optional<GLuint> CreateProgram(const char * vertexFile, const char * fragme
     return program;
 }
 
+std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback)
+{
+    auto vertexData = Common::ReadFile(vertexFile);
+    vertexData.push_back('\0');
+
+    auto fragmentData = Common::ReadFile(fragmentFile);
+    fragmentData.push_back('\0');
+
+    return CreateAndLinkProgram((const char *)vertexData.data(), (const char *)fragmentData.data(), bindCallback);
+}
+
 Shader::Shader(const char * vertexFile, const char * fragmentFile)
 {
-    m_program = CreateProgram(vertexFile, fragmentFile);
+    m_program = CreateAndLinkProgramFile(vertexFile, fragmentFile);
 }
 
 Shader::~Shader()
@@ -300,6 +307,11 @@ void Shader::CleanUp(bool disableLocations)
 
     glActiveTexture(GL_TEXTURE0);
     m_currentTexture = 0;
+}
+
+GLuint Shader::GetLocation(const std::string & locationName, LocationType type)
+{
+    return GetLocation(locationName.c_str(), type);
 }
 
 GLuint Shader::GetLocation(const char * locationName, LocationType type)

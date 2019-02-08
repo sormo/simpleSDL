@@ -35,7 +35,8 @@ LOCAL_SRC_FILES :=  \
   ../../../sourceCommon/VboIndexer.cpp \
   ../../../sourceCommon/TangentSpace.cpp \
   ../../../source/Text2D.cpp \
-  ../../../source/Model.cpp
+  ../../../source/Model.cpp \
+  ../../../source/ModelShader.cpp
 
 
 # Linking options

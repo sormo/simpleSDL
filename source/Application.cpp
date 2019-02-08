@@ -16,7 +16,7 @@
 #include "Cylinder.h"
 #include "Light.h"
 #include "Model.h"
-#include "Shader.h"
+#include "ModelShader.h"
 
 namespace Application
 {
@@ -27,7 +27,7 @@ namespace Application
 
     //std::unique_ptr<Cylinder> g_cylinder;
     std::unique_ptr<Model> g_model;
-    std::shared_ptr<Shader> g_modelShader;
+    std::shared_ptr<ModelShader> g_modelShader;
     std::unique_ptr<Light> g_light;
 
     // positions all containers
@@ -52,24 +52,58 @@ namespace Application
         //material.specular = { 0.0f, 1.0f, 0.0f };
         //material.shininess = 32.0f;
 
-        g_modelShader->Begin();
-        g_modelShader->SetUniform(g_camera.GetPosition(), "cameraWorldSpace");
-        g_modelShader->SetUniform(10.0f, "shininess");
+        ModelShader::Data data;
+        data.shininess = 10.0f;
+        data.cameraWorldSpace = g_camera.GetPosition();
+        data.material.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
+        data.material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+        data.material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
 
-        Model::LightSpot light;
-        light.position = g_lightPositionWorldSpace;
-        light.direction = -g_lightPositionWorldSpace;
-        light.cutOff = glm::cos(glm::radians(12.5f));
-        light.outerCutOff = glm::cos(glm::radians(17.5f));
+        data.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
+        data.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
+        data.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
+        data.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
 
-        light.ambient = { 0.1f, 0.1f, 0.1f };
-        light.diffuse = { 1.0f, 1.0f, 1.0f };
-        light.specular = { 1.0f, 1.0f, 1.0f };
-        light.constant = 1.0f;
-        light.linear = 0.09f;
-        light.quadratic = 0.032f;
+        ModelShader::Data::LightPoint lightBlue;
+        lightBlue.position = g_lightPositionWorldSpace;
+        lightBlue.constant = 1.0f;
+        lightBlue.linear = 0.09f;
+        lightBlue.quadratic = 0.032f;
+        lightBlue.ambient = { 0.1f, 0.1f, 0.1f };
+        lightBlue.diffuse = { 0.5f, 0.5f, 0.5f };
+        lightBlue.specular = { 0.5f, 0.5f, 0.5f };
 
-        light.Bind(*g_modelShader.get());
+        data.lightPoint.push_back(lightBlue);
+
+        ModelShader::Data::LightSpot lightRed;
+        lightRed.position = g_lightPositionWorldSpace;
+        lightRed.direction = -g_lightPositionWorldSpace;
+        lightRed.cutOff = glm::cos(glm::radians(12.5f));
+        lightRed.outerCutOff = glm::cos(glm::radians(17.5f));
+        lightRed.ambient = { 0.1f, 0.1f, 0.1f };
+        lightRed.diffuse = { 1.0f, 0.0f, 0.0f };
+        lightRed.specular = { 0.5f, 0.5f, 0.5f };
+        lightRed.constant = 1.0f;
+        lightRed.linear = 0.09f;
+        lightRed.quadratic = 0.032f;
+
+        data.lightSpot.push_back(lightRed);
+
+        ModelShader::Data::LightSpot lightGreen;
+        lightGreen.position = -g_lightPositionWorldSpace;
+        lightGreen.direction = g_lightPositionWorldSpace;
+        lightGreen.cutOff = glm::cos(glm::radians(12.5f));
+        lightGreen.outerCutOff = glm::cos(glm::radians(17.5f));
+        lightGreen.ambient = { 0.1f, 0.1f, 0.1f };
+        lightGreen.diffuse = { 0.0f, 1.0f, 0.0f };
+        lightGreen.specular = { 0.5f, 0.5f, 0.5f };
+        lightGreen.constant = 1.0f;
+        lightGreen.linear = 0.09f;
+        lightGreen.quadratic = 0.032f;
+
+        data.lightSpot.push_back(lightGreen);
+
+        g_model->Bind(data);
     }
 
     void Draw()
@@ -136,17 +170,25 @@ namespace Application
         //    return false;
         //}
 
+        ModelShader::Config modelConfig;
+        modelConfig.textureDiffuseCount = 1;
+        modelConfig.textureNormalCount = 1;
+        modelConfig.lightDirection = true;
+        modelConfig.lightPointCount = 1;
+        modelConfig.lightSpotCount = 2;
+
         //g_cylinder.reset(new Cylinder());
-        //g_modelShader.reset(new Shader("shaders/vertDiffuseLightSpecMapNorm.glsl", "shaders/fragDiffuseLightSpecMapNorm.glsl"));
-        g_modelShader.reset(new Shader("shaders/material/vertColorMap.glsl", "shaders/material/fragColorMapSpot.glsl"));
-        if (!(*g_modelShader))
+        //g_modelShader.reset(new ModelShader("shaders/material/vertColorMapNew.glsl", "shaders/material/fragColorMapSpotMultiple.glsl", modelConfig));
+        g_modelShader.reset(new ModelShader("shaders/material/vertColorMapNewNormal.glsl", "shaders/material/fragColorMapSpotMultipleNormal.glsl", modelConfig));
+        if (!g_modelShader->GetShader())
         {
             printf("Error loading shaders.\n");
             return false;
         }
 
         //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
-        g_model.reset(new Model("models/cube/cubeMap.model", Model::FlagNormal | Model::FlagTextureDiffuse | Model::FlagTextureSpecular, g_modelShader));
+        g_model.reset(new Model("models/cube2/cube2.model", g_modelShader));
+        //g_model.reset(new Model("models/rubix/RubixCube.model", g_modelShader));
         g_light.reset(new Light());
 
         return true;
