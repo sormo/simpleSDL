@@ -36,7 +36,8 @@ LOCAL_SRC_FILES :=  \
   ../../../sourceCommon/TangentSpace.cpp \
   ../../../source/Text2D.cpp \
   ../../../source/Model.cpp \
-  ../../../source/ModelShader.cpp
+  ../../../source/ModelShader.cpp \
+  ../../../source/ShaderGenerator.cpp
 
 
 # Linking options

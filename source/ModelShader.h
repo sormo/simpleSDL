@@ -125,7 +125,7 @@ public:
         std::vector<LightSpot> lightSpot;
     };
 
-    ModelShader(const char * vertexFile, const char * fragmentFile, Config config);
+    ModelShader(Config config);
 
     const Config & GetConfig();
     const Locations & GetLocations();
@@ -147,7 +147,7 @@ private:
 
     Config m_config;
     Locations m_locations;
-    Shader m_shader;
+    std::unique_ptr<Shader> m_shader;
 };
 
 using ModelShaderPtr = std::shared_ptr<ModelShader>;

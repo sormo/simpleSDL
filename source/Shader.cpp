@@ -108,9 +108,9 @@ std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const ch
     return CreateAndLinkProgram((const char *)vertexData.data(), (const char *)fragmentData.data(), bindCallback);
 }
 
-Shader::Shader(const char * vertexFile, const char * fragmentFile)
+Shader::Shader(const char * vertex, const char * fragment)
 {
-    m_program = CreateAndLinkProgramFile(vertexFile, fragmentFile);
+    m_program = CreateAndLinkProgram(vertex, fragment);
 }
 
 Shader::~Shader()

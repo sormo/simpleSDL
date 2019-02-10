@@ -36,6 +36,14 @@ namespace Common
         return result;
     }
 
+    std::string ReadFileToString(const char * name)
+    {
+        auto data = ReadFile(name);
+        data.push_back('\0');
+
+        return (const char *)data.data();
+    }
+
     std::tuple<int32_t, int32_t> GetWindowSize()
     {
         int32_t width, height;

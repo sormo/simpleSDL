@@ -14,6 +14,7 @@
 namespace Common
 {
     std::vector<uint8_t> ReadFile(const char * name);
+    std::string ReadFileToString(const char * name);
     std::tuple<int32_t, int32_t> GetWindowSize();
     // seconds since epoch
     double GetCurrentTimeInSeconds();

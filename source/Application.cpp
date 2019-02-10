@@ -171,15 +171,14 @@ namespace Application
         //}
 
         ModelShader::Config modelConfig;
-        modelConfig.textureDiffuseCount = 1;
-        modelConfig.textureNormalCount = 1;
+        modelConfig.textureDiffuseCount = 0;
+        modelConfig.textureNormalCount = 0;
         modelConfig.lightDirection = true;
-        modelConfig.lightPointCount = 1;
-        modelConfig.lightSpotCount = 2;
+        modelConfig.lightPointCount = 0;
+        modelConfig.lightSpotCount = 0;
 
         //g_cylinder.reset(new Cylinder());
-        //g_modelShader.reset(new ModelShader("shaders/material/vertColorMapNew.glsl", "shaders/material/fragColorMapSpotMultiple.glsl", modelConfig));
-        g_modelShader.reset(new ModelShader("shaders/material/vertColorMapNewNormal.glsl", "shaders/material/fragColorMapSpotMultipleNormal.glsl", modelConfig));
+        g_modelShader.reset(new ModelShader(modelConfig));
         if (!g_modelShader->GetShader())
         {
             printf("Error loading shaders.\n");
@@ -187,8 +186,8 @@ namespace Application
         }
 
         //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
-        g_model.reset(new Model("models/cube2/cube2.model", g_modelShader));
-        //g_model.reset(new Model("models/rubix/RubixCube.model", g_modelShader));
+        //g_model.reset(new Model("models/cube2/cube2.model", g_modelShader));
+        g_model.reset(new Model("models/rubix/RubixCube.model", g_modelShader));
         g_light.reset(new Light());
 
         return true;

@@ -24,14 +24,13 @@ mat3 transposeCustom(mat3 m)
     vec3 i1 = m[1];
     vec3 i2 = m[2];
 
-    return mat3(
-                 vec3(i0.x, i1.x, i2.x),
-                 vec3(i0.y, i1.y, i2.y),
-                 vec3(i0.z, i1.z, i2.z)
-                 );
+    return mat3(vec3(i0.x, i1.x, i2.x),
+                vec3(i0.y, i1.y, i2.y),
+                vec3(i0.z, i1.z, i2.z));
 }
 
-mat3 inverseCustom(mat3 m) {
+mat3 inverseCustom(mat3 m)
+{
   float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
   float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];
   float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];

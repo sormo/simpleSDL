@@ -10,7 +10,7 @@ class Cylinder
 {
 public:
     Cylinder()
-        : m_shader("shaderVertex.glsl", "shaderFragment.glsl")
+        : m_shader(Common::ReadFileToString("shaderVertex.glsl").c_str(), Common::ReadFileToString("shaderFragment.glsl").c_str())
     {
         m_verticesCount = InitBuffers();
         if (m_verticesCount == 0)

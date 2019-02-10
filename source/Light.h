@@ -8,7 +8,7 @@ class Light
 {
 public:
     Light()
-        : m_shader("shaders/vertLight.glsl", "shaders/fragLight.glsl")
+        : m_shader(Common::ReadFileToString("shaders/vertLight.glsl").c_str(), Common::ReadFileToString("shaders/fragLight.glsl").c_str())
     {
         m_verticesCount = InitBuffers();
         if (m_verticesCount == 0)
