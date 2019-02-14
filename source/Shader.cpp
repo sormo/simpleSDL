@@ -326,10 +326,13 @@ GLuint Shader::GetLocation(const char * locationName, LocationType type)
     else
         newLocation = glGetUniformLocation(*m_program, locationName);
 
+    CheckGlError("glGetUniformLocation");
+
     if (newLocation == -1)
     {
         printf("Requested invalid location in shader: %s\n", locationName);
-        throw std::runtime_error("Requested invalid location in shader.");
+        // TODO sometimes location can be optimized away according to constants of material
+        //throw std::runtime_error("Requested invalid location in shader.");
     }
 
     m_locations[locationName] = newLocation;
@@ -343,6 +346,48 @@ std::vector<GLuint> Shader::GetLocations(const std::vector<std::tuple<std::strin
     for (const auto &[name, type] : locations)
         result.push_back(GetLocation(name.c_str(), type));
     return result;
+}
+
+void Shader::PrintUniforms()
+{
+    GLint count;
+    glGetProgramiv(*m_program, GL_ACTIVE_UNIFORMS, &count);
+    printf("Active Uniforms: %d\n", count);
+
+    GLint size; // size of the variable
+    GLenum type; // type of the variable (float, vec3 or mat4, etc)
+
+    const GLsizei bufSize = 128; // maximum name length
+    GLchar name[bufSize]; // variable name in GLSL
+    GLsizei length; // name length
+
+    for (GLint i = 0; i < count; i++)
+    {
+        glGetActiveUniform(*m_program, (GLuint)i, bufSize, &length, &size, &type, name);
+
+        printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
+    }
+}
+
+void Shader::PrintAttributes()
+{
+    GLint count;
+    glGetProgramiv(*m_program, GL_ACTIVE_ATTRIBUTES, &count);
+    printf("Active Attributes: %d\n", count);
+
+    GLint size; // size of the variable
+    GLenum type; // type of the variable (float, vec3 or mat4, etc)
+
+    const GLsizei bufSize = 128; // maximum name length
+    GLchar name[bufSize]; // variable name in GLSL
+    GLsizei length; // name length
+
+    for (GLint i = 0; i < count; i++)
+    {
+        glGetActiveAttrib(*m_program, (GLuint)i, bufSize, &length, &size, &type, name);
+
+        printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
+    }
 }
 
 //template void Shader::BindBuffer<glm::vec3>(GLuint buffer, const char * location, uint32_t offset, uint32_t stride);

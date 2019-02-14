@@ -44,6 +44,8 @@ PFNGLUNIFORMMATRIX3FVPROC glUniformMatrix3fv;
 PFNGLUNIFORM1FPROC glUniform1f;
 PFNGLBUFFERSUBDATAPROC glBufferSubData;
 PFNGLUNIFORM2FPROC glUniform2f;
+PFNGLGETACTIVEUNIFORMPROC glGetActiveUniform;
+PFNGLGETACTIVEATTRIBPROC glGetActiveAttrib;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -90,6 +92,8 @@ bool InitOpenGL()
     glUniform1f = (PFNGLUNIFORM1FPROC)SDL_GL_GetProcAddress("glUniform1f");
     glBufferSubData = (PFNGLBUFFERSUBDATAPROC)SDL_GL_GetProcAddress("glBufferSubData");
     glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
+    glGetActiveUniform = (PFNGLGETACTIVEUNIFORMPROC)SDL_GL_GetProcAddress("glGetActiveUniform");
+    glGetActiveAttrib = (PFNGLGETACTIVEATTRIBPROC)SDL_GL_GetProcAddress("glGetActiveAttrib");
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
@@ -104,6 +108,7 @@ bool InitOpenGL()
         glGenBuffers && glDeleteBuffers && glBufferData &&
         glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
         glUniform1f && glBufferSubData && glUniform2f &&
+        glGetActiveUniform && glGetActiveAttrib &&
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&
 #endif
@@ -122,6 +127,7 @@ void PrintOpenGlPointers()
         "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
         "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
         "glUniform1f %p\n glBufferSubData %p\n glUniform2f &p\n"
+        "glGetActiveUniform %p\n glGetActiveAttrib %p\n"
 #ifndef EMSCRIPTEN
         "glCompressedTexImage2D %p\nglActiveTexture %p\n glGetStringi %p\n"
 #endif
@@ -136,6 +142,7 @@ void PrintOpenGlPointers()
         glGenBuffers, glDeleteBuffers, glBufferData,
         glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
         glUniform1f, glBufferSubData, glUniform2f,
+        glGetActiveUniform, glGetActiveAttrib,
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D, glActiveTexture, glGetStringi,
 #endif

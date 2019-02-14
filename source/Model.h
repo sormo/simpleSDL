@@ -6,10 +6,24 @@
 #include <memory>
 #include <string>
 
+struct ModelMaterial
+{
+    struct Textures
+    {
+        std::vector<GLuint> ambient;
+        std::vector<GLuint> diffuse;
+        std::vector<GLuint> specular;
+        std::vector<GLuint> normal;
+    };
+    Textures textures;
+    std::unique_ptr<ModelShader> shader;
+};
+
 class Mesh
 {
 public:
-    Mesh(const ModelData::MeshT & mesh, const std::string & root, ModelShader & shader);
+
+    Mesh(const ModelData::MeshT & mesh, ModelMaterial & material);
     ~Mesh();
 
     void Draw();
@@ -22,7 +36,6 @@ private:
                         const std::vector<ModelData::Vec3> & bitangents,
                         const std::vector<uint16_t> & indices);
 
-    std::vector<GLuint> & GetTextureContainer(ModelData::TextureType type);
     bool InitTextures(const std::vector<std::unique_ptr<ModelData::TextureT>> & textures, const std::string & root);
 
     GLuint m_vao;
@@ -35,21 +48,16 @@ private:
 
     GLuint m_vboIndices;
 
-    std::vector<GLuint> m_textureDiffuse;
-    std::vector<GLuint> m_textureNormal;
-    std::vector<GLuint> m_textureSpecular;
-    std::vector<GLuint> m_textureAmbient;
-    std::vector<GLuint> m_textureHeight;
-
     GLuint m_verticesCount;
 
-    ModelShader * m_shader = nullptr;
+    ModelMaterial & m_material;
 };
 
 class Model
 {
 public:
-    Model(const char * path, ModelShaderPtr & shader);
+    Model(const char * path, ModelShader::ConfigLight light);
+    ~Model();
 
     // bind must be called before drawing
     // camera and light positions should be in world space
@@ -59,7 +67,10 @@ public:
     void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
 
 private:
-    std::vector<std::unique_ptr<Mesh>> m_meshes;
+    const ModelShader::ConfigLight m_configLight;
 
-    ModelShaderPtr m_shader;
+    std::unique_ptr<ModelMaterial> CreateMaterial(const std::string & root, ModelData::MaterialT & material);
+
+    std::vector<std::unique_ptr<Mesh>> m_meshes;
+    std::vector<std::unique_ptr<ModelMaterial>> m_materials;
 };

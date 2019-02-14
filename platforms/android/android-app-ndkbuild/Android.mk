@@ -37,7 +37,9 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Text2D.cpp \
   ../../../source/Model.cpp \
   ../../../source/ModelShader.cpp \
-  ../../../source/ShaderGenerator.cpp
+  ../../../source/ShaderGenerator.cpp \
+  ../../../source/TextureManager.cpp \
+  ../../../sourceCommon/CommonProject.cpp
 
 
 # Linking options

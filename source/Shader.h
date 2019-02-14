@@ -45,6 +45,9 @@ public:
 
     operator bool();
 
+    void PrintUniforms();
+    void PrintAttributes();
+
 private:
 
     std::unordered_map<std::string, GLuint> m_locations;

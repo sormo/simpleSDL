@@ -4,16 +4,67 @@
 class ModelShader
 {
 public:
+    // right now lights are part of shader config which is possibly not necessary
+    struct ConfigLight
+    {
+        bool directional = false;
+        uint32_t pointCount = 0;
+        uint32_t spotCount = 0;
+    };
+
+    struct Material
+    {
+        glm::vec3 ambient;
+        glm::vec3 diffuse;
+        glm::vec3 specular;
+        float shininess;
+    };
+
+    struct TextureStackEntry
+    {
+        enum class Operation
+        {
+            // T = T1 * T2
+            Multiply = 0,
+            // T = T1 + T2
+            Add = 0x1,
+            // T = T1 - T2
+            Substract = 0x2,
+            // T = T1 / T2
+            Divide = 0x3,
+            // T = (T1 + T2) - (T1 * T2)
+            SmoothAdd = 0x4,
+            // T = T1 + (T2-0.5)
+            SignedAdd = 0x5,
+        };
+
+        float factor;
+        Operation operation;
+    };
+
+    struct TextureMaps
+    {
+        std::vector<TextureStackEntry> ambient;
+        std::vector<TextureStackEntry> diffuse;
+        std::vector<TextureStackEntry> specular;
+        std::vector<TextureStackEntry> normal;
+    };
+
     struct Config
     {
-        uint32_t textureAmbientCount = 0;
-        uint32_t textureDiffuseCount = 0;
-        uint32_t textureSpecularCount = 0;
-        uint32_t textureNormalCount = 0;
+        enum class Flags : uint32_t
+        {
+            // material will be binded at runtime from data
+            UseRuntimeMaterial = 0x0001
+        };
 
-        bool lightDirection = false;
-        uint32_t lightPointCount = 0;
-        uint32_t lightSpotCount = 0;
+        Material material;
+
+        TextureMaps textures;
+
+        ConfigLight light;
+
+        uint32_t flags = 0;
 
         // determines whether this config needs UV coordinates
         bool NeedsUVs() const;
@@ -33,12 +84,11 @@ public:
             GLuint ambient;
             GLuint diffuse;
             GLuint specular;
+            GLuint shininess;
         };
 
         // material
         Material material;
-
-        GLuint shininess;
 
         GLuint cameraWorldSpace;
 
@@ -79,15 +129,8 @@ public:
 
     struct Data
     {
-        struct Material
-        {
-            glm::vec3 ambient;
-            glm::vec3 diffuse;
-            glm::vec3 specular;
-        };
-
         Material material;
-        float shininess;
+
         glm::vec3 cameraWorldSpace;
 
         struct Light

@@ -15,7 +15,7 @@ void AppendAttributes(const ModelShader::Config & config, std::string & result)
     result += "attribute vec3 normalModelSpace;\n";
     if (config.NeedsUVs())
         result += "attribute vec2 vertexUV;\n";
-    if (config.textureNormalCount)
+    if (config.textures.normal.size())
     {
         result += "attribute vec3 tangentModelSpace;\n";
         //result += "attribute vec3 bitangentModelSpace;\n";
@@ -35,29 +35,32 @@ void AppendUniforms(const ModelShader::Config & config, std::string & result)
 void AppendUniformsMaterial(const ModelShader::Config & config, std::string & result)
 {
     result += "// *** material uniforms ***\n";
-    result += "struct Material\n";
-    result += "{\n";
-    result += "    vec3 ambient;\n";
-    result += "    vec3 diffuse;\n";
-    result += "    vec3 specular;\n";
-    result += "};\n";
-    result += "uniform Material material;\n";
-    result += "uniform float shininess;\n";
-    if (config.textureAmbientCount)
-        result += "uniform sampler2D textureAmbient[" + std::to_string(config.textureAmbientCount) + "];\n";
-    if (config.textureDiffuseCount)
-        result += "uniform sampler2D textureDiffuse[" + std::to_string(config.textureDiffuseCount) + "];\n";
-    if (config.textureSpecularCount)
-        result += "uniform sampler2D textureSpecular[" + std::to_string(config.textureSpecularCount) + "];\n";
-    if (config.textureNormalCount)
-        result += "uniform sampler2D textureNormal[" + std::to_string(config.textureNormalCount) + "];\n";
+    if (config.flags & (uint32_t)ModelShader::Config::Flags::UseRuntimeMaterial)
+    {
+        result += "struct Material\n";
+        result += "{\n";
+        result += "    vec3 ambient;\n";
+        result += "    vec3 diffuse;\n";
+        result += "    vec3 specular;\n";
+        result += "    vec3 shininess;\n";
+        result += "};\n";
+        result += "uniform Material material;\n";
+    }
+    if (config.textures.ambient.size())
+        result += "uniform sampler2D textureAmbient[" + std::to_string(config.textures.ambient.size()) + "];\n";
+    if (config.textures.diffuse.size())
+        result += "uniform sampler2D textureDiffuse[" + std::to_string(config.textures.diffuse.size()) + "];\n";
+    if (config.textures.specular.size())
+        result += "uniform sampler2D textureSpecular[" + std::to_string(config.textures.specular.size()) + "];\n";
+    if (config.textures.normal.size())
+        result += "uniform sampler2D textureNormal[" + std::to_string(config.textures.normal.size()) + "];\n";
     result += "// *************************\n";
 }
 
 void AppendUniformsLight(const ModelShader::Config & config, std::string & result)
 {
     result += "// *** light uniforms ***\n";
-    if (config.lightDirection)
+    if (config.light.directional)
     {
         result += "struct LightDirectional\n";
         result += "{\n";
@@ -68,7 +71,7 @@ void AppendUniformsLight(const ModelShader::Config & config, std::string & resul
         result += "};\n";
         result += "uniform LightDirectional lightDirectional;\n";
     }
-    if (config.lightPointCount)
+    if (config.light.pointCount)
     {
         result += "struct LightPoint\n";
         result += "{\n";
@@ -80,9 +83,9 @@ void AppendUniformsLight(const ModelShader::Config & config, std::string & resul
         result += "    float linear;\n";
         result += "    float quadratic;\n";
         result += "};\n";
-        result += "uniform LightPoint lightPoint[" + std::to_string(config.lightPointCount) + "];\n";
+        result += "uniform LightPoint lightPoint[" + std::to_string(config.light.pointCount) + "];\n";
     }
-    if (config.lightSpotCount)
+    if (config.light.spotCount)
     {
         result += "struct LightSpot\n";
         result += "{\n";
@@ -97,7 +100,7 @@ void AppendUniformsLight(const ModelShader::Config & config, std::string & resul
         result += "    float linear;\n";
         result += "    float quadratic;\n";
         result += "};\n";
-        result += "uniform LightSpot lightSpot[" + std::to_string(config.lightSpotCount) + "];\n";
+        result += "uniform LightSpot lightSpot[" + std::to_string(config.light.spotCount) + "];\n";
     }
     result += "// **********************\n";
 }
@@ -106,7 +109,7 @@ void AppendVaryings(const ModelShader::Config & config, std::string & result)
 {
     result += "// *** varyings ***\n";
     result += "varying vec3 positionWorldSpace;\n";
-    if (config.textureNormalCount)
+    if (config.textures.normal.size())
         result += "varying mat3 TBN;\n";
     else
         result += "varying vec3 normalWorldSpace;\n";
@@ -151,7 +154,7 @@ void AppendBodyVertex(const ModelShader::Config & config, std::string & result)
     result += "  gl_Position =  MVP * vec4(positionModelSpace, 1.0);\n";
     result += "  positionWorldSpace = vec3(M * vec4(positionModelSpace, 1.0));\n\n";
     result += "  mat3 normalMatrix = transposeCustom(inverseCustom(mat3(M)));\n";
-    if (config.textureNormalCount)
+    if (config.textures.normal.size())
     {
         result += "  vec3 T = normalize(normalMatrix * tangentModelSpace);\n";
         result += "  vec3 N = normalize(normalMatrix * normalModelSpace);\n";
@@ -169,7 +172,7 @@ void AppendBodyVertex(const ModelShader::Config & config, std::string & result)
     result += "// ******************\n";
 }
 
-void AppendFunctionLightDirectional(std::string & result)
+void AppendFunctionLightDirectional(std::string & result, const std::string & shininess)
 {
     result += "vec3 CalcLightDirectional(LightDirectional light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
     result += "{\n";
@@ -178,7 +181,7 @@ void AppendFunctionLightDirectional(std::string & result)
     result += "    float diffuseFactor = max(dot(normalize(normal), ligthDirectionWorldSpace), 0.0);\n";
     result += "    // specular shading\n";
     result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalize(normal));\n";
-    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), shininess);\n";
+    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
     result += "    // combine results\n";
     result += "    vec3 ambient = light.ambient * ambientColor;\n";
     result += "    vec3 diffuse = light.diffuse * diffuseFactor * diffuseColor;\n";
@@ -187,7 +190,7 @@ void AppendFunctionLightDirectional(std::string & result)
     result += "}\n";
 }
 
-void AppendFunctionLightPoint(std::string & result)
+void AppendFunctionLightPoint(std::string & result, const std::string & shininess)
 {
     result += "vec3 CalcLightPoint(LightPoint light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
     result += "{\n";
@@ -196,7 +199,7 @@ void AppendFunctionLightPoint(std::string & result)
     result += "    float diffuseFactor = max(dot(normalize(normal), ligthDirectionWorldSpace), 0.0);\n";
     result += "    // specular shading\n";
     result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalize(normal));\n";
-    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), shininess);\n";
+    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
     result += "    // attenuation\n";
     result += "    float distance = length(light.position - positionWorldSpace);\n";
     result += "    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));\n";
@@ -211,7 +214,7 @@ void AppendFunctionLightPoint(std::string & result)
     result += "}\n";
 }
 
-void AppendFunctionLightSpot(std::string & result)
+void AppendFunctionLightSpot(std::string & result, const std::string & shininess)
 {
     result += "vec3 CalcLightSpot(LightSpot light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
     result += "{\n";
@@ -220,7 +223,7 @@ void AppendFunctionLightSpot(std::string & result)
     result += "    float diffuseFactor = max(dot(normal, ligthDirectionWorldSpace), 0.0);\n";
     result += "    // specular shading\n";
     result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normal);\n";
-    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), shininess);\n";
+    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
     result += "    // attenuation\n";
     result += "    float distance = length(light.position - positionWorldSpace);\n";
     result += "    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));\n";
@@ -241,40 +244,98 @@ void AppendFunctionLightSpot(std::string & result)
 
 void AppendFunctionLight(const ModelShader::Config & config, std::string & result)
 {
+    std::string shininess = std::to_string(config.material.shininess);
+    if (config.flags & (uint32_t)ModelShader::Config::Flags::UseRuntimeMaterial)
+        shininess = "material.shininess";
+
     result += "// *** light functions ***\n";
-    if (config.lightDirection)
-        AppendFunctionLightDirectional(result);
-    if (config.lightPointCount)
-        AppendFunctionLightPoint(result);
-    if (config.lightSpotCount)
-        AppendFunctionLightSpot(result);
+    if (config.light.directional)
+        AppendFunctionLightDirectional(result, shininess);
+    if (config.light.pointCount)
+        AppendFunctionLightPoint(result, shininess);
+    if (config.light.spotCount)
+        AppendFunctionLightSpot(result, shininess);
     result += "// ***********************\n";
+}
+
+void AppendFunctionColorOperations(std::string & result)
+{
+    result += "// *** color operations ***\n";
+    result += "vec3 CalcColorAdd(vec3 c1, vec3 c2)\n";
+    result += "{\n";
+    result += "    return c1 + c2;\n";
+    result += "}\n";
+    result += "vec3 CalcColorMultiply(vec3 c1, vec3 c2)\n";
+    result += "{\n";
+    result += "    return c1 * c2;\n";
+    result += "}\n";
+    result += "vec3 CalcColorSubstract(vec3 c1, vec3 c2)\n";
+    result += "{\n";
+    result += "    return c1 - c2;\n";
+    result += "}\n";
+    result += "vec3 CalcColorDivide(vec3 c1, vec3 c2)\n";
+    result += "{\n";
+    result += "    return c1 / c2;\n";
+    result += "}\n";
+    result += "vec3 CalcColorSmoothAdd(vec3 c1, vec3 c2)\n";
+    result += "{\n";
+    result += "    return (c1 + c2) - (c1 * c2);\n";
+    result += "}\n";
+    result += "vec3 CalcColorSignedAdd(vec3 c1, vec3 c2)\n";
+    result += "{\n";
+    result += "    return c1 + (c2 - 0.5);\n";
+    result += "}\n";
+    result += "// ************************\n";
+}
+
+std::string MapOperation(ModelShader::TextureStackEntry::Operation operation)
+{
+    switch (operation)
+    {
+    case ModelShader::TextureStackEntry::Operation::Add:
+        return "CalcColorAdd";
+    case ModelShader::TextureStackEntry::Operation::Divide:
+        return "CalcColorAdd";
+    case ModelShader::TextureStackEntry::Operation::Multiply:
+        return "CalcColorMultiply";
+    case ModelShader::TextureStackEntry::Operation::SignedAdd:
+        return "CalcColorAdd";
+    case ModelShader::TextureStackEntry::Operation::SmoothAdd:
+        return "CalcColorAdd";
+    case ModelShader::TextureStackEntry::Operation::Substract:
+        return "CalcColorAdd";
+    }
+}
+
+void AppendFunctionColorSpecific(std::string name, const std::string & base, const std::vector<ModelShader::TextureStackEntry> & stack, std::string & result)
+{
+    result += "vec3 Calc" + name + "Color()\n";
+    result += "{\n";
+    result += "    vec3 result = " + base + ";\n\n";
+    
+    for (size_t i = 0; i < stack.size(); ++i)
+    {
+        std::string sample("texture2D(texture" + name + "[" + std::to_string(i) + "], vertexUVA).rgb");
+        result += "    result = " + MapOperation(stack[i].operation) + "(result, " + sample + ");\n";
+    }
+
+    result += "    return result;\n";
+    result += "}\n";
+}
+
+std::string Convert(const glm::vec3 & c)
+{
+    return "vec3(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " + std::to_string(c.b) + ")";
 }
 
 void AppendFunctionColor(const ModelShader::Config & config, std::string & result)
 {
+    bool useMaterial = config.flags & (uint32_t)ModelShader::Config::Flags::UseRuntimeMaterial;
+
     result += "// *** color functions ***\n";
-    result += "vec3 CalcAmbientColor()\n";
-    result += "{\n";
-    if (config.textureAmbientCount)
-        result += "    return texture2D(textureAmbient[0], vertexUVA).rgb;\n";
-    else
-        result += "    return material.ambient;\n";
-    result += "}\n";
-    result += "vec3 CalcDiffuseColor()\n";
-    result += "{\n";
-    if (config.textureDiffuseCount)
-        result += "    return texture2D(textureDiffuse[0], vertexUVA).rgb;\n";
-    else
-        result += "    return material.diffuse;\n";
-    result += "}\n";
-    result += "vec3 CalcSpecularColor()\n";
-    result += "{\n";
-    if (config.textureSpecularCount)
-        result += "    return texture2D(textureDiffuse[0], vertexUVA).rgb;\n";
-    else
-        result += "    return material.specular;\n";
-    result += "}\n";
+    AppendFunctionColorSpecific("Ambient", useMaterial ? "material.ambient" : Convert(config.material.ambient), config.textures.ambient, result);
+    AppendFunctionColorSpecific("Diffuse", useMaterial ? "material.diffuse" : Convert(config.material.diffuse), config.textures.diffuse, result);
+    AppendFunctionColorSpecific("Specular", useMaterial ? "material.specular" : Convert(config.material.specular), config.textures.specular, result);
     result += "// ***********************\n";
 }
 
@@ -291,8 +352,9 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
  
     result += "    vec3 result = vec3(0.0, 0.0, 0.0);\n";
     result += "    vec3 normal = vec3(0.0, 0.0, 0.0);\n\n";
-    if (config.textureNormalCount)
+    if (config.textures.normal.size())
     {
+        // TODO single texture normal ???
         result += "    vec3 normalTangentSpace = texture2D(textureNormal[0], vertexUVA).rgb;\n";
         result += "    normalTangentSpace = normalize(normalTangentSpace * 2.0 - 1.0);\n";
         result += "    normal = normalize(TBN * normalTangentSpace);\n\n";
@@ -301,16 +363,16 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
     {
         result += "    normal = normalize(normalWorldSpace);\n\n";
     }
-    if (config.lightDirection)
+    if (config.light.directional)
         result += "    result = CalcLightDirectional(lightDirectional, ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
-    if (config.lightPointCount)
+    if (config.light.pointCount)
     {
-        result += "    for(int i = 0; i < " + std::to_string(config.lightPointCount) + "; i++)\n";
+        result += "    for(int i = 0; i < " + std::to_string(config.light.pointCount) + "; i++)\n";
         result += "        result += CalcLightPoint(lightPoint[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
     }
-    if (config.lightSpotCount)
+    if (config.light.spotCount)
     {
-        result += "    for(int i = 0; i < " + std::to_string(config.lightSpotCount) + "; i++)\n";
+        result += "    for(int i = 0; i < " + std::to_string(config.light.spotCount) + "; i++)\n";
         result += "        result += CalcLightSpot(lightSpot[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
     }
     result += "    gl_FragColor.rgb = result;\n";
@@ -343,6 +405,7 @@ std::string GenerateFragment(const ModelShader::Config & config)
     AppendUniformsLight(config, result);
     AppendVaryings(config, result);
     AppendFunctionLight(config, result);
+    AppendFunctionColorOperations(result);
     AppendFunctionColor(config, result);
     AppendBodyFragment(config, result);
 

@@ -36,7 +36,7 @@ int main(int32_t argc, char * argv[])
         if (path.extension() == ".model")
         {
             std::ifstream file(argv[i], std::ios::binary | std::ios::ate);
-            size_t fileSize = file.tellg();
+            size_t fileSize = (size_t)file.tellg();
             file.seekg(std::ios::beg);
 
             std::vector<char> fileData(fileSize);

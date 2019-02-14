@@ -53,7 +53,7 @@ namespace Application
         //material.shininess = 32.0f;
 
         ModelShader::Data data;
-        data.shininess = 10.0f;
+        data.material.shininess = 10.0f;
         data.cameraWorldSpace = g_camera.GetPosition();
         data.material.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
         data.material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -70,7 +70,7 @@ namespace Application
         lightBlue.linear = 0.09f;
         lightBlue.quadratic = 0.032f;
         lightBlue.ambient = { 0.1f, 0.1f, 0.1f };
-        lightBlue.diffuse = { 0.5f, 0.5f, 0.5f };
+        lightBlue.diffuse = { 0.9f, 0.9f, 0.9f };
         lightBlue.specular = { 0.5f, 0.5f, 0.5f };
 
         data.lightPoint.push_back(lightBlue);
@@ -115,7 +115,7 @@ namespace Application
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
-        for (uint32_t i = 0; i < 10; i++)
+        for (uint32_t i = 0; i < 1; i++)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f);
@@ -170,24 +170,14 @@ namespace Application
         //    return false;
         //}
 
-        ModelShader::Config modelConfig;
-        modelConfig.textureDiffuseCount = 0;
-        modelConfig.textureNormalCount = 0;
-        modelConfig.lightDirection = true;
-        modelConfig.lightPointCount = 0;
-        modelConfig.lightSpotCount = 0;
+        ModelShader::ConfigLight light;
+        light.directional = false;
+        light.pointCount = 1;
+        light.spotCount = 0;
 
-        //g_cylinder.reset(new Cylinder());
-        g_modelShader.reset(new ModelShader(modelConfig));
-        if (!g_modelShader->GetShader())
-        {
-            printf("Error loading shaders.\n");
-            return false;
-        }
-
-        //g_model.reset(new Model("models/nanosuit/nanosuit.model", Model::FlagTextureDiffuse | Model::FlagNormal | Model::FlagTextureNormal | Model::FlagTextureSpecular));
-        //g_model.reset(new Model("models/cube2/cube2.model", g_modelShader));
-        g_model.reset(new Model("models/rubix/RubixCube.model", g_modelShader));
+        //g_model.reset(new Model("models/moses/scene.model", light));
+        g_model.reset(new Model("models/skull/craneo.model", light));
+        //g_model.reset(new Model("models/cube/cube.model", light));
         g_light.reset(new Light());
 
         return true;

@@ -9,23 +9,42 @@
 #include <iostream>
 #include <vector>
 
-ModelData::TextureType MapAssimpTextureTypeToModel(aiTextureType textureType)
+ModelData::TextureOperation MapOperation(aiTextureOp operation)
 {
-    switch (textureType)
+    switch (operation)
     {
-    case aiTextureType_DIFFUSE:
-        return ModelData::TextureType_Diffuse;
-    case aiTextureType_SPECULAR:
-        return ModelData::TextureType_Specular;
-    case aiTextureType_NORMALS:
-        return ModelData::TextureType_Normal;
-    case aiTextureType_AMBIENT:
-        return ModelData::TextureType_Ambient;
-    case aiTextureType_HEIGHT:
-        return ModelData::TextureType_Height;
+    case aiTextureOp_Multiply:
+        return ModelData::TextureOperation_Multiply;
+    case aiTextureOp_Add:
+        return ModelData::TextureOperation_Add;
+    case aiTextureOp_Subtract:
+        return ModelData::TextureOperation_Substract;
+    case aiTextureOp_Divide:
+        return ModelData::TextureOperation_Divide;
+    case aiTextureOp_SmoothAdd:
+        return ModelData::TextureOperation_SmoothAdd;
+    case aiTextureOp_SignedAdd:
+        return ModelData::TextureOperation_SignedAdd;
     }
-    assert(false);
-    return ModelData::TextureType_MAX;
+
+    return ModelData::TextureOperation_MAX;
+}
+
+ModelData::TextureMapMode MapMapMode(aiTextureMapMode mapping)
+{
+    switch (mapping)
+    {
+    case aiTextureMapMode_Wrap:
+        return ModelData::TextureMapMode_Wrap;
+    case aiTextureMapMode_Clamp:
+        return ModelData::TextureMapMode_Clamp;
+    case aiTextureMapMode_Decal:
+        return ModelData::TextureMapMode_Decal;
+    case aiTextureMapMode_Mirror:
+        return ModelData::TextureMapMode_Mirror;
+    }
+
+    return ModelData::TextureMapMode_MAX;
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -37,14 +56,80 @@ std::vector<std::unique_ptr<ModelData::TextureT>> ProcessTexture(aiMaterial * ma
     for (uint32_t i = 0; i < material->GetTextureCount(textureType); i++)
     {
         aiString texturePath;
-        material->GetTexture(textureType, i, &texturePath);
+        uint32_t uvIndex = 0;
+        ai_real blendFactor = 1.0f;
+        aiTextureOp operation;
+        aiTextureMapMode mapMode[2];
+
+        if (material->GetTexture(textureType, i, &texturePath, nullptr, &uvIndex, &blendFactor, &operation, mapMode) != AI_SUCCESS)
+        {
+            std::cout << "Error retrieving texture!!\n";
+            continue;
+        }
 
         std::unique_ptr<ModelData::TextureT> texture = std::make_unique<ModelData::TextureT>();
 
-        texture->type = MapAssimpTextureTypeToModel(textureType);
         texture->path = texturePath.C_Str();
+        texture->uvIndex = uvIndex;
+        texture->blendFactor = blendFactor;
+        texture->operation = MapOperation(operation);
+        texture->mapping = MapMapMode(mapMode[0]);
+
         result.push_back(std::move(texture));
     }
+
+    return result;
+}
+
+std::unique_ptr<ModelData::MaterialT> ProcessMaterial(aiMaterial * material)
+{
+    std::unique_ptr<ModelData::MaterialT> result = std::make_unique<ModelData::MaterialT>();
+
+    aiColor4D ambientColor;
+    if (material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == AI_SUCCESS)
+    {
+        result->ambient = std::make_unique<ModelData::Color>(ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a);
+    }
+    aiColor4D diffuseColor;
+    if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == AI_SUCCESS)
+    {
+        result->diffuse = std::make_unique<ModelData::Color>(diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a);
+    }
+    aiColor4D specularColor;
+    if (material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == AI_SUCCESS)
+    {
+        result->specular = std::make_unique<ModelData::Color>(specularColor.r, specularColor.g, specularColor.b, specularColor.a);
+    }
+    float shininess;
+    if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS)
+    {
+        result->shininess = shininess;
+    }
+
+    auto processTexture = [](aiMaterial * material, aiTextureType textureType, std::vector<std::unique_ptr<ModelData::TextureT>> & result)
+    {
+        auto processed = ProcessTexture(material, textureType);
+        result.insert(result.end(), std::make_move_iterator(processed.begin()), std::make_move_iterator(processed.end()));
+    };
+
+    // ambient maps
+    processTexture(material, aiTextureType_AMBIENT, result->textureAmbient);
+    // diffuse maps
+    processTexture(material, aiTextureType_DIFFUSE, result->textureDiffuse);
+    //specular maps
+    processTexture(material, aiTextureType_SPECULAR, result->textureSpecular);
+    // normal maps
+    processTexture(material, aiTextureType_NORMALS, result->textureNormal);
+    // height maps
+    processTexture(material, aiTextureType_HEIGHT, result->textureHeight);
+    // lightmap maps
+    processTexture(material, aiTextureType_LIGHTMAP, result->textureLightmap);
+    // opacity maps
+    processTexture(material, aiTextureType_OPACITY, result->textureOpacity);
+    // emissive maps
+    processTexture(material, aiTextureType_EMISSIVE, result->textureEmissive);
+    // shininess maps
+    processTexture(material, aiTextureType_SHININESS, result->textureShininess);
 
     return result;
 }
@@ -57,14 +142,21 @@ std::unique_ptr<ModelData::MeshT> ProcessMesh(aiMesh * mesh, const aiScene * sce
     // Walk through each of the mesh's vertices
     for (uint32_t i = 0; i < mesh->mNumVertices; i++)
     {
-        result->positions.push_back({ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
-        result->normals.push_back({ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z });
-        result->texCoords.push_back({ mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][i].x : 0.0f, mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][i].y : 0.0f });
-        result->tangents.push_back({ mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
-        result->bitangents.push_back({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z });
+        if (mesh->HasPositions())
+            result->positions.push_back({ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
+        if (mesh->HasNormals())
+            result->normals.push_back({ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z });
+        // TODO multiple texture coordinates
+        if (mesh->HasTextureCoords(0))
+            result->texCoords.push_back({ mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][i].x : 0.0f, mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][i].y : 0.0f });
+        if (mesh->HasTangentsAndBitangents())
+        {
+            result->tangents.push_back({ mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
+            result->bitangents.push_back({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z });
+        }
     }
 
-    // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+    // now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
     for (uint32_t i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];
@@ -73,24 +165,7 @@ std::unique_ptr<ModelData::MeshT> ProcessMesh(aiMesh * mesh, const aiScene * sce
             result->indices.push_back(face.mIndices[j]);
     }
 
-    // process materials
-    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-    // 1. diffuse maps
-    auto diffuse = ProcessTexture(material, aiTextureType_DIFFUSE);
-    result->textures.insert(result->textures.end(), std::make_move_iterator(diffuse.begin()), std::make_move_iterator(diffuse.end()));
-    // 2. specular maps
-    auto specular = ProcessTexture(material, aiTextureType_SPECULAR);
-    result->textures.insert(result->textures.end(), std::make_move_iterator(specular.begin()), std::make_move_iterator(specular.end()));
-    // 3. normal maps
-    auto normal = ProcessTexture(material, aiTextureType_NORMALS);
-    result->textures.insert(result->textures.end(), std::make_move_iterator(normal.begin()), std::make_move_iterator(normal.end()));
-    // 4. ambient maps
-    auto ambient = ProcessTexture(material, aiTextureType_AMBIENT);
-    result->textures.insert(result->textures.end(), std::make_move_iterator(ambient.begin()), std::make_move_iterator(ambient.end()));
-    // 5. height maps
-    auto height = ProcessTexture(material, aiTextureType_HEIGHT);
-    result->textures.insert(result->textures.end(), std::make_move_iterator(height.begin()), std::make_move_iterator(height.end()));
+    result->material = mesh->mMaterialIndex;
 
     // return a mesh object created from the extracted mesh data
     return result;
@@ -132,6 +207,9 @@ std::optional<ModelData::ModelT> LoadModel(const char * path)
     // read file via ASSIMP
     Assimp::Importer importer;
 
+    // TODO for now exclude lines and points
+    importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+
     const aiScene * scene = importer.ReadFile(path, aiProcessPreset_TargetRealtime_MaxQuality);
     
     DestroyLogger();
@@ -142,7 +220,14 @@ std::optional<ModelData::ModelT> LoadModel(const char * path)
         std::cout << "Error assimp: " << importer.GetErrorString() << std::endl;
         return std::nullopt;
     }
+
     ModelData::ModelT data;
+
+    // process materials
+    for (uint32_t i = 0; i < scene->mNumMaterials; i++)
+    {
+        data.materials.push_back(ProcessMaterial(scene->mMaterials[i]));
+    }
 
     // process ASSIMP's root node recursively
     ProcessNode(scene->mRootNode, scene, data);

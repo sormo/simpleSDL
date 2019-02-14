@@ -15,7 +15,7 @@ void ValidateWindingOrders(glm::vec3 * positions, glm::vec3 * normals, std::vect
         float w = glm::dot(N, positions[a] - normals[a]);
 
         // want CCW for front face
-        if (w > 0.0f)
+        if (w < 0.0f)
         {
             std::iter_swap(std::begin(indices) + i + 1, std::begin(indices) + i + 2);
         }

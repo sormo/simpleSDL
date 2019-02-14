@@ -48,6 +48,7 @@ void ModelShader::InitLocation<ModelShader::Locations::Material>(const std::stri
     location.ambient = m_shader->GetLocation(path + "ambient", Shader::LocationType::Uniform);
     location.diffuse = m_shader->GetLocation(path + "diffuse", Shader::LocationType::Uniform);
     location.specular = m_shader->GetLocation(path + "specular", Shader::LocationType::Uniform);
+    location.shininess = m_shader->GetLocation(path + "shininess", Shader::LocationType::Uniform);
 }
 
 ModelShader::ModelShader(Config config)
@@ -59,6 +60,8 @@ ModelShader::ModelShader(Config config)
 
     if (m_shader)
     {
+        m_shader->PrintUniforms();
+
         InitModelLocations();
         InitMeshLocations();
     }
@@ -81,7 +84,7 @@ Shader & ModelShader::GetShader()
 
 bool ModelShader::Config::NeedsUVs() const
 {
-    return textureAmbientCount || textureDiffuseCount || textureNormalCount || textureSpecularCount;
+    return textures.ambient.size() || textures.diffuse.size() || textures.specular.size() || textures.normal.size();
 }
 
 void ModelShader::InitTextureLocations(const std::string & path, uint32_t count, std::vector<GLuint> & locations)
@@ -97,44 +100,39 @@ void ModelShader::InitMeshLocations()
     m_locations.normals = m_shader->GetLocation("normalModelSpace", Shader::LocationType::Attrib);
     if (m_config.NeedsUVs())
         m_locations.texCoords = m_shader->GetLocation("vertexUV", Shader::LocationType::Attrib);
-    if (m_config.textureNormalCount)
+    if (m_config.textures.normal.size())
     {
         m_locations.tangents = m_shader->GetLocation("tangentModelSpace", Shader::LocationType::Attrib);
         //m_locations.bitangents = m_shader->GetLocation("bitangentModelSpace", Shader::LocationType::Attrib);
     }
 
     // textures
-    InitTextureLocations("textureAmbient", m_config.textureAmbientCount, m_locations.textureAmbient);
-    InitTextureLocations("textureDiffuse", m_config.textureDiffuseCount, m_locations.textureDiffuse);
-    InitTextureLocations("textureSpecular", m_config.textureSpecularCount, m_locations.textureSpecular);
-    InitTextureLocations("textureNormal", m_config.textureNormalCount, m_locations.textureNormal);
+    InitTextureLocations("textureAmbient", m_config.textures.ambient.size(), m_locations.textureAmbient);
+    InitTextureLocations("textureDiffuse", m_config.textures.diffuse.size(), m_locations.textureDiffuse);
+    InitTextureLocations("textureSpecular", m_config.textures.specular.size(), m_locations.textureSpecular);
+    InitTextureLocations("textureNormal", m_config.textures.normal.size(), m_locations.textureNormal);
 }
 
 void ModelShader::InitModelLocations()
 {
-    if (m_config.lightDirection)
+    if (m_config.light.directional)
         InitLocation("lightDirectional.", m_locations.lightDirectional);
 
-    for (size_t i = 0; i < m_config.lightPointCount; ++i)
+    for (size_t i = 0; i < m_config.light.pointCount; ++i)
     {
         m_locations.lightPoint.push_back({});
         InitLocation("lightPoint[" + std::to_string(i) + "].", m_locations.lightPoint.back());
     }
 
-    for (size_t i = 0; i < m_config.lightSpotCount; ++i)
+    for (size_t i = 0; i < m_config.light.spotCount; ++i)
     {
         m_locations.lightSpot.push_back({});
         InitLocation("lightSpot[" + std::to_string(i) + "].", m_locations.lightSpot.back());
     }
 
-    if (!m_config.textureAmbientCount)
-        m_locations.material.ambient = m_shader->GetLocation("material.ambient", Shader::LocationType::Uniform);
-    if (!m_config.textureDiffuseCount)
-        m_locations.material.diffuse = m_shader->GetLocation("material.diffuse", Shader::LocationType::Uniform);
-    if (!m_config.textureSpecularCount)
-        m_locations.material.specular = m_shader->GetLocation("material.specular", Shader::LocationType::Uniform);
+    if (m_config.flags & (uint32_t)Config::Flags::UseRuntimeMaterial)
+        InitLocation("material.", m_locations.material);
 
-    m_locations.shininess = m_shader->GetLocation("shininess", Shader::LocationType::Uniform);
     m_locations.cameraWorldSpace = m_shader->GetLocation("cameraWorldSpace", Shader::LocationType::Uniform);
 }
 
@@ -183,33 +181,31 @@ void ModelShader::Bind<ModelShader::Data::LightSpot, ModelShader::Locations::Lig
 }
 
 template<>
-void ModelShader::Bind<ModelShader::Data::Material, ModelShader::Locations::Material>(const ModelShader::Data::Material & data, const ModelShader::Locations::Material & locations)
+void ModelShader::Bind<ModelShader::Material, ModelShader::Locations::Material>(const ModelShader::Material & data, const ModelShader::Locations::Material & locations)
 {
     m_shader->SetUniform(data.ambient, locations.ambient);
     m_shader->SetUniform(data.diffuse, locations.diffuse);
     m_shader->SetUniform(data.specular, locations.specular);
+    m_shader->SetUniform(data.shininess, locations.shininess);
 }
 
 void ModelShader::Bind(const Data & data)
 {
     m_shader->Begin();
 
-    if (m_config.lightDirection)
+    if (m_config.light.directional)
         Bind(data.lightDirectional, m_locations.lightDirectional);
 
-    for (size_t i = 0; i < m_config.lightPointCount; ++i)
+    for (size_t i = 0; i < m_config.light.pointCount; ++i)
         Bind(data.lightPoint[i], m_locations.lightPoint[i]);
 
-    for (size_t i = 0; i < m_config.lightSpotCount; ++i)
+    for (size_t i = 0; i < m_config.light.spotCount; ++i)
         Bind(data.lightSpot[i], m_locations.lightSpot[i]);
 
-    if (!m_config.textureAmbientCount)
-        m_shader->SetUniform(data.material.ambient, m_locations.material.ambient);
-    if (!m_config.textureDiffuseCount)
-        m_shader->SetUniform(data.material.diffuse, m_locations.material.diffuse);
-    if (!m_config.textureSpecularCount)
-        m_shader->SetUniform(data.material.specular, m_locations.material.specular);
+    if (m_config.flags & (uint32_t)Config::Flags::UseRuntimeMaterial)
+    {
+        Bind(data.material, m_locations.material);
+    }
 
-    m_shader->SetUniform(data.shininess, m_locations.shininess);
     m_shader->SetUniform(data.cameraWorldSpace, m_locations.cameraWorldSpace);
 }
