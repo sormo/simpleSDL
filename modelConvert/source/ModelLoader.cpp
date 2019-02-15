@@ -73,7 +73,8 @@ std::vector<std::unique_ptr<ModelData::TextureT>> ProcessTexture(aiMaterial * ma
         texture->uvIndex = uvIndex;
         texture->blendFactor = blendFactor;
         texture->operation = MapOperation(operation);
-        texture->mapping = MapMapMode(mapMode[0]);
+        texture->mappingU = MapMapMode(mapMode[0]);
+        texture->mappingV = MapMapMode(mapMode[1]);
 
         result.push_back(std::move(texture));
     }
@@ -104,6 +105,11 @@ std::unique_ptr<ModelData::MaterialT> ProcessMaterial(aiMaterial * material)
     if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS)
     {
         result->shininess = shininess;
+    }
+    float shininessStrength;
+    if (material->Get(AI_MATKEY_SHININESS_STRENGTH, shininessStrength) == AI_SUCCESS)
+    {
+        result->shininessStrength = shininessStrength;
     }
 
     auto processTexture = [](aiMaterial * material, aiTextureType textureType, std::vector<std::unique_ptr<ModelData::TextureT>> & result)
@@ -146,13 +152,33 @@ std::unique_ptr<ModelData::MeshT> ProcessMesh(aiMesh * mesh, const aiScene * sce
             result->positions.push_back({ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
         if (mesh->HasNormals())
             result->normals.push_back({ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z });
-        // TODO multiple texture coordinates
-        if (mesh->HasTextureCoords(0))
-            result->texCoords.push_back({ mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][i].x : 0.0f, mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][i].y : 0.0f });
+        
         if (mesh->HasTangentsAndBitangents())
         {
             result->tangents.push_back({ mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
             result->bitangents.push_back({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z });
+        }
+    }
+
+    // Store UV channels as continuous array
+    {
+        uint32_t index = 0;
+        while (mesh->HasTextureCoords(index))
+        {
+            for (uint32_t i = 0; i < mesh->mNumVertices; i++)
+                result->texCoords.push_back({ mesh->mTextureCoords[index][i].x, mesh->mTextureCoords[index][i].y });
+            index++;
+        }
+    }
+
+    // Store colors as continuous array
+    {
+        uint32_t index = 0;
+        while (mesh->HasVertexColors(index))
+        {
+            for (uint32_t i = 0; i < mesh->mNumVertices; i++)
+                result->colors.push_back({ mesh->mColors[index][i].r, mesh->mColors[index][i].g, mesh->mColors[index][i].b, mesh->mColors[index][i].a });
+            index++;
         }
     }
 
