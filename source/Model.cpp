@@ -21,8 +21,8 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &m_vboIndices);
     glDeleteBuffers(1, &m_normals);
 
-    if (m_material.shader->GetConfig().NeedsUVs())
-        glDeleteBuffers(1, &m_texCoords);
+    if (m_material.shader->GetConfig().GetUVChannelsCount())
+        glDeleteBuffers(m_texCoords.size(), m_texCoords.data());
 
     if (m_material.shader->GetConfig().textures.normal.size())
     {
@@ -62,8 +62,8 @@ void Mesh::Draw()
         m_material.shader->GetShader().BindBuffer<glm::vec3>(m_positions, m_material.shader->GetLocations().positions);
         m_material.shader->GetShader().BindBuffer<glm::vec3>(m_normals, m_material.shader->GetLocations().normals);
 
-        if (m_material.shader->GetConfig().NeedsUVs())
-            m_material.shader->GetShader().BindBuffer<glm::vec2>(m_texCoords, m_material.shader->GetLocations().texCoords);
+        for (uint32_t i = 0; i < m_material.shader->GetConfig().GetUVChannelsCount(); ++i)
+            m_material.shader->GetShader().BindBuffer<glm::vec2>(m_texCoords[i], m_material.shader->GetLocations().texCoords[i]);
 
         if (m_material.shader->GetConfig().textures.normal.size())
         {
@@ -82,7 +82,7 @@ void Mesh::Draw()
 }
 
 template<class T, uint32_t N>
-GLuint CreateFloatVBO(GLuint index, const std::vector<T> & data, bool isVaoBinded)
+GLuint CreateFloatVBO(GLuint index, const T * data, size_t size, bool isVaoBinded)
 {
     GLuint vbo;
 
@@ -92,7 +92,7 @@ GLuint CreateFloatVBO(GLuint index, const std::vector<T> & data, bool isVaoBinde
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     CheckGlError("glBindBuffer");
 
-    glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(T), &data[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, size*sizeof(T), data, GL_STATIC_DRAW);
     CheckGlError("glBufferData");
 
     if (isVaoBinded)
@@ -105,6 +105,12 @@ GLuint CreateFloatVBO(GLuint index, const std::vector<T> & data, bool isVaoBinde
     }
 
     return vbo;
+}
+
+template<class T, uint32_t N>
+GLuint CreateFloatVBO(GLuint index, const std::vector<T> & data, bool isVaoBinded)
+{
+    return CreateFloatVBO<T, N>(index, &data[0], data.size(), isVaoBinded);
 }
 
 void Mesh::InitBuffers(const std::vector<ModelData::Vec3> & positions,
@@ -135,9 +141,10 @@ void Mesh::InitBuffers(const std::vector<ModelData::Vec3> & positions,
         //m_bitangents = CreateFloatVBO<ModelData::Vec3, 3>(m_shader->GetShader().GetLocation("bitangentModelSpace", Shader::LocationType::Attrib), bitangents, bindVAO);
     }
 
-    if (m_material.shader->GetConfig().NeedsUVs())
+    for (uint32_t i = 0; i < m_material.shader->GetConfig().GetUVChannelsCount(); ++i)
     {
-        m_texCoords = CreateFloatVBO<ModelData::Vec2, 2>(m_material.shader->GetShader().GetLocation("vertexUV", Shader::LocationType::Attrib), texCoords, bindVAO);
+        m_texCoords.push_back(CreateFloatVBO<ModelData::Vec2, 2>(m_material.shader->GetShader().GetLocation("vertexUV" + std::to_string(i), Shader::LocationType::Attrib),
+            &texCoords[i * positions.size()], positions.size(), bindVAO));
     }
 
     glBindVertexArray(0);
@@ -177,6 +184,7 @@ bool ProcessTextures(const std::string & root, std::vector<std::unique_ptr<Model
         ModelShader::TextureStackEntry entry;
         entry.factor = data[i]->blendFactor;
         entry.operation = Convert(data[i]->operation);
+        entry.uvIndex = data[i]->uvIndex;
 
         auto texture = TextureManager::Instance().GetTexture((root + data[i]->path).c_str());
         if (!texture)
@@ -208,6 +216,7 @@ std::unique_ptr<ModelMaterial> Model::CreateMaterial(const std::string & root, M
     if (material.specular)
         config.material.specular = Convert(*material.specular);
     config.material.shininess = material.shininess;
+    config.material.shininessStrength = material.shininessStrength;
 
     if (!ProcessTextures(root, material.textureAmbient, config.textures.ambient, result->textures.ambient))
         return nullptr;

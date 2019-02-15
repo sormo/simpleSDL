@@ -42,7 +42,7 @@ private:
 
     GLuint m_positions;
     GLuint m_normals;
-    GLuint m_texCoords;
+    std::vector<GLuint> m_texCoords;
     GLuint m_tangents;
     GLuint m_bitangents;
 

@@ -52,10 +52,12 @@ enum TextureMapMode:byte
 table Texture
 {
     path:string;
-    uvIndex:uint32; // not used yet, not supported multiple uv channels
-    blendFactor:float;
-    operation:TextureOperation;
-    mapping:TextureMapMode;
+    uvIndex:uint32 = 0;
+    blendFactor:float = 1.0;
+    operation:TextureOperation = Multiply;
+    // not used yet
+    mappingU:TextureMapMode;
+    mappingV:TextureMapMode;
 }
 
 table Material
@@ -64,6 +66,9 @@ table Material
 	diffuse:Color;
 	specular:Color;
 	shininess:float;
+	// factor of specular component
+	shininessStrength:float = 1.0;
+
 	textureAmbient:[Texture];
 	textureDiffuse:[Texture];
 	textureSpecular:[Texture];
@@ -79,11 +84,14 @@ table Mesh
 {
     positions:[Vec3];
     normals:[Vec3];
+    // there can be multiple UV channels, stored in a continuous array
     texCoords:[Vec2];
     tangents:[Vec3];
     bitangents:[Vec3];
     indices:[uint16];
     material:uint32;
+    // there can be multiple colors per vertex, stored in a continuous array
+    colors:[Color];
 }
 
 table Model

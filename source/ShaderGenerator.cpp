@@ -13,8 +13,8 @@ void AppendAttributes(const ModelShader::Config & config, std::string & result)
     result += "// *** attributes ***\n";
     result += "attribute vec3 positionModelSpace;\n";
     result += "attribute vec3 normalModelSpace;\n";
-    if (config.NeedsUVs())
-        result += "attribute vec2 vertexUV;\n";
+    for (uint32_t i = 0; i < config.GetUVChannelsCount(); ++i)
+        result += "attribute vec2 vertexUV" + std::to_string(i) + ";\n";
     if (config.textures.normal.size())
     {
         result += "attribute vec3 tangentModelSpace;\n";
@@ -43,6 +43,7 @@ void AppendUniformsMaterial(const ModelShader::Config & config, std::string & re
         result += "    vec3 diffuse;\n";
         result += "    vec3 specular;\n";
         result += "    vec3 shininess;\n";
+        result += "    vec3 shininessStrength;\n";
         result += "};\n";
         result += "uniform Material material;\n";
     }
@@ -113,8 +114,9 @@ void AppendVaryings(const ModelShader::Config & config, std::string & result)
         result += "varying mat3 TBN;\n";
     else
         result += "varying vec3 normalWorldSpace;\n";
-    if (config.NeedsUVs())
-        result += "varying vec2 vertexUVA;\n";
+    if (config.GetUVChannelsCount())
+        result += "varying vec2 vertexUVA[" + std::to_string(config.GetUVChannelsCount()) + "];\n";
+
     result += "// ****************\n";
 }
 
@@ -166,8 +168,9 @@ void AppendBodyVertex(const ModelShader::Config & config, std::string & result)
     {
         result += "  normalWorldSpace = normalMatrix * normalModelSpace;\n\n";
     }
-    if (config.NeedsUVs())
-        result += "  vertexUVA = vertexUV;\n";
+    for (uint32_t i = 0; i < config.GetUVChannelsCount(); ++i)
+        result += "  vertexUVA[" + std::to_string(i) + "] = vertexUV" + std::to_string(i) + ";\n";
+
     result += "}\n";
     result += "// ******************\n";
 }
@@ -299,11 +302,11 @@ std::string MapOperation(ModelShader::TextureStackEntry::Operation operation)
     case ModelShader::TextureStackEntry::Operation::Multiply:
         return "CalcColorMultiply";
     case ModelShader::TextureStackEntry::Operation::SignedAdd:
-        return "CalcColorAdd";
+        return "CalcColorSignedAdd";
     case ModelShader::TextureStackEntry::Operation::SmoothAdd:
-        return "CalcColorAdd";
+        return "CalcColorSmoothAdd";
     case ModelShader::TextureStackEntry::Operation::Substract:
-        return "CalcColorAdd";
+        return "CalcColorSubstract";
     }
 }
 
@@ -315,7 +318,7 @@ void AppendFunctionColorSpecific(std::string name, const std::string & base, con
     
     for (size_t i = 0; i < stack.size(); ++i)
     {
-        std::string sample("texture2D(texture" + name + "[" + std::to_string(i) + "], vertexUVA).rgb");
+        std::string sample("texture2D(texture" + name + "[" + std::to_string(i) + "], vertexUVA[" + std::to_string(stack[i].uvIndex) + "]).rgb");
         result += "    result = " + MapOperation(stack[i].operation) + "(result, " + sample + ");\n";
     }
 
@@ -348,6 +351,11 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
     result += "    vec3 diffuseColor = CalcDiffuseColor();\n";
     result += "    vec3 specularColor = CalcSpecularColor();\n\n";
 
+    if (config.flags & (uint32_t)ModelShader::Config::Flags::UseRuntimeMaterial)
+        result += "    specularColor *= material.shininessStrength;\n\n";
+    else
+        result += "    specularColor *= " + std::to_string(config.material.shininessStrength) + ";\n\n";
+
     result += "    vec3 cameraDirectionWorldSpace = normalize(cameraWorldSpace - positionWorldSpace);\n\n";
  
     result += "    vec3 result = vec3(0.0, 0.0, 0.0);\n";
@@ -355,7 +363,7 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
     if (config.textures.normal.size())
     {
         // TODO single texture normal ???
-        result += "    vec3 normalTangentSpace = texture2D(textureNormal[0], vertexUVA).rgb;\n";
+        result += "    vec3 normalTangentSpace = texture2D(textureNormal[0], vertexUVA[0]).rgb;\n";
         result += "    normalTangentSpace = normalize(normalTangentSpace * 2.0 - 1.0);\n";
         result += "    normal = normalize(TBN * normalTangentSpace);\n\n";
     }

@@ -18,6 +18,8 @@ public:
         glm::vec3 diffuse;
         glm::vec3 specular;
         float shininess;
+        // factor of specular component
+        float shininessStrength = 1.0f;
     };
 
     struct TextureStackEntry
@@ -40,6 +42,7 @@ public:
 
         float factor;
         Operation operation;
+        uint32_t uvIndex;
     };
 
     struct TextureMaps
@@ -66,8 +69,13 @@ public:
 
         uint32_t flags = 0;
 
-        // determines whether this config needs UV coordinates
-        bool NeedsUVs() const;
+        // number of color attributes per vertex
+        // TODO not used don't know what to do with it in shader
+        uint32_t colorsCount = 0;
+
+        // determines number of UV attributes per vertex
+        // TODO simplify computation
+        uint32_t GetUVChannelsCount() const;
     };
 
     struct Locations
@@ -75,9 +83,10 @@ public:
         // VBOs
         GLuint positions;
         GLuint normals;
-        GLuint texCoords;
+        std::vector<GLuint> texCoords;
         GLuint tangents;
         GLuint bitangents;
+        // std::vector<GLuint> colors;
 
         struct Material
         {

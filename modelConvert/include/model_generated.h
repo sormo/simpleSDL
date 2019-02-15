@@ -191,12 +191,14 @@ struct TextureT : public flatbuffers::NativeTable {
   uint32_t uvIndex;
   float blendFactor;
   TextureOperation operation;
-  TextureMapMode mapping;
+  TextureMapMode mappingU;
+  TextureMapMode mappingV;
   TextureT()
       : uvIndex(0),
         blendFactor(0.0f),
         operation(TextureOperation_Multiply),
-        mapping(TextureMapMode_Wrap) {
+        mappingU(TextureMapMode_Wrap),
+        mappingV(TextureMapMode_Wrap) {
   }
 };
 
@@ -207,7 +209,8 @@ struct Texture FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_UVINDEX = 6,
     VT_BLENDFACTOR = 8,
     VT_OPERATION = 10,
-    VT_MAPPING = 12
+    VT_MAPPINGU = 12,
+    VT_MAPPINGV = 14
   };
   const flatbuffers::String *path() const {
     return GetPointer<const flatbuffers::String *>(VT_PATH);
@@ -221,8 +224,11 @@ struct Texture FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   TextureOperation operation() const {
     return static_cast<TextureOperation>(GetField<int8_t>(VT_OPERATION, 0));
   }
-  TextureMapMode mapping() const {
-    return static_cast<TextureMapMode>(GetField<int8_t>(VT_MAPPING, 0));
+  TextureMapMode mappingU() const {
+    return static_cast<TextureMapMode>(GetField<int8_t>(VT_MAPPINGU, 0));
+  }
+  TextureMapMode mappingV() const {
+    return static_cast<TextureMapMode>(GetField<int8_t>(VT_MAPPINGV, 0));
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -231,7 +237,8 @@ struct Texture FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<uint32_t>(verifier, VT_UVINDEX) &&
            VerifyField<float>(verifier, VT_BLENDFACTOR) &&
            VerifyField<int8_t>(verifier, VT_OPERATION) &&
-           VerifyField<int8_t>(verifier, VT_MAPPING) &&
+           VerifyField<int8_t>(verifier, VT_MAPPINGU) &&
+           VerifyField<int8_t>(verifier, VT_MAPPINGV) &&
            verifier.EndTable();
   }
   TextureT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -254,8 +261,11 @@ struct TextureBuilder {
   void add_operation(TextureOperation operation) {
     fbb_.AddElement<int8_t>(Texture::VT_OPERATION, static_cast<int8_t>(operation), 0);
   }
-  void add_mapping(TextureMapMode mapping) {
-    fbb_.AddElement<int8_t>(Texture::VT_MAPPING, static_cast<int8_t>(mapping), 0);
+  void add_mappingU(TextureMapMode mappingU) {
+    fbb_.AddElement<int8_t>(Texture::VT_MAPPINGU, static_cast<int8_t>(mappingU), 0);
+  }
+  void add_mappingV(TextureMapMode mappingV) {
+    fbb_.AddElement<int8_t>(Texture::VT_MAPPINGV, static_cast<int8_t>(mappingV), 0);
   }
   explicit TextureBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -275,12 +285,14 @@ inline flatbuffers::Offset<Texture> CreateTexture(
     uint32_t uvIndex = 0,
     float blendFactor = 0.0f,
     TextureOperation operation = TextureOperation_Multiply,
-    TextureMapMode mapping = TextureMapMode_Wrap) {
+    TextureMapMode mappingU = TextureMapMode_Wrap,
+    TextureMapMode mappingV = TextureMapMode_Wrap) {
   TextureBuilder builder_(_fbb);
   builder_.add_blendFactor(blendFactor);
   builder_.add_uvIndex(uvIndex);
   builder_.add_path(path);
-  builder_.add_mapping(mapping);
+  builder_.add_mappingV(mappingV);
+  builder_.add_mappingU(mappingU);
   builder_.add_operation(operation);
   return builder_.Finish();
 }
@@ -291,7 +303,8 @@ inline flatbuffers::Offset<Texture> CreateTextureDirect(
     uint32_t uvIndex = 0,
     float blendFactor = 0.0f,
     TextureOperation operation = TextureOperation_Multiply,
-    TextureMapMode mapping = TextureMapMode_Wrap) {
+    TextureMapMode mappingU = TextureMapMode_Wrap,
+    TextureMapMode mappingV = TextureMapMode_Wrap) {
   auto path__ = path ? _fbb.CreateString(path) : 0;
   return ModelData::CreateTexture(
       _fbb,
@@ -299,7 +312,8 @@ inline flatbuffers::Offset<Texture> CreateTextureDirect(
       uvIndex,
       blendFactor,
       operation,
-      mapping);
+      mappingU,
+      mappingV);
 }
 
 flatbuffers::Offset<Texture> CreateTexture(flatbuffers::FlatBufferBuilder &_fbb, const TextureT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -310,6 +324,7 @@ struct MaterialT : public flatbuffers::NativeTable {
   std::unique_ptr<Color> diffuse;
   std::unique_ptr<Color> specular;
   float shininess;
+  float shininessStrength;
   std::vector<std::unique_ptr<TextureT>> textureAmbient;
   std::vector<std::unique_ptr<TextureT>> textureDiffuse;
   std::vector<std::unique_ptr<TextureT>> textureSpecular;
@@ -320,7 +335,8 @@ struct MaterialT : public flatbuffers::NativeTable {
   std::vector<std::unique_ptr<TextureT>> textureOpacity;
   std::vector<std::unique_ptr<TextureT>> textureLightmap;
   MaterialT()
-      : shininess(0.0f) {
+      : shininess(0.0f),
+        shininessStrength(1.0f) {
   }
 };
 
@@ -331,15 +347,16 @@ struct Material FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_DIFFUSE = 6,
     VT_SPECULAR = 8,
     VT_SHININESS = 10,
-    VT_TEXTUREAMBIENT = 12,
-    VT_TEXTUREDIFFUSE = 14,
-    VT_TEXTURESPECULAR = 16,
-    VT_TEXTURENORMAL = 18,
-    VT_TEXTURESHININESS = 20,
-    VT_TEXTUREHEIGHT = 22,
-    VT_TEXTUREEMISSIVE = 24,
-    VT_TEXTUREOPACITY = 26,
-    VT_TEXTURELIGHTMAP = 28
+    VT_SHININESSSTRENGTH = 12,
+    VT_TEXTUREAMBIENT = 14,
+    VT_TEXTUREDIFFUSE = 16,
+    VT_TEXTURESPECULAR = 18,
+    VT_TEXTURENORMAL = 20,
+    VT_TEXTURESHININESS = 22,
+    VT_TEXTUREHEIGHT = 24,
+    VT_TEXTUREEMISSIVE = 26,
+    VT_TEXTUREOPACITY = 28,
+    VT_TEXTURELIGHTMAP = 30
   };
   const Color *ambient() const {
     return GetStruct<const Color *>(VT_AMBIENT);
@@ -352,6 +369,9 @@ struct Material FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   float shininess() const {
     return GetField<float>(VT_SHININESS, 0.0f);
+  }
+  float shininessStrength() const {
+    return GetField<float>(VT_SHININESSSTRENGTH, 1.0f);
   }
   const flatbuffers::Vector<flatbuffers::Offset<Texture>> *textureAmbient() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Texture>> *>(VT_TEXTUREAMBIENT);
@@ -386,6 +406,7 @@ struct Material FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<Color>(verifier, VT_DIFFUSE) &&
            VerifyField<Color>(verifier, VT_SPECULAR) &&
            VerifyField<float>(verifier, VT_SHININESS) &&
+           VerifyField<float>(verifier, VT_SHININESSSTRENGTH) &&
            VerifyOffset(verifier, VT_TEXTUREAMBIENT) &&
            verifier.VerifyVector(textureAmbient()) &&
            verifier.VerifyVectorOfTables(textureAmbient()) &&
@@ -435,6 +456,9 @@ struct MaterialBuilder {
   void add_shininess(float shininess) {
     fbb_.AddElement<float>(Material::VT_SHININESS, shininess, 0.0f);
   }
+  void add_shininessStrength(float shininessStrength) {
+    fbb_.AddElement<float>(Material::VT_SHININESSSTRENGTH, shininessStrength, 1.0f);
+  }
   void add_textureAmbient(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Texture>>> textureAmbient) {
     fbb_.AddOffset(Material::VT_TEXTUREAMBIENT, textureAmbient);
   }
@@ -480,6 +504,7 @@ inline flatbuffers::Offset<Material> CreateMaterial(
     const Color *diffuse = 0,
     const Color *specular = 0,
     float shininess = 0.0f,
+    float shininessStrength = 1.0f,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Texture>>> textureAmbient = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Texture>>> textureDiffuse = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Texture>>> textureSpecular = 0,
@@ -499,6 +524,7 @@ inline flatbuffers::Offset<Material> CreateMaterial(
   builder_.add_textureSpecular(textureSpecular);
   builder_.add_textureDiffuse(textureDiffuse);
   builder_.add_textureAmbient(textureAmbient);
+  builder_.add_shininessStrength(shininessStrength);
   builder_.add_shininess(shininess);
   builder_.add_specular(specular);
   builder_.add_diffuse(diffuse);
@@ -512,6 +538,7 @@ inline flatbuffers::Offset<Material> CreateMaterialDirect(
     const Color *diffuse = 0,
     const Color *specular = 0,
     float shininess = 0.0f,
+    float shininessStrength = 1.0f,
     const std::vector<flatbuffers::Offset<Texture>> *textureAmbient = nullptr,
     const std::vector<flatbuffers::Offset<Texture>> *textureDiffuse = nullptr,
     const std::vector<flatbuffers::Offset<Texture>> *textureSpecular = nullptr,
@@ -536,6 +563,7 @@ inline flatbuffers::Offset<Material> CreateMaterialDirect(
       diffuse,
       specular,
       shininess,
+      shininessStrength,
       textureAmbient__,
       textureDiffuse__,
       textureSpecular__,
@@ -558,6 +586,7 @@ struct MeshT : public flatbuffers::NativeTable {
   std::vector<Vec3> bitangents;
   std::vector<uint16_t> indices;
   uint32_t material;
+  std::vector<Color> colors;
   MeshT()
       : material(0) {
   }
@@ -572,7 +601,8 @@ struct Mesh FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_TANGENTS = 10,
     VT_BITANGENTS = 12,
     VT_INDICES = 14,
-    VT_MATERIAL = 16
+    VT_MATERIAL = 16,
+    VT_COLORS = 18
   };
   const flatbuffers::Vector<const Vec3 *> *positions() const {
     return GetPointer<const flatbuffers::Vector<const Vec3 *> *>(VT_POSITIONS);
@@ -595,6 +625,9 @@ struct Mesh FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t material() const {
     return GetField<uint32_t>(VT_MATERIAL, 0);
   }
+  const flatbuffers::Vector<const Color *> *colors() const {
+    return GetPointer<const flatbuffers::Vector<const Color *> *>(VT_COLORS);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_POSITIONS) &&
@@ -610,6 +643,8 @@ struct Mesh FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_INDICES) &&
            verifier.VerifyVector(indices()) &&
            VerifyField<uint32_t>(verifier, VT_MATERIAL) &&
+           VerifyOffset(verifier, VT_COLORS) &&
+           verifier.VerifyVector(colors()) &&
            verifier.EndTable();
   }
   MeshT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -641,6 +676,9 @@ struct MeshBuilder {
   void add_material(uint32_t material) {
     fbb_.AddElement<uint32_t>(Mesh::VT_MATERIAL, material, 0);
   }
+  void add_colors(flatbuffers::Offset<flatbuffers::Vector<const Color *>> colors) {
+    fbb_.AddOffset(Mesh::VT_COLORS, colors);
+  }
   explicit MeshBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -661,8 +699,10 @@ inline flatbuffers::Offset<Mesh> CreateMesh(
     flatbuffers::Offset<flatbuffers::Vector<const Vec3 *>> tangents = 0,
     flatbuffers::Offset<flatbuffers::Vector<const Vec3 *>> bitangents = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint16_t>> indices = 0,
-    uint32_t material = 0) {
+    uint32_t material = 0,
+    flatbuffers::Offset<flatbuffers::Vector<const Color *>> colors = 0) {
   MeshBuilder builder_(_fbb);
+  builder_.add_colors(colors);
   builder_.add_material(material);
   builder_.add_indices(indices);
   builder_.add_bitangents(bitangents);
@@ -681,13 +721,15 @@ inline flatbuffers::Offset<Mesh> CreateMeshDirect(
     const std::vector<Vec3> *tangents = nullptr,
     const std::vector<Vec3> *bitangents = nullptr,
     const std::vector<uint16_t> *indices = nullptr,
-    uint32_t material = 0) {
+    uint32_t material = 0,
+    const std::vector<Color> *colors = nullptr) {
   auto positions__ = positions ? _fbb.CreateVectorOfStructs<Vec3>(*positions) : 0;
   auto normals__ = normals ? _fbb.CreateVectorOfStructs<Vec3>(*normals) : 0;
   auto texCoords__ = texCoords ? _fbb.CreateVectorOfStructs<Vec2>(*texCoords) : 0;
   auto tangents__ = tangents ? _fbb.CreateVectorOfStructs<Vec3>(*tangents) : 0;
   auto bitangents__ = bitangents ? _fbb.CreateVectorOfStructs<Vec3>(*bitangents) : 0;
   auto indices__ = indices ? _fbb.CreateVector<uint16_t>(*indices) : 0;
+  auto colors__ = colors ? _fbb.CreateVectorOfStructs<Color>(*colors) : 0;
   return ModelData::CreateMesh(
       _fbb,
       positions__,
@@ -696,7 +738,8 @@ inline flatbuffers::Offset<Mesh> CreateMeshDirect(
       tangents__,
       bitangents__,
       indices__,
-      material);
+      material,
+      colors__);
 }
 
 flatbuffers::Offset<Mesh> CreateMesh(flatbuffers::FlatBufferBuilder &_fbb, const MeshT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -794,7 +837,8 @@ inline void Texture::UnPackTo(TextureT *_o, const flatbuffers::resolver_function
   { auto _e = uvIndex(); _o->uvIndex = _e; };
   { auto _e = blendFactor(); _o->blendFactor = _e; };
   { auto _e = operation(); _o->operation = _e; };
-  { auto _e = mapping(); _o->mapping = _e; };
+  { auto _e = mappingU(); _o->mappingU = _e; };
+  { auto _e = mappingV(); _o->mappingV = _e; };
 }
 
 inline flatbuffers::Offset<Texture> Texture::Pack(flatbuffers::FlatBufferBuilder &_fbb, const TextureT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -809,14 +853,16 @@ inline flatbuffers::Offset<Texture> CreateTexture(flatbuffers::FlatBufferBuilder
   auto _uvIndex = _o->uvIndex;
   auto _blendFactor = _o->blendFactor;
   auto _operation = _o->operation;
-  auto _mapping = _o->mapping;
+  auto _mappingU = _o->mappingU;
+  auto _mappingV = _o->mappingV;
   return ModelData::CreateTexture(
       _fbb,
       _path,
       _uvIndex,
       _blendFactor,
       _operation,
-      _mapping);
+      _mappingU,
+      _mappingV);
 }
 
 inline MaterialT *Material::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
@@ -832,6 +878,7 @@ inline void Material::UnPackTo(MaterialT *_o, const flatbuffers::resolver_functi
   { auto _e = diffuse(); if (_e) _o->diffuse = std::unique_ptr<Color>(new Color(*_e)); };
   { auto _e = specular(); if (_e) _o->specular = std::unique_ptr<Color>(new Color(*_e)); };
   { auto _e = shininess(); _o->shininess = _e; };
+  { auto _e = shininessStrength(); _o->shininessStrength = _e; };
   { auto _e = textureAmbient(); if (_e) { _o->textureAmbient.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->textureAmbient[_i] = std::unique_ptr<TextureT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = textureDiffuse(); if (_e) { _o->textureDiffuse.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->textureDiffuse[_i] = std::unique_ptr<TextureT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = textureSpecular(); if (_e) { _o->textureSpecular.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->textureSpecular[_i] = std::unique_ptr<TextureT>(_e->Get(_i)->UnPack(_resolver)); } } };
@@ -855,6 +902,7 @@ inline flatbuffers::Offset<Material> CreateMaterial(flatbuffers::FlatBufferBuild
   auto _diffuse = _o->diffuse ? _o->diffuse.get() : 0;
   auto _specular = _o->specular ? _o->specular.get() : 0;
   auto _shininess = _o->shininess;
+  auto _shininessStrength = _o->shininessStrength;
   auto _textureAmbient = _o->textureAmbient.size() ? _fbb.CreateVector<flatbuffers::Offset<Texture>> (_o->textureAmbient.size(), [](size_t i, _VectorArgs *__va) { return CreateTexture(*__va->__fbb, __va->__o->textureAmbient[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _textureDiffuse = _o->textureDiffuse.size() ? _fbb.CreateVector<flatbuffers::Offset<Texture>> (_o->textureDiffuse.size(), [](size_t i, _VectorArgs *__va) { return CreateTexture(*__va->__fbb, __va->__o->textureDiffuse[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _textureSpecular = _o->textureSpecular.size() ? _fbb.CreateVector<flatbuffers::Offset<Texture>> (_o->textureSpecular.size(), [](size_t i, _VectorArgs *__va) { return CreateTexture(*__va->__fbb, __va->__o->textureSpecular[i].get(), __va->__rehasher); }, &_va ) : 0;
@@ -870,6 +918,7 @@ inline flatbuffers::Offset<Material> CreateMaterial(flatbuffers::FlatBufferBuild
       _diffuse,
       _specular,
       _shininess,
+      _shininessStrength,
       _textureAmbient,
       _textureDiffuse,
       _textureSpecular,
@@ -897,6 +946,7 @@ inline void Mesh::UnPackTo(MeshT *_o, const flatbuffers::resolver_function_t *_r
   { auto _e = bitangents(); if (_e) { _o->bitangents.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->bitangents[_i] = *_e->Get(_i); } } };
   { auto _e = indices(); if (_e) { _o->indices.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->indices[_i] = _e->Get(_i); } } };
   { auto _e = material(); _o->material = _e; };
+  { auto _e = colors(); if (_e) { _o->colors.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->colors[_i] = *_e->Get(_i); } } };
 }
 
 inline flatbuffers::Offset<Mesh> Mesh::Pack(flatbuffers::FlatBufferBuilder &_fbb, const MeshT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -914,6 +964,7 @@ inline flatbuffers::Offset<Mesh> CreateMesh(flatbuffers::FlatBufferBuilder &_fbb
   auto _bitangents = _o->bitangents.size() ? _fbb.CreateVectorOfStructs(_o->bitangents) : 0;
   auto _indices = _o->indices.size() ? _fbb.CreateVector(_o->indices) : 0;
   auto _material = _o->material;
+  auto _colors = _o->colors.size() ? _fbb.CreateVectorOfStructs(_o->colors) : 0;
   return ModelData::CreateMesh(
       _fbb,
       _positions,
@@ -922,7 +973,8 @@ inline flatbuffers::Offset<Mesh> CreateMesh(flatbuffers::FlatBufferBuilder &_fbb
       _tangents,
       _bitangents,
       _indices,
-      _material);
+      _material,
+      _colors);
 }
 
 inline ModelT *Model::UnPack(const flatbuffers::resolver_function_t *_resolver) const {

@@ -30,20 +30,6 @@ namespace Application
     std::shared_ptr<ModelShader> g_modelShader;
     std::unique_ptr<Light> g_light;
 
-    // positions all containers
-    glm::vec3 g_cubePositions[] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f,  2.0f, -2.5f),
-        glm::vec3(1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-
     void BindModel()
     {
         //Model::Material material;
@@ -115,16 +101,20 @@ namespace Application
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
-        for (uint32_t i = 0; i < 1; i++)
-        {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, g_cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        glm::mat4 model = glm::mat4(1.0f);
+        //model = glm::translate(model, glm::vec3{0.0f, 0.0f, 0.0f});
+        //float angle = 20.0f * 0.0f;
+        //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
-        }
+
+        //glm::mat4 model = glm::mat4({ 1.0,  0.0,  0.0,  0.0 },
+        //                            { 0.0,  0.0,  1.0,  0.0 },
+        //                            { 0.0, -1.0,  0.0,  0.0 },
+        //                            { 0.0,  0.0,  0.0,  1.0 });
+        //model = glm::transpose(model);
+        //model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+
+        g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //g_cylinder->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace);
 
@@ -171,7 +161,7 @@ namespace Application
         //}
 
         ModelShader::ConfigLight light;
-        light.directional = false;
+        light.directional = true;
         light.pointCount = 1;
         light.spotCount = 0;
 

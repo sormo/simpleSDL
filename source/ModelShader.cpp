@@ -1,5 +1,6 @@
 #include "ModelShader.h"
 #include "ShaderGenerator.h"
+#include <algorithm>
 
 template<class T>
 void ModelShader::InitLocation(const std::string & path, T & location)
@@ -61,6 +62,7 @@ ModelShader::ModelShader(Config config)
     if (m_shader)
     {
         m_shader->PrintUniforms();
+        m_shader->PrintAttributes();
 
         InitModelLocations();
         InitMeshLocations();
@@ -82,9 +84,24 @@ Shader & ModelShader::GetShader()
     return *m_shader;
 }
 
-bool ModelShader::Config::NeedsUVs() const
+uint32_t ModelShader::Config::GetUVChannelsCount() const
 {
-    return textures.ambient.size() || textures.diffuse.size() || textures.specular.size() || textures.normal.size();
+    uint32_t result = 0;
+
+    auto getMaxChannel = [](const std::vector<TextureStackEntry> & textureStack) -> uint32_t
+    {
+        uint32_t result = 0;
+        for (const auto & entry : textureStack)
+            result = std::max(result, entry.uvIndex + 1);
+        return result;
+    };
+
+    result = std::max(result, getMaxChannel(textures.ambient));
+    result = std::max(result, getMaxChannel(textures.diffuse));
+    result = std::max(result, getMaxChannel(textures.specular));
+    result = std::max(result, getMaxChannel(textures.normal));
+
+    return result;
 }
 
 void ModelShader::InitTextureLocations(const std::string & path, uint32_t count, std::vector<GLuint> & locations)
@@ -98,8 +115,8 @@ void ModelShader::InitMeshLocations()
     // VBOs
     m_locations.positions = m_shader->GetLocation("positionModelSpace", Shader::LocationType::Attrib);
     m_locations.normals = m_shader->GetLocation("normalModelSpace", Shader::LocationType::Attrib);
-    if (m_config.NeedsUVs())
-        m_locations.texCoords = m_shader->GetLocation("vertexUV", Shader::LocationType::Attrib);
+    for (uint32_t i = 0; i < m_config.GetUVChannelsCount(); ++i)
+        m_locations.texCoords.push_back(m_shader->GetLocation("vertexUV" + std::to_string(i), Shader::LocationType::Attrib));
     if (m_config.textures.normal.size())
     {
         m_locations.tangents = m_shader->GetLocation("tangentModelSpace", Shader::LocationType::Attrib);
