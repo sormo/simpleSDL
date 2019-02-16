@@ -14,6 +14,8 @@ struct Vec2;
 
 struct Color;
 
+struct Mat4;
+
 struct Texture;
 struct TextureT;
 
@@ -22,6 +24,9 @@ struct MaterialT;
 
 struct Mesh;
 struct MeshT;
+
+struct Tree;
+struct TreeT;
 
 struct Model;
 struct ModelT;
@@ -185,6 +190,98 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Color FLATBUFFERS_FINAL_CLASS {
 };
 FLATBUFFERS_STRUCT_END(Color, 16);
 
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Mat4 FLATBUFFERS_FINAL_CLASS {
+ private:
+  float a1_;
+  float a2_;
+  float a3_;
+  float a4_;
+  float b1_;
+  float b2_;
+  float b3_;
+  float b4_;
+  float c1_;
+  float c2_;
+  float c3_;
+  float c4_;
+  float d1_;
+  float d2_;
+  float d3_;
+  float d4_;
+
+ public:
+  Mat4() {
+    memset(this, 0, sizeof(Mat4));
+  }
+  Mat4(float _a1, float _a2, float _a3, float _a4, float _b1, float _b2, float _b3, float _b4, float _c1, float _c2, float _c3, float _c4, float _d1, float _d2, float _d3, float _d4)
+      : a1_(flatbuffers::EndianScalar(_a1)),
+        a2_(flatbuffers::EndianScalar(_a2)),
+        a3_(flatbuffers::EndianScalar(_a3)),
+        a4_(flatbuffers::EndianScalar(_a4)),
+        b1_(flatbuffers::EndianScalar(_b1)),
+        b2_(flatbuffers::EndianScalar(_b2)),
+        b3_(flatbuffers::EndianScalar(_b3)),
+        b4_(flatbuffers::EndianScalar(_b4)),
+        c1_(flatbuffers::EndianScalar(_c1)),
+        c2_(flatbuffers::EndianScalar(_c2)),
+        c3_(flatbuffers::EndianScalar(_c3)),
+        c4_(flatbuffers::EndianScalar(_c4)),
+        d1_(flatbuffers::EndianScalar(_d1)),
+        d2_(flatbuffers::EndianScalar(_d2)),
+        d3_(flatbuffers::EndianScalar(_d3)),
+        d4_(flatbuffers::EndianScalar(_d4)) {
+  }
+  float a1() const {
+    return flatbuffers::EndianScalar(a1_);
+  }
+  float a2() const {
+    return flatbuffers::EndianScalar(a2_);
+  }
+  float a3() const {
+    return flatbuffers::EndianScalar(a3_);
+  }
+  float a4() const {
+    return flatbuffers::EndianScalar(a4_);
+  }
+  float b1() const {
+    return flatbuffers::EndianScalar(b1_);
+  }
+  float b2() const {
+    return flatbuffers::EndianScalar(b2_);
+  }
+  float b3() const {
+    return flatbuffers::EndianScalar(b3_);
+  }
+  float b4() const {
+    return flatbuffers::EndianScalar(b4_);
+  }
+  float c1() const {
+    return flatbuffers::EndianScalar(c1_);
+  }
+  float c2() const {
+    return flatbuffers::EndianScalar(c2_);
+  }
+  float c3() const {
+    return flatbuffers::EndianScalar(c3_);
+  }
+  float c4() const {
+    return flatbuffers::EndianScalar(c4_);
+  }
+  float d1() const {
+    return flatbuffers::EndianScalar(d1_);
+  }
+  float d2() const {
+    return flatbuffers::EndianScalar(d2_);
+  }
+  float d3() const {
+    return flatbuffers::EndianScalar(d3_);
+  }
+  float d4() const {
+    return flatbuffers::EndianScalar(d4_);
+  }
+};
+FLATBUFFERS_STRUCT_END(Mat4, 64);
+
 struct TextureT : public flatbuffers::NativeTable {
   typedef Texture TableType;
   std::string path;
@@ -195,7 +292,7 @@ struct TextureT : public flatbuffers::NativeTable {
   TextureMapMode mappingV;
   TextureT()
       : uvIndex(0),
-        blendFactor(0.0f),
+        blendFactor(1.0f),
         operation(TextureOperation_Multiply),
         mappingU(TextureMapMode_Wrap),
         mappingV(TextureMapMode_Wrap) {
@@ -219,7 +316,7 @@ struct Texture FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetField<uint32_t>(VT_UVINDEX, 0);
   }
   float blendFactor() const {
-    return GetField<float>(VT_BLENDFACTOR, 0.0f);
+    return GetField<float>(VT_BLENDFACTOR, 1.0f);
   }
   TextureOperation operation() const {
     return static_cast<TextureOperation>(GetField<int8_t>(VT_OPERATION, 0));
@@ -256,7 +353,7 @@ struct TextureBuilder {
     fbb_.AddElement<uint32_t>(Texture::VT_UVINDEX, uvIndex, 0);
   }
   void add_blendFactor(float blendFactor) {
-    fbb_.AddElement<float>(Texture::VT_BLENDFACTOR, blendFactor, 0.0f);
+    fbb_.AddElement<float>(Texture::VT_BLENDFACTOR, blendFactor, 1.0f);
   }
   void add_operation(TextureOperation operation) {
     fbb_.AddElement<int8_t>(Texture::VT_OPERATION, static_cast<int8_t>(operation), 0);
@@ -283,7 +380,7 @@ inline flatbuffers::Offset<Texture> CreateTexture(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> path = 0,
     uint32_t uvIndex = 0,
-    float blendFactor = 0.0f,
+    float blendFactor = 1.0f,
     TextureOperation operation = TextureOperation_Multiply,
     TextureMapMode mappingU = TextureMapMode_Wrap,
     TextureMapMode mappingV = TextureMapMode_Wrap) {
@@ -301,7 +398,7 @@ inline flatbuffers::Offset<Texture> CreateTextureDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *path = nullptr,
     uint32_t uvIndex = 0,
-    float blendFactor = 0.0f,
+    float blendFactor = 1.0f,
     TextureOperation operation = TextureOperation_Multiply,
     TextureMapMode mappingU = TextureMapMode_Wrap,
     TextureMapMode mappingV = TextureMapMode_Wrap) {
@@ -587,6 +684,7 @@ struct MeshT : public flatbuffers::NativeTable {
   std::vector<uint16_t> indices;
   uint32_t material;
   std::vector<Color> colors;
+  std::unique_ptr<Mat4> transform;
   MeshT()
       : material(0) {
   }
@@ -602,7 +700,8 @@ struct Mesh FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_BITANGENTS = 12,
     VT_INDICES = 14,
     VT_MATERIAL = 16,
-    VT_COLORS = 18
+    VT_COLORS = 18,
+    VT_TRANSFORM = 20
   };
   const flatbuffers::Vector<const Vec3 *> *positions() const {
     return GetPointer<const flatbuffers::Vector<const Vec3 *> *>(VT_POSITIONS);
@@ -628,6 +727,9 @@ struct Mesh FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<const Color *> *colors() const {
     return GetPointer<const flatbuffers::Vector<const Color *> *>(VT_COLORS);
   }
+  const Mat4 *transform() const {
+    return GetStruct<const Mat4 *>(VT_TRANSFORM);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_POSITIONS) &&
@@ -645,6 +747,7 @@ struct Mesh FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<uint32_t>(verifier, VT_MATERIAL) &&
            VerifyOffset(verifier, VT_COLORS) &&
            verifier.VerifyVector(colors()) &&
+           VerifyField<Mat4>(verifier, VT_TRANSFORM) &&
            verifier.EndTable();
   }
   MeshT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -679,6 +782,9 @@ struct MeshBuilder {
   void add_colors(flatbuffers::Offset<flatbuffers::Vector<const Color *>> colors) {
     fbb_.AddOffset(Mesh::VT_COLORS, colors);
   }
+  void add_transform(const Mat4 *transform) {
+    fbb_.AddStruct(Mesh::VT_TRANSFORM, transform);
+  }
   explicit MeshBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -700,8 +806,10 @@ inline flatbuffers::Offset<Mesh> CreateMesh(
     flatbuffers::Offset<flatbuffers::Vector<const Vec3 *>> bitangents = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint16_t>> indices = 0,
     uint32_t material = 0,
-    flatbuffers::Offset<flatbuffers::Vector<const Color *>> colors = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<const Color *>> colors = 0,
+    const Mat4 *transform = 0) {
   MeshBuilder builder_(_fbb);
+  builder_.add_transform(transform);
   builder_.add_colors(colors);
   builder_.add_material(material);
   builder_.add_indices(indices);
@@ -722,7 +830,8 @@ inline flatbuffers::Offset<Mesh> CreateMeshDirect(
     const std::vector<Vec3> *bitangents = nullptr,
     const std::vector<uint16_t> *indices = nullptr,
     uint32_t material = 0,
-    const std::vector<Color> *colors = nullptr) {
+    const std::vector<Color> *colors = nullptr,
+    const Mat4 *transform = 0) {
   auto positions__ = positions ? _fbb.CreateVectorOfStructs<Vec3>(*positions) : 0;
   auto normals__ = normals ? _fbb.CreateVectorOfStructs<Vec3>(*normals) : 0;
   auto texCoords__ = texCoords ? _fbb.CreateVectorOfStructs<Vec2>(*texCoords) : 0;
@@ -739,15 +848,109 @@ inline flatbuffers::Offset<Mesh> CreateMeshDirect(
       bitangents__,
       indices__,
       material,
-      colors__);
+      colors__,
+      transform);
 }
 
 flatbuffers::Offset<Mesh> CreateMesh(flatbuffers::FlatBufferBuilder &_fbb, const MeshT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct TreeT : public flatbuffers::NativeTable {
+  typedef Tree TableType;
+  std::unique_ptr<Mat4> transform;
+  std::vector<std::unique_ptr<TreeT>> childs;
+  std::vector<uint32_t> meshes;
+  TreeT() {
+  }
+};
+
+struct Tree FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef TreeT NativeTableType;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TRANSFORM = 4,
+    VT_CHILDS = 6,
+    VT_MESHES = 8
+  };
+  const Mat4 *transform() const {
+    return GetStruct<const Mat4 *>(VT_TRANSFORM);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<Tree>> *childs() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Tree>> *>(VT_CHILDS);
+  }
+  const flatbuffers::Vector<uint32_t> *meshes() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_MESHES);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<Mat4>(verifier, VT_TRANSFORM) &&
+           VerifyOffset(verifier, VT_CHILDS) &&
+           verifier.VerifyVector(childs()) &&
+           verifier.VerifyVectorOfTables(childs()) &&
+           VerifyOffset(verifier, VT_MESHES) &&
+           verifier.VerifyVector(meshes()) &&
+           verifier.EndTable();
+  }
+  TreeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(TreeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static flatbuffers::Offset<Tree> Pack(flatbuffers::FlatBufferBuilder &_fbb, const TreeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct TreeBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_transform(const Mat4 *transform) {
+    fbb_.AddStruct(Tree::VT_TRANSFORM, transform);
+  }
+  void add_childs(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Tree>>> childs) {
+    fbb_.AddOffset(Tree::VT_CHILDS, childs);
+  }
+  void add_meshes(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> meshes) {
+    fbb_.AddOffset(Tree::VT_MESHES, meshes);
+  }
+  explicit TreeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  TreeBuilder &operator=(const TreeBuilder &);
+  flatbuffers::Offset<Tree> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Tree>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Tree> CreateTree(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const Mat4 *transform = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Tree>>> childs = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> meshes = 0) {
+  TreeBuilder builder_(_fbb);
+  builder_.add_meshes(meshes);
+  builder_.add_childs(childs);
+  builder_.add_transform(transform);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<Tree> CreateTreeDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const Mat4 *transform = 0,
+    const std::vector<flatbuffers::Offset<Tree>> *childs = nullptr,
+    const std::vector<uint32_t> *meshes = nullptr) {
+  auto childs__ = childs ? _fbb.CreateVector<flatbuffers::Offset<Tree>>(*childs) : 0;
+  auto meshes__ = meshes ? _fbb.CreateVector<uint32_t>(*meshes) : 0;
+  return ModelData::CreateTree(
+      _fbb,
+      transform,
+      childs__,
+      meshes__);
+}
+
+flatbuffers::Offset<Tree> CreateTree(flatbuffers::FlatBufferBuilder &_fbb, const TreeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct ModelT : public flatbuffers::NativeTable {
   typedef Model TableType;
   std::vector<std::unique_ptr<MeshT>> meshes;
   std::vector<std::unique_ptr<MaterialT>> materials;
+  std::unique_ptr<TreeT> tree;
   ModelT() {
   }
 };
@@ -756,13 +959,17 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ModelT NativeTableType;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_MESHES = 4,
-    VT_MATERIALS = 6
+    VT_MATERIALS = 6,
+    VT_TREE = 8
   };
   const flatbuffers::Vector<flatbuffers::Offset<Mesh>> *meshes() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Mesh>> *>(VT_MESHES);
   }
   const flatbuffers::Vector<flatbuffers::Offset<Material>> *materials() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Material>> *>(VT_MATERIALS);
+  }
+  const Tree *tree() const {
+    return GetPointer<const Tree *>(VT_TREE);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -772,6 +979,8 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_MATERIALS) &&
            verifier.VerifyVector(materials()) &&
            verifier.VerifyVectorOfTables(materials()) &&
+           VerifyOffset(verifier, VT_TREE) &&
+           verifier.VerifyTable(tree()) &&
            verifier.EndTable();
   }
   ModelT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -788,6 +997,9 @@ struct ModelBuilder {
   void add_materials(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Material>>> materials) {
     fbb_.AddOffset(Model::VT_MATERIALS, materials);
   }
+  void add_tree(flatbuffers::Offset<Tree> tree) {
+    fbb_.AddOffset(Model::VT_TREE, tree);
+  }
   explicit ModelBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -803,8 +1015,10 @@ struct ModelBuilder {
 inline flatbuffers::Offset<Model> CreateModel(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Mesh>>> meshes = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Material>>> materials = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Material>>> materials = 0,
+    flatbuffers::Offset<Tree> tree = 0) {
   ModelBuilder builder_(_fbb);
+  builder_.add_tree(tree);
   builder_.add_materials(materials);
   builder_.add_meshes(meshes);
   return builder_.Finish();
@@ -813,13 +1027,15 @@ inline flatbuffers::Offset<Model> CreateModel(
 inline flatbuffers::Offset<Model> CreateModelDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<flatbuffers::Offset<Mesh>> *meshes = nullptr,
-    const std::vector<flatbuffers::Offset<Material>> *materials = nullptr) {
+    const std::vector<flatbuffers::Offset<Material>> *materials = nullptr,
+    flatbuffers::Offset<Tree> tree = 0) {
   auto meshes__ = meshes ? _fbb.CreateVector<flatbuffers::Offset<Mesh>>(*meshes) : 0;
   auto materials__ = materials ? _fbb.CreateVector<flatbuffers::Offset<Material>>(*materials) : 0;
   return ModelData::CreateModel(
       _fbb,
       meshes__,
-      materials__);
+      materials__,
+      tree);
 }
 
 flatbuffers::Offset<Model> CreateModel(flatbuffers::FlatBufferBuilder &_fbb, const ModelT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -947,6 +1163,7 @@ inline void Mesh::UnPackTo(MeshT *_o, const flatbuffers::resolver_function_t *_r
   { auto _e = indices(); if (_e) { _o->indices.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->indices[_i] = _e->Get(_i); } } };
   { auto _e = material(); _o->material = _e; };
   { auto _e = colors(); if (_e) { _o->colors.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->colors[_i] = *_e->Get(_i); } } };
+  { auto _e = transform(); if (_e) _o->transform = std::unique_ptr<Mat4>(new Mat4(*_e)); };
 }
 
 inline flatbuffers::Offset<Mesh> Mesh::Pack(flatbuffers::FlatBufferBuilder &_fbb, const MeshT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -965,6 +1182,7 @@ inline flatbuffers::Offset<Mesh> CreateMesh(flatbuffers::FlatBufferBuilder &_fbb
   auto _indices = _o->indices.size() ? _fbb.CreateVector(_o->indices) : 0;
   auto _material = _o->material;
   auto _colors = _o->colors.size() ? _fbb.CreateVectorOfStructs(_o->colors) : 0;
+  auto _transform = _o->transform ? _o->transform.get() : 0;
   return ModelData::CreateMesh(
       _fbb,
       _positions,
@@ -974,7 +1192,40 @@ inline flatbuffers::Offset<Mesh> CreateMesh(flatbuffers::FlatBufferBuilder &_fbb
       _bitangents,
       _indices,
       _material,
-      _colors);
+      _colors,
+      _transform);
+}
+
+inline TreeT *Tree::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = new TreeT();
+  UnPackTo(_o, _resolver);
+  return _o;
+}
+
+inline void Tree::UnPackTo(TreeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = transform(); if (_e) _o->transform = std::unique_ptr<Mat4>(new Mat4(*_e)); };
+  { auto _e = childs(); if (_e) { _o->childs.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->childs[_i] = std::unique_ptr<TreeT>(_e->Get(_i)->UnPack(_resolver)); } } };
+  { auto _e = meshes(); if (_e) { _o->meshes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->meshes[_i] = _e->Get(_i); } } };
+}
+
+inline flatbuffers::Offset<Tree> Tree::Pack(flatbuffers::FlatBufferBuilder &_fbb, const TreeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateTree(_fbb, _o, _rehasher);
+}
+
+inline flatbuffers::Offset<Tree> CreateTree(flatbuffers::FlatBufferBuilder &_fbb, const TreeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const TreeT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _transform = _o->transform ? _o->transform.get() : 0;
+  auto _childs = _o->childs.size() ? _fbb.CreateVector<flatbuffers::Offset<Tree>> (_o->childs.size(), [](size_t i, _VectorArgs *__va) { return CreateTree(*__va->__fbb, __va->__o->childs[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _meshes = _o->meshes.size() ? _fbb.CreateVector(_o->meshes) : 0;
+  return ModelData::CreateTree(
+      _fbb,
+      _transform,
+      _childs,
+      _meshes);
 }
 
 inline ModelT *Model::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
@@ -988,6 +1239,7 @@ inline void Model::UnPackTo(ModelT *_o, const flatbuffers::resolver_function_t *
   (void)_resolver;
   { auto _e = meshes(); if (_e) { _o->meshes.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->meshes[_i] = std::unique_ptr<MeshT>(_e->Get(_i)->UnPack(_resolver)); } } };
   { auto _e = materials(); if (_e) { _o->materials.resize(_e->size()); for (flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->materials[_i] = std::unique_ptr<MaterialT>(_e->Get(_i)->UnPack(_resolver)); } } };
+  { auto _e = tree(); if (_e) _o->tree = std::unique_ptr<TreeT>(_e->UnPack(_resolver)); };
 }
 
 inline flatbuffers::Offset<Model> Model::Pack(flatbuffers::FlatBufferBuilder &_fbb, const ModelT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -1000,10 +1252,12 @@ inline flatbuffers::Offset<Model> CreateModel(flatbuffers::FlatBufferBuilder &_f
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const ModelT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _meshes = _o->meshes.size() ? _fbb.CreateVector<flatbuffers::Offset<Mesh>> (_o->meshes.size(), [](size_t i, _VectorArgs *__va) { return CreateMesh(*__va->__fbb, __va->__o->meshes[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _materials = _o->materials.size() ? _fbb.CreateVector<flatbuffers::Offset<Material>> (_o->materials.size(), [](size_t i, _VectorArgs *__va) { return CreateMaterial(*__va->__fbb, __va->__o->materials[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _tree = _o->tree ? CreateTree(_fbb, _o->tree.get(), _rehasher) : 0;
   return ModelData::CreateModel(
       _fbb,
       _meshes,
-      _materials);
+      _materials,
+      _tree);
 }
 
 inline const ModelData::Model *GetModel(const void *buf) {

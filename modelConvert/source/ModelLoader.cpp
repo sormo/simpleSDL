@@ -140,7 +140,7 @@ std::unique_ptr<ModelData::MaterialT> ProcessMaterial(aiMaterial * material)
     return result;
 }
 
-std::unique_ptr<ModelData::MeshT> ProcessMesh(aiMesh * mesh, const aiScene * scene)
+std::unique_ptr<ModelData::MeshT> ProcessMesh(aiMesh * mesh)
 {
     // data to fill
     std::unique_ptr<ModelData::MeshT> result = std::make_unique<ModelData::MeshT>();
@@ -197,22 +197,27 @@ std::unique_ptr<ModelData::MeshT> ProcessMesh(aiMesh * mesh, const aiScene * sce
     return result;
 }
 
-void ProcessNode(aiNode * node, const aiScene * scene, ModelData::ModelT & model)
+std::unique_ptr<ModelData::Mat4> Convert(const aiMatrix4x4 & m)
 {
-    // process each mesh located at the current node
-    for (uint32_t i = 0; i < node->mNumMeshes; i++)
-    {
-        // the node object only contains indices to index the actual objects in the scene. 
-        // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-        aiMesh * mesh = scene->mMeshes[node->mMeshes[i]];
-        model.meshes.push_back(ProcessMesh(mesh, scene));
-    }
-    // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-    for (unsigned int i = 0; i < node->mNumChildren; i++)
-    {
-        ProcessNode(node->mChildren[i], scene, model);
-    }
+    return std::make_unique<ModelData::Mat4>(
+        m.a1, m.a2, m.a3, m.a4,
+        m.b1, m.b2, m.b3, m.b4,
+        m.c1, m.c2, m.c3, m.c4,
+        m.d1, m.d2, m.d3, m.d4);
+}
 
+std::unique_ptr<ModelData::TreeT> ProcessTree(aiNode * node)
+{
+    std::unique_ptr<ModelData::TreeT> result = std::make_unique<ModelData::TreeT>();
+
+    result->transform = Convert(node->mTransformation);
+    for (uint32_t i = 0; i < node->mNumMeshes; ++i)
+        result->meshes.push_back(node->mMeshes[i]);
+
+    for (uint32_t i = 0; i < node->mNumChildren; ++i)
+        result->childs.push_back(ProcessTree(node->mChildren[i]));
+
+    return result;
 }
 
 void CreateLogger()
@@ -255,8 +260,14 @@ std::optional<ModelData::ModelT> LoadModel(const char * path)
         data.materials.push_back(ProcessMaterial(scene->mMaterials[i]));
     }
 
-    // process ASSIMP's root node recursively
-    ProcessNode(scene->mRootNode, scene, data);
+    // process meshes
+    for (uint32_t i = 0; i < scene->mNumMeshes; i++)
+    {
+        data.meshes.push_back(ProcessMesh(scene->mMeshes[i]));
+    }
+
+    // recursively process tree structure
+    data.tree = ProcessTree(scene->mRootNode);
 
     return data;
 }

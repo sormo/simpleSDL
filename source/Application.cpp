@@ -165,8 +165,8 @@ namespace Application
         light.pointCount = 1;
         light.spotCount = 0;
 
-        //g_model.reset(new Model("models/moses/scene.model", light));
-        g_model.reset(new Model("models/skull/craneo.model", light));
+        g_model.reset(new Model("models/moses/scene.model", light));
+        //g_model.reset(new Model("models/skull/craneo.model", light));
         //g_model.reset(new Model("models/cube/cube.model", light));
         g_light.reset(new Light());
 

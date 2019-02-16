@@ -9,9 +9,26 @@
 #include "CommonProject.h"
 #include "TextureManager.h"
 
-Mesh::Mesh(const ModelData::MeshT & mesh, ModelMaterial & material)
-    : m_material(material)
+glm::mat4 Convert(const ModelData::Mat4 & m)
 {
+    return glm::mat4{
+        { m.a1(), m.b1(), m.c1(), m.d1() },
+        { m.a2(), m.b2(), m.c2(), m.d2() },
+        { m.a3(), m.b3(), m.c3(), m.d3() },
+        { m.a4(), m.b4(), m.c4(), m.d4() }
+    };
+}
+
+Mesh::Mesh(const ModelData::MeshT & mesh, std::vector<std::unique_ptr<ModelMaterial>> & materials)
+{
+    uint32_t materialIndex = mesh.material;
+    if (materialIndex >= materials.size())
+    {
+        printf("Error loading model, mesh has invalid material index (%d)", materialIndex);
+        throw std::runtime_error("Error loading model.");
+    }
+    m_material = materials[materialIndex].get();
+
     InitBuffers(mesh.positions, mesh.normals, mesh.texCoords, mesh.tangents, mesh.bitangents, mesh.indices);
 }
 
@@ -21,10 +38,10 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &m_vboIndices);
     glDeleteBuffers(1, &m_normals);
 
-    if (m_material.shader->GetConfig().GetUVChannelsCount())
+    if (m_material->shader->GetConfig().GetUVChannelsCount())
         glDeleteBuffers(m_texCoords.size(), m_texCoords.data());
 
-    if (m_material.shader->GetConfig().textures.normal.size())
+    if (m_material->shader->GetConfig().textures.normal.size())
     {
         glDeleteBuffers(1, &m_tangents);
         glDeleteBuffers(1, &m_bitangents);
@@ -34,51 +51,65 @@ Mesh::~Mesh()
         glDeleteVertexArrays(1, &m_vao);
 }
 
-// render the mesh
-void Mesh::Draw()
+void Mesh::BindUniforms(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
+{
+    glm::mat4 MVP = projection * view * model;
+
+    m_material->shader->GetShader().SetUniform(MVP, "MVP");
+    m_material->shader->GetShader().SetUniform(model, "M");
+}
+
+void Mesh::BindData()
 {
     // bind mesh specific data
+    for (size_t i = 0; i < m_material->shader->GetConfig().textures.ambient.size(); ++i)
+        m_material->shader->GetShader().BindTexture(m_material->textures.ambient[i], m_material->shader->GetLocations().textureAmbient[i]);
 
-    for (size_t i = 0; i < m_material.shader->GetConfig().textures.ambient.size(); ++i)
-        m_material.shader->GetShader().BindTexture(m_material.textures.ambient[i], m_material.shader->GetLocations().textureAmbient[i]);
+    for (size_t i = 0; i < m_material->shader->GetConfig().textures.diffuse.size(); ++i)
+        m_material->shader->GetShader().BindTexture(m_material->textures.diffuse[i], m_material->shader->GetLocations().textureDiffuse[i]);
 
-    for (size_t i = 0; i < m_material.shader->GetConfig().textures.diffuse.size(); ++i)
-        m_material.shader->GetShader().BindTexture(m_material.textures.diffuse[i], m_material.shader->GetLocations().textureDiffuse[i]);
+    for (size_t i = 0; i < m_material->shader->GetConfig().textures.specular.size(); ++i)
+        m_material->shader->GetShader().BindTexture(m_material->textures.specular[i], m_material->shader->GetLocations().textureSpecular[i]);
 
-    for (size_t i = 0; i < m_material.shader->GetConfig().textures.specular.size(); ++i)
-        m_material.shader->GetShader().BindTexture(m_material.textures.specular[i], m_material.shader->GetLocations().textureSpecular[i]);
-
-    for (size_t i = 0; i < m_material.shader->GetConfig().textures.normal.size(); ++i)
-        m_material.shader->GetShader().BindTexture(m_material.textures.normal[i], m_material.shader->GetLocations().textureNormal[i]);
+    for (size_t i = 0; i < m_material->shader->GetConfig().textures.normal.size(); ++i)
+        m_material->shader->GetShader().BindTexture(m_material->textures.normal[i], m_material->shader->GetLocations().textureNormal[i]);
 
     //BindTextures(m_textureHeight, "textureHeight", shader);
 
     if (IsVAOSupported())
     {
-        m_material.shader->GetShader().BindVAO(m_vao);
+        m_material->shader->GetShader().BindVAO(m_vao);
     }
     else
     {
-        m_material.shader->GetShader().BindBuffer<glm::vec3>(m_positions, m_material.shader->GetLocations().positions);
-        m_material.shader->GetShader().BindBuffer<glm::vec3>(m_normals, m_material.shader->GetLocations().normals);
+        m_material->shader->GetShader().BindBuffer<glm::vec3>(m_positions, m_material->shader->GetLocations().positions);
+        m_material->shader->GetShader().BindBuffer<glm::vec3>(m_normals, m_material->shader->GetLocations().normals);
 
-        for (uint32_t i = 0; i < m_material.shader->GetConfig().GetUVChannelsCount(); ++i)
-            m_material.shader->GetShader().BindBuffer<glm::vec2>(m_texCoords[i], m_material.shader->GetLocations().texCoords[i]);
+        for (uint32_t i = 0; i < m_material->shader->GetConfig().GetUVChannelsCount(); ++i)
+            m_material->shader->GetShader().BindBuffer<glm::vec2>(m_texCoords[i], m_material->shader->GetLocations().texCoords[i]);
 
-        if (m_material.shader->GetConfig().textures.normal.size())
+        if (m_material->shader->GetConfig().textures.normal.size())
         {
-            m_material.shader->GetShader().BindBuffer<glm::vec3>(m_tangents, m_material.shader->GetLocations().tangents);
-            //m_material.shader->GetShader().BindBuffer<glm::vec3>(m_bitangents, m_shader->GetLocations().bitangents);
+            m_material->shader->GetShader().BindBuffer<glm::vec3>(m_tangents, m_material->shader->GetLocations().tangents);
+            //m_material->shader->GetShader().BindBuffer<glm::vec3>(m_bitangents, m_shader->GetLocations().bitangents);
         }
     }
 
     // TODO can be bound to VAO ???
-    m_material.shader->GetShader().BindElementBuffer(m_vboIndices);
+    m_material->shader->GetShader().BindElementBuffer(m_vboIndices);
+}
+
+// render the mesh
+void Mesh::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
+{
+    BindUniforms(model, view, projection);
+
+    BindData();
 
     glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
     CheckGlError("glDrawElements");
 
-    m_material.shader->GetShader().CleanUp();
+    m_material->shader->GetShader().CleanUp();
 }
 
 template<class T, uint32_t N>
@@ -132,18 +163,18 @@ void Mesh::InitBuffers(const std::vector<ModelData::Vec3> & positions,
         CheckGlError("glBindVertexArray");
     }
 
-    m_positions = CreateFloatVBO<ModelData::Vec3, 3>(m_material.shader->GetShader().GetLocation("positionModelSpace", Shader::LocationType::Attrib), positions, bindVAO);
-    m_normals = CreateFloatVBO<ModelData::Vec3, 3>(m_material.shader->GetShader().GetLocation("normalModelSpace", Shader::LocationType::Attrib), normals, bindVAO);
+    m_positions = CreateFloatVBO<ModelData::Vec3, 3>(m_material->shader->GetShader().GetLocation("positionModelSpace", Shader::LocationType::Attrib), positions, bindVAO);
+    m_normals = CreateFloatVBO<ModelData::Vec3, 3>(m_material->shader->GetShader().GetLocation("normalModelSpace", Shader::LocationType::Attrib), normals, bindVAO);
 
-    if (m_material.shader->GetConfig().textures.normal.size())
+    if (m_material->shader->GetConfig().textures.normal.size())
     {
-        m_tangents = CreateFloatVBO<ModelData::Vec3, 3>(m_material.shader->GetShader().GetLocation("tangentModelSpace", Shader::LocationType::Attrib), tangents, bindVAO);
+        m_tangents = CreateFloatVBO<ModelData::Vec3, 3>(m_material->shader->GetShader().GetLocation("tangentModelSpace", Shader::LocationType::Attrib), tangents, bindVAO);
         //m_bitangents = CreateFloatVBO<ModelData::Vec3, 3>(m_shader->GetShader().GetLocation("bitangentModelSpace", Shader::LocationType::Attrib), bitangents, bindVAO);
     }
 
-    for (uint32_t i = 0; i < m_material.shader->GetConfig().GetUVChannelsCount(); ++i)
+    for (uint32_t i = 0; i < m_material->shader->GetConfig().GetUVChannelsCount(); ++i)
     {
-        m_texCoords.push_back(CreateFloatVBO<ModelData::Vec2, 2>(m_material.shader->GetShader().GetLocation("vertexUV" + std::to_string(i), Shader::LocationType::Attrib),
+        m_texCoords.push_back(CreateFloatVBO<ModelData::Vec2, 2>(m_material->shader->GetShader().GetLocation("vertexUV" + std::to_string(i), Shader::LocationType::Attrib),
             &texCoords[i * positions.size()], positions.size(), bindVAO));
     }
 
@@ -241,6 +272,24 @@ Model::Model(const char * path, ModelShader::ConfigLight light)
     auto model = ModelData::UnPackModel(data.data());
     auto root = Common::GetDirectoryFromFilePath(path);
 
+    // process materials
+    ProcessMaterials(model.get(), root);
+
+    // process meshes
+    ProcessMeshes(model.get());
+
+    // recursively process tree
+    m_tree = ProcessTree(*model->tree);
+}
+
+Model::~Model()
+{
+    // clear meshes before materials
+    m_meshes.clear();
+}
+
+void Model::ProcessMaterials(ModelData::ModelT * model, const std::string & root)
+{
     for (size_t i = 0; i < model->materials.size(); ++i)
     {
         auto material = CreateMaterial(root, *model->materials[i].get());
@@ -249,30 +298,31 @@ Model::Model(const char * path, ModelShader::ConfigLight light)
             printf("Error creating material.");
             throw std::runtime_error("Error creating material.");
         }
-        
+
         m_materials.push_back(std::move(material));
-    }
-
-    for (size_t i = 0; i < model->meshes.size(); ++i)
-    {
-        uint32_t materialIndex = model->meshes[i]->material;
-        if (materialIndex >= m_materials.size())
-        {
-            printf("Error loading model, mesh has invalid material index (%d)", materialIndex);
-            throw std::runtime_error("Error loading model.");
-        }
-
-        auto & material = *m_materials[materialIndex];
-
-        // TODO check is mesh constructed successfully
-        m_meshes.push_back(std::make_unique<Mesh>(*model->meshes[i].get(), material));
     }
 }
 
-Model::~Model()
+void Model::ProcessMeshes(ModelData::ModelT * model)
 {
-    // clear meshes before materials
-    m_meshes.clear();
+    for (size_t i = 0; i < model->meshes.size(); ++i)
+    {
+        // TODO check is mesh constructed successfully
+        m_meshes.push_back(std::make_unique<Mesh>(*model->meshes[i].get(), m_materials));
+    }
+}
+
+Model::Tree Model::ProcessTree(ModelData::TreeT & node)
+{
+    Model::Tree result;
+
+    result.transform = Convert(*node.transform);
+    result.meshes = node.meshes;
+
+    for (auto & child : node.childs)
+        result.childs.push_back(ProcessTree(*child));
+
+    return result;
 }
 
 void Model::Bind(const ModelShader::Data & data)
@@ -283,14 +333,17 @@ void Model::Bind(const ModelShader::Data & data)
 
 void Model::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
 {
-    glm::mat4 MVP = projection * view * model;
+    DrawInternal(m_tree, model, view, projection);
+}
 
-    for (auto & material : m_materials)
-    {
-        material->shader->GetShader().SetUniform(MVP, "MVP");
-        material->shader->GetShader().SetUniform(model, "M");
-    }
+void Model::DrawInternal(Tree & tree, const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
+{
+    glm::mat4 nodeModel = model * tree.transform;
+    //glm::mat4 nodeModel = model;
 
-    for (auto & mesh : m_meshes)
-        mesh->Draw();
+    for (uint32_t i : tree.meshes)
+        m_meshes[i]->Draw(nodeModel, view, projection);
+
+    for (Tree & child : tree.childs)
+        DrawInternal(child, nodeModel, view, projection);
 }

@@ -21,6 +21,29 @@ struct Color
 	a:float;
 }
 
+struct Mat4
+{
+	a1:float;
+	a2:float;
+	a3:float;
+	a4:float;
+
+	b1:float;
+	b2:float;
+	b3:float;
+	b4:float;
+
+	c1:float;
+	c2:float;
+	c3:float;
+	c4:float;
+
+	d1:float;
+	d2:float;
+	d3:float;
+	d4:float;
+}
+
 enum TextureOperation:byte
 {
     // T = T1 * T2
@@ -92,12 +115,24 @@ table Mesh
     material:uint32;
     // there can be multiple colors per vertex, stored in a continuous array
     colors:[Color];
+    // transformation relative to parent
+    transform:Mat4;
+}
+
+table Tree
+{
+	transform:Mat4;
+	childs:[Tree];
+	// indices to meshes array of model
+	meshes:[uint32];
 }
 
 table Model
 {
     meshes:[Mesh];
     materials:[Material];
+
+    tree:Tree;
 }
 
 root_type Model;
