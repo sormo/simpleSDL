@@ -51,6 +51,7 @@ public:
         std::vector<TextureStackEntry> diffuse;
         std::vector<TextureStackEntry> specular;
         std::vector<TextureStackEntry> normal;
+        std::vector<TextureStackEntry> lightmap;
     };
 
     struct Config
@@ -106,6 +107,8 @@ public:
         std::vector<GLuint> textureDiffuse;
         std::vector<GLuint> textureSpecular;
         std::vector<GLuint> textureNormal;
+        // TODO lightmaps are not yet used in shader
+        std::vector<GLuint> textureLightmaps;
 
         // lights
         struct Light

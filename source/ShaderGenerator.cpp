@@ -55,6 +55,8 @@ void AppendUniformsMaterial(const ModelShader::Config & config, std::string & re
         result += "uniform sampler2D textureSpecular[" + std::to_string(config.textures.specular.size()) + "];\n";
     if (config.textures.normal.size())
         result += "uniform sampler2D textureNormal[" + std::to_string(config.textures.normal.size()) + "];\n";
+    if (config.textures.lightmap.size())
+        result += "uniform sampler2D textureLightmap[" + std::to_string(config.textures.lightmap.size()) + "];\n";
     result += "// *************************\n";
 }
 
@@ -310,7 +312,7 @@ std::string MapOperation(ModelShader::TextureStackEntry::Operation operation)
     }
 }
 
-void AppendFunctionColorSpecific(std::string name, const std::string & base, const std::vector<ModelShader::TextureStackEntry> & stack, std::string & result)
+void AppendFunctionColorTextureStack(std::string name, const std::string & base, const std::vector<ModelShader::TextureStackEntry> & stack, std::string & result)
 {
     result += "vec3 Calc" + name + "Color()\n";
     result += "{\n";
@@ -336,9 +338,15 @@ void AppendFunctionColor(const ModelShader::Config & config, std::string & resul
     bool useMaterial = config.flags & (uint32_t)ModelShader::Config::Flags::UseRuntimeMaterial;
 
     result += "// *** color functions ***\n";
-    AppendFunctionColorSpecific("Ambient", useMaterial ? "material.ambient" : Convert(config.material.ambient), config.textures.ambient, result);
-    AppendFunctionColorSpecific("Diffuse", useMaterial ? "material.diffuse" : Convert(config.material.diffuse), config.textures.diffuse, result);
-    AppendFunctionColorSpecific("Specular", useMaterial ? "material.specular" : Convert(config.material.specular), config.textures.specular, result);
+    AppendFunctionColorTextureStack("Ambient", useMaterial ? "material.ambient" : Convert(config.material.ambient), config.textures.ambient, result);
+    AppendFunctionColorTextureStack("Diffuse", useMaterial ? "material.diffuse" : Convert(config.material.diffuse), config.textures.diffuse, result);
+    AppendFunctionColorTextureStack("Specular", useMaterial ? "material.specular" : Convert(config.material.specular), config.textures.specular, result);
+    // 
+    if (config.textures.lightmap.size())
+        AppendFunctionColorTextureStack("Lightmap", "vec3(1.0, 1.0, 1.0)", config.textures.lightmap, result);
+    if (config.textures.normal.size())
+        AppendFunctionColorTextureStack("Normal", "vec3(1.0, 1.0, 1.0)", config.textures.normal, result);
+
     result += "// ***********************\n";
 }
 
@@ -362,8 +370,7 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
     result += "    vec3 normal = vec3(0.0, 0.0, 0.0);\n\n";
     if (config.textures.normal.size())
     {
-        // TODO single texture normal ???
-        result += "    vec3 normalTangentSpace = texture2D(textureNormal[0], vertexUVA[0]).rgb;\n";
+        result += "    vec3 normalTangentSpace = CalcNormalColor();\n";
         result += "    normalTangentSpace = normalize(normalTangentSpace * 2.0 - 1.0);\n";
         result += "    normal = normalize(TBN * normalTangentSpace);\n\n";
     }
@@ -383,6 +390,11 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
         result += "    for(int i = 0; i < " + std::to_string(config.light.spotCount) + "; i++)\n";
         result += "        result += CalcLightSpot(lightSpot[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
     }
+
+    // final color is changed by lightmap
+    //if (config.textures.lightmap.size())
+    //    result += "    result *= CalcLightmapColor();\n\n";
+
     result += "    gl_FragColor.rgb = result;\n";
     result += "    gl_FragColor.a = 1.0;\n";
     result += "}\n";

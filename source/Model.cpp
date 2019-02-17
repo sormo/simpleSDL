@@ -74,6 +74,9 @@ void Mesh::BindData()
     for (size_t i = 0; i < m_material->shader->GetConfig().textures.normal.size(); ++i)
         m_material->shader->GetShader().BindTexture(m_material->textures.normal[i], m_material->shader->GetLocations().textureNormal[i]);
 
+    for (size_t i = 0; i < m_material->shader->GetConfig().textures.lightmap.size(); ++i)
+        m_material->shader->GetShader().BindTexture(m_material->textures.lightmap[i], m_material->shader->GetLocations().textureLightmaps[i]);
+
     //BindTextures(m_textureHeight, "textureHeight", shader);
 
     if (IsVAOSupported())
@@ -256,6 +259,8 @@ std::unique_ptr<ModelMaterial> Model::CreateMaterial(const std::string & root, M
     if (!ProcessTextures(root, material.textureSpecular, config.textures.specular, result->textures.specular))
         return nullptr;
     if (!ProcessTextures(root, material.textureNormal, config.textures.normal, result->textures.normal))
+        return nullptr;
+    if (!ProcessTextures(root, material.textureLightmap, config.textures.lightmap, result->textures.lightmap))
         return nullptr;
 
     result->shader = std::make_unique<ModelShader>(config);

@@ -58,7 +58,7 @@ std::vector<std::unique_ptr<ModelData::TextureT>> ProcessTexture(aiMaterial * ma
         aiString texturePath;
         uint32_t uvIndex = 0;
         ai_real blendFactor = 1.0f;
-        aiTextureOp operation;
+        aiTextureOp operation = aiTextureOp_Multiply;
         aiTextureMapMode mapMode[2];
 
         if (material->GetTexture(textureType, i, &texturePath, nullptr, &uvIndex, &blendFactor, &operation, mapMode) != AI_SUCCESS)

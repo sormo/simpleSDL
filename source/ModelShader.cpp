@@ -128,6 +128,7 @@ void ModelShader::InitMeshLocations()
     InitTextureLocations("textureDiffuse", m_config.textures.diffuse.size(), m_locations.textureDiffuse);
     InitTextureLocations("textureSpecular", m_config.textures.specular.size(), m_locations.textureSpecular);
     InitTextureLocations("textureNormal", m_config.textures.normal.size(), m_locations.textureNormal);
+    InitTextureLocations("textureLightmap", m_config.textures.lightmap.size(), m_locations.textureLightmaps);
 }
 
 void ModelShader::InitModelLocations()

@@ -14,6 +14,7 @@ struct ModelMaterial
         std::vector<GLuint> diffuse;
         std::vector<GLuint> specular;
         std::vector<GLuint> normal;
+        std::vector<GLuint> lightmap;
     };
     Textures textures;
     std::unique_ptr<ModelShader> shader;
