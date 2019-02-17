@@ -54,6 +54,12 @@ public:
         std::vector<TextureStackEntry> lightmap;
     };
 
+    enum class ShadingModel
+    {
+        Phong = 0,
+        BlinnPhong
+    };
+
     struct Config
     {
         enum class Flags : uint32_t
@@ -69,6 +75,8 @@ public:
         ConfigLight light;
 
         uint32_t flags = 0;
+
+        ShadingModel shading = ShadingModel::Phong;
 
         // number of color attributes per vertex
         // TODO not used don't know what to do with it in shader

@@ -177,41 +177,46 @@ void AppendBodyVertex(const ModelShader::Config & config, std::string & result)
     result += "// ******************\n";
 }
 
-void AppendFunctionLightDirectional(std::string & result, const std::string & shininess)
+void AppendFunctionLightCommon(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
 {
-    result += "vec3 CalcLightDirectional(LightDirectional light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
-    result += "{\n";
-    result += "    vec3 ligthDirectionWorldSpace = normalize(-light.direction);\n";
     result += "    // diffuse shading\n";
     result += "    float diffuseFactor = max(dot(normalize(normal), ligthDirectionWorldSpace), 0.0);\n";
     result += "    // specular shading\n";
-    result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalize(normal));\n";
-    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
+    if (model == ModelShader::ShadingModel::Phong)
+    {
+        result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalize(normal));\n";
+        result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
+    }
+    else if (model == ModelShader::ShadingModel::BlinnPhong)
+    {
+        result += "    vec3 halfwayDirectionWorldSpace = normalize(ligthDirectionWorldSpace + cameraDirectionWorldSpace);\n";
+        result += "    float specularFactor = pow(max(dot(normal, halfwayDirectionWorldSpace), 0.0), " + shininess + ");\n";
+    }
     result += "    // combine results\n";
     result += "    vec3 ambient = light.ambient * ambientColor;\n";
     result += "    vec3 diffuse = light.diffuse * diffuseFactor * diffuseColor;\n";
     result += "    vec3 specular = light.specular * specularFactor * specularColor;\n\n";
+}
+
+void AppendFunctionLightDirectional(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
+{
+    result += "vec3 CalcLightDirectional(LightDirectional light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
+    result += "{\n";
+    result += "    vec3 ligthDirectionWorldSpace = normalize(-light.direction);\n";
+    AppendFunctionLightCommon(result, shininess, model);
     result += "    return (ambient + diffuse + specular);\n";
     result += "}\n";
 }
 
-void AppendFunctionLightPoint(std::string & result, const std::string & shininess)
+void AppendFunctionLightPoint(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
 {
     result += "vec3 CalcLightPoint(LightPoint light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
     result += "{\n";
     result += "    vec3 ligthDirectionWorldSpace = normalize(light.position - positionWorldSpace);\n";
-    result += "    // diffuse shading\n";
-    result += "    float diffuseFactor = max(dot(normalize(normal), ligthDirectionWorldSpace), 0.0);\n";
-    result += "    // specular shading\n";
-    result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normalize(normal));\n";
-    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
+    AppendFunctionLightCommon(result, shininess, model);
     result += "    // attenuation\n";
     result += "    float distance = length(light.position - positionWorldSpace);\n";
-    result += "    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));\n";
-    result += "    // combine results\n";
-    result += "    vec3 ambient = light.ambient * ambientColor;\n";
-    result += "    vec3 diffuse = light.diffuse * diffuseFactor * diffuseColor;\n";
-    result += "    vec3 specular = light.specular * specularFactor * specularColor;\n";
+    result += "    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));\n\n";
     result += "    ambient *= attenuation;\n";
     result += "    diffuse *= attenuation;\n";
     result += "    specular *= attenuation;\n\n";
@@ -219,28 +224,20 @@ void AppendFunctionLightPoint(std::string & result, const std::string & shinines
     result += "}\n";
 }
 
-void AppendFunctionLightSpot(std::string & result, const std::string & shininess)
+void AppendFunctionLightSpot(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
 {
     result += "vec3 CalcLightSpot(LightSpot light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
     result += "{\n";
     result += "    vec3 ligthDirectionWorldSpace = normalize(light.position - positionWorldSpace);\n";
-    result += "    // diffuse shading\n";
-    result += "    float diffuseFactor = max(dot(normal, ligthDirectionWorldSpace), 0.0);\n";
-    result += "    // specular shading\n";
-    result += "    vec3 reflectDirectionWorldSpace = reflect(-ligthDirectionWorldSpace, normal);\n";
-    result += "    float specularFactor = pow(max(dot(cameraDirectionWorldSpace, reflectDirectionWorldSpace), 0.0), " + shininess + ");\n";
+    AppendFunctionLightCommon(result, shininess, model);
     result += "    // attenuation\n";
     result += "    float distance = length(light.position - positionWorldSpace);\n";
-    result += "    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));\n";
+    result += "    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));\n\n";
     result += "    // spotlight intensity\n";
     result += "    float theta = dot(ligthDirectionWorldSpace, normalize(-light.direction));\n";
     result += "    float epsilon = light.cutOff - light.outerCutOff;\n";
-    result += "    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);\n";
-    result += "    // combine results\n";
-    result += "    vec3 ambient = light.ambient * ambientColor;\n";
-    result += "    vec3 diffuse = light.diffuse * diffuseFactor * diffuseColor;\n";
-    result += "    vec3 specular = light.specular * specularFactor * specularColor;\n";
-    result += "    ambient *= attenuation * intensity;;\n";
+    result += "    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);\n\n";
+    result += "    ambient *= attenuation * intensity;\n";
     result += "    diffuse *= attenuation * intensity;\n";
     result += "    specular *= attenuation * intensity;\n\n";
     result += "    return (ambient + diffuse + specular);\n";
@@ -255,11 +252,11 @@ void AppendFunctionLight(const ModelShader::Config & config, std::string & resul
 
     result += "// *** light functions ***\n";
     if (config.light.directional)
-        AppendFunctionLightDirectional(result, shininess);
+        AppendFunctionLightDirectional(result, shininess, config.shading);
     if (config.light.pointCount)
-        AppendFunctionLightPoint(result, shininess);
+        AppendFunctionLightPoint(result, shininess, config.shading);
     if (config.light.spotCount)
-        AppendFunctionLightSpot(result, shininess);
+        AppendFunctionLightSpot(result, shininess, config.shading);
     result += "// ***********************\n";
 }
 
@@ -310,6 +307,7 @@ std::string MapOperation(ModelShader::TextureStackEntry::Operation operation)
     case ModelShader::TextureStackEntry::Operation::Substract:
         return "CalcColorSubstract";
     }
+    return "CalcColorMultiply";
 }
 
 void AppendFunctionColorTextureStack(std::string name, const std::string & base, const std::vector<ModelShader::TextureStackEntry> & stack, std::string & result)

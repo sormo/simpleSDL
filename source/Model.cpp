@@ -263,6 +263,8 @@ std::unique_ptr<ModelMaterial> Model::CreateMaterial(const std::string & root, M
     if (!ProcessTextures(root, material.textureLightmap, config.textures.lightmap, result->textures.lightmap))
         return nullptr;
 
+    config.shading = ModelShader::ShadingModel::BlinnPhong;
+
     result->shader = std::make_unique<ModelShader>(config);
     if (!result->shader.get())
         return nullptr;
