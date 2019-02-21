@@ -237,7 +237,7 @@ namespace Texture
 
         if (data.empty())
         {
-            printf("Error reading file %s", imagePath);
+            printf("Error reading file %s\n", imagePath);
             return std::nullopt;
         }
 
@@ -248,17 +248,19 @@ namespace Texture
         uint8_t * imageData = stbi_load_from_memory(data.data(), data.size(), &width, &height, &numberOfColorChannels, 0);
         if (!imageData)
         {
-            printf("Error loading image using STB.");
+            printf("Error loading image using STB.\n");
             return std::nullopt;
         }
+
+        stbi_set_flip_vertically_on_load(false);
 
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
         // set the texture wrapping/filtering options (on the currently bound texture object)
         // warning: emscripten accepts only GL_CLAMP_TO_EDGE for non-power of two textures
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -279,5 +281,53 @@ namespace Texture
         stbi_image_free(imageData);
 
         return texture;
+    }
+
+    std::optional<GLuint> LoadCubemap(const std::vector<std::string> & paths)
+    {
+        uint32_t result;
+
+        glGenTextures(1, &result);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, result);
+
+        for (size_t i = 0; i < paths.size(); i++)
+        {
+            std::vector<uint8_t> data = Common::ReadFile(paths[i].c_str());
+
+            if (data.empty())
+            {
+                printf("Error reading file %s\n", paths[i].c_str());
+                glDeleteTextures(1, &result);
+
+                return std::nullopt;
+            }
+
+            int32_t width, height, numberOfColorChannels;
+
+            uint8_t * imageData = stbi_load_from_memory(data.data(), data.size(), &width, &height, &numberOfColorChannels, 0);
+
+            if (imageData)
+            {
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+                stbi_image_free(imageData);
+            }
+            else
+            {
+                printf("Cubemap texture failed to load at path: %s\n", paths[i].c_str());
+                glDeleteTextures(1, &result);
+
+                return std::nullopt;
+            }
+        }
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#ifndef ANDROID
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+#endif
+
+        return result;
     }
 }

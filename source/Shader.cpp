@@ -99,6 +99,8 @@ std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char *
 
 std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback)
 {
+    printf("Compiling shaders from files: %s %s", vertexFile, fragmentFile);
+
     auto vertexData = Common::ReadFile(vertexFile);
     vertexData.push_back('\0');
 

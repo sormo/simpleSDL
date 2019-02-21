@@ -3,7 +3,6 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Camera.h"
-#include "ModelLoader.h"
 #include "VboIndexer.h"
 #include "Text2D.h"
 #include <string>
@@ -13,10 +12,11 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <inttypes.h>
-#include "Cylinder.h"
+#include "ObjModel.h"
 #include "Light.h"
 #include "Model.h"
 #include "ModelShader.h"
+#include "Skybox.h"
 
 namespace Application
 {
@@ -25,10 +25,11 @@ namespace Application
     CameraRotate g_camera;
     //CameraKeyboard g_camera;
 
-    //std::unique_ptr<Cylinder> g_cylinder;
+    std::unique_ptr<ObjModel> g_objModel;
     std::unique_ptr<Model> g_model;
     std::shared_ptr<ModelShader> g_modelShader;
     std::unique_ptr<Light> g_light;
+    std::unique_ptr<Skybox> g_skybox;
 
     void BindModel()
     {
@@ -95,33 +96,23 @@ namespace Application
     void Draw()
     {
         // drawing single model
-        BindModel();
+        //BindModel();
 
         // enable blending
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
-        glm::mat4 model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3{0.0f, 0.0f, 0.0f});
-        //float angle = 20.0f * 0.0f;
-        //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        //glm::mat4 model = glm::mat4(1.0f);
+        //g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-
-        //glm::mat4 model = glm::mat4({ 1.0,  0.0,  0.0,  0.0 },
-        //                            { 0.0,  0.0,  1.0,  0.0 },
-        //                            { 0.0, -1.0,  0.0,  0.0 },
-        //                            { 0.0,  0.0,  0.0,  1.0 });
-        //model = glm::transpose(model);
-        //model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-
-        g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
-
-        //g_cylinder->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace);
+        g_objModel->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace, g_camera.GetPosition());
 
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
         lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
         g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+
+        g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //glDisable(GL_BLEND);
     }
@@ -166,9 +157,17 @@ namespace Application
         light.spotCount = 0;
 
         //g_model.reset(new Model("models/moses/scene.model", light));
-        g_model.reset(new Model("models/skull/craneo.model", light));
+        //g_model.reset(new Model("models/skull/craneo.model", light));
         //g_model.reset(new Model("models/cube/cube.model", light));
+        g_objModel.reset(new ObjModel());
         g_light.reset(new Light());
+
+        g_skybox.reset(new Skybox({ "skybox/islands/right.jpg",
+                                    "skybox/islands/left.jpg",
+                                    "skybox/islands/top.jpg",
+                                    "skybox/islands/bottom.jpg",
+                                    "skybox/islands/front.jpg",
+                                    "skybox/islands/back.jpg" }));
 
         return true;
     }

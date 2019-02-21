@@ -1,7 +1,7 @@
 #pragma once
 #include "glm/glm.hpp"
 #include "Shader.h"
-#include "ModelLoader.h"
+#include "ObjLoader.h"
 #include "VboIndexer.h"
 
 class Light

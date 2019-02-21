@@ -66,7 +66,6 @@ public:
 
     // bind must be called before drawing
     // camera and light positions should be in world space
-    // TODO all meshes are drawn with same shader ?
     void Bind(const ModelShader::Data & data);
     
     void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);

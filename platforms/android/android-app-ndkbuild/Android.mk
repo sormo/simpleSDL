@@ -31,7 +31,7 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Shader.cpp \
   ../../../source/Texture.cpp \
   ../../../source/Camera.cpp \
-  ../../../source/ModelLoader.cpp \
+  ../../../source/ObjLoader.cpp \
   ../../../sourceCommon/VboIndexer.cpp \
   ../../../sourceCommon/TangentSpace.cpp \
   ../../../source/Text2D.cpp \
@@ -39,7 +39,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/ModelShader.cpp \
   ../../../source/ShaderGenerator.cpp \
   ../../../source/TextureManager.cpp \
-  ../../../sourceCommon/CommonProject.cpp
+  ../../../sourceCommon/CommonProject.cpp \
+  ../../../source/Skybox.cpp
 
 
 # Linking options
