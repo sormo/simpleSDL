@@ -14,6 +14,8 @@ public:
 
     void Draw(const glm::mat4 & view, const glm::mat4 & projection);
 
+    GLuint GetSkyboxTexture();
+
 private:
     Shader m_shader;
 

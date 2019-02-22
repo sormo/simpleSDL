@@ -39,9 +39,12 @@ public:
     void BindTexture(GLuint texture, const char * locationName);
     void BindTexture(GLuint texture, GLuint location);
 
+    void BindCubemapTexture(GLuint texture, const char * locationName);
+    void BindCubemapTexture(GLuint texture, GLuint location);
+
     void Begin();
     // cleanup after draw
-    void CleanUp(bool disableLocations = false);
+    void CleanUp();
 
     operator bool();
 

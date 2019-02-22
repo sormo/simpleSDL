@@ -8,9 +8,32 @@
 
 class ObjModel
 {
+    void DrawSkyboxCommon(GLuint skyboxTexture, const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, Shader & shader)
+    {
+        glm::mat4 MVP = projection * view * model;
+
+        shader.Begin();
+
+        shader.SetUniform(MVP, "MVP");
+        shader.SetUniform(model, "M");
+        shader.SetUniform(cameraPosition, "cameraWorldSpace");
+
+        shader.BindCubemapTexture(skyboxTexture, "textureSkybox");
+
+        shader.BindBuffer<glm::vec3>(m_bufferVertex, "positionModelSpace");
+        shader.BindBuffer<glm::vec3>(m_bufferNormal, "normalModelSpace");
+        shader.BindElementBuffer(m_bufferIndex);
+
+        glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
+
+        shader.CleanUp();
+    }
+
 public:
     ObjModel()
-        : m_shader(Common::ReadFileToString("shaders/vertTangent.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffSpecNormSpot.glsl").c_str())
+        : m_shader(Common::ReadFileToString("shaders/vertTangent.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffSpecNormSpot.glsl").c_str()),
+          m_shaderSkyboxReflection(Common::ReadFileToString("shaders/vertNormal.glsl").c_str(), Common::ReadFileToString("shaders/fragSkyboxReflection.glsl").c_str()),
+          m_shaderSkyboxRefraction(Common::ReadFileToString("shaders/vertNormal.glsl").c_str(), Common::ReadFileToString("shaders/fragSkyboxRefraction.glsl").c_str())
     {
         m_verticesCount = InitBuffers();
         if (m_verticesCount == 0)
@@ -30,16 +53,25 @@ public:
         glDeleteTextures(1, &m_textureDiffuse);
     }
 
+    void DrawSkyboxRefraction(GLuint skyboxTexture, const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition)
+    {
+        DrawSkyboxCommon(skyboxTexture, model, view, projection, cameraPosition, m_shaderSkyboxRefraction);
+    }
+
+    void DrawSkyboxReflection(GLuint skyboxTexture, const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition)
+    {
+        DrawSkyboxCommon(skyboxTexture, model, view, projection, cameraPosition, m_shaderSkyboxReflection);
+    }
+
     void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & lightPosition, const glm::vec3 & cameraPosition)
     {
         glm::mat4 MVP = projection * view * model;
 
-        glBindVertexArray(0);
         m_shader.Begin();
-
 
         m_shader.SetUniform(MVP, "MVP");
         m_shader.SetUniform(model, "M");
+        m_shader.SetUniform(cameraPosition, "cameraWorldSpace");
 
         m_shader.SetUniform(lightPosition, "light.position");
         m_shader.SetUniform(-lightPosition, "light.direction");
@@ -52,7 +84,6 @@ public:
         m_shader.SetUniform(0.01f, "light.linear");
         m_shader.SetUniform(0.02f, "light.quadratic");
         m_shader.SetUniform(32.0f, "shininess");
-        m_shader.SetUniform(cameraPosition, "cameraWorldSpace");
 
         m_shader.BindTexture(m_textureDiffuse, "textureDiffuse");
         m_shader.BindTexture(m_textureNormal, "textureNormal");
@@ -66,10 +97,7 @@ public:
 
         m_shader.BindElementBuffer(m_bufferIndex);
 
-        glDrawElements(GL_TRIANGLES,      // mode
-                       m_verticesCount,   // count
-                       GL_UNSIGNED_SHORT, // type
-                       (void*)0);         // element array buffer offset
+        glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
 
         m_shader.CleanUp();
     }
@@ -153,6 +181,8 @@ private:
     }
 
     Shader m_shader;
+    Shader m_shaderSkyboxReflection;
+    Shader m_shaderSkyboxRefraction;
 
     GLuint m_bufferVertex;
     GLuint m_bufferNormal;

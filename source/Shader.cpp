@@ -288,13 +288,33 @@ void Shader::BindTexture(GLuint texture, const char * locationName)
     BindTexture(texture, location);
 }
 
+void Shader::BindCubemapTexture(GLuint texture, const char * locationName)
+{
+    GLuint location = GetLocation(locationName, LocationType::Uniform);
+    BindCubemapTexture(texture, location);
+}
+
+void Shader::BindCubemapTexture(GLuint texture, GLuint location)
+{
+    glActiveTexture(GL_TEXTURE0 + m_currentTexture);
+    CheckGlError("glActiveTexture");
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+    CheckGlError("glBindTexture");
+
+    glUniform1i(location, m_currentTexture);
+    CheckGlError("glUniform1i");
+
+    m_currentTexture++;
+}
+
 void Shader::Begin()
 {
     glUseProgram(*m_program);
     CheckGlError("glUseProgram");
 }
 
-void Shader::CleanUp(bool disableLocations)
+void Shader::CleanUp()
 {
     if (m_boundVAO)
     {

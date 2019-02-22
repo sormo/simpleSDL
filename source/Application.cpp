@@ -26,72 +26,71 @@ namespace Application
     //CameraKeyboard g_camera;
 
     std::unique_ptr<ObjModel> g_objModel;
-    std::unique_ptr<Model> g_model;
-    std::shared_ptr<ModelShader> g_modelShader;
+    //std::unique_ptr<Model> g_model;
     std::unique_ptr<Light> g_light;
     std::unique_ptr<Skybox> g_skybox;
 
-    void BindModel()
-    {
-        //Model::Material material;
-        //material.ambient = { 1.0f, 1.0f, 1.0f };
-        //material.diffuse = { 1.0f, 0.0f, 0.0f };
-        //material.specular = { 0.0f, 1.0f, 0.0f };
-        //material.shininess = 32.0f;
+    //void BindModel()
+    //{
+    //    //Model::Material material;
+    //    //material.ambient = { 1.0f, 1.0f, 1.0f };
+    //    //material.diffuse = { 1.0f, 0.0f, 0.0f };
+    //    //material.specular = { 0.0f, 1.0f, 0.0f };
+    //    //material.shininess = 32.0f;
 
-        ModelShader::Data data;
-        data.material.shininess = 10.0f;
-        data.cameraWorldSpace = g_camera.GetPosition();
-        data.material.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
-        data.material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-        data.material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+    //    ModelShader::Data data;
+    //    data.material.shininess = 10.0f;
+    //    data.cameraWorldSpace = g_camera.GetPosition();
+    //    data.material.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
+    //    data.material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+    //    data.material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
 
-        data.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
-        data.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
-        data.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
-        data.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+    //    data.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
+    //    data.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
+    //    data.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
+    //    data.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
 
-        ModelShader::Data::LightPoint lightBlue;
-        lightBlue.position = g_lightPositionWorldSpace;
-        lightBlue.constant = 1.0f;
-        lightBlue.linear = 0.09f;
-        lightBlue.quadratic = 0.032f;
-        lightBlue.ambient = { 0.1f, 0.1f, 0.1f };
-        lightBlue.diffuse = { 0.9f, 0.9f, 0.9f };
-        lightBlue.specular = { 0.5f, 0.5f, 0.5f };
+    //    ModelShader::Data::LightPoint lightBlue;
+    //    lightBlue.position = g_lightPositionWorldSpace;
+    //    lightBlue.constant = 1.0f;
+    //    lightBlue.linear = 0.09f;
+    //    lightBlue.quadratic = 0.032f;
+    //    lightBlue.ambient = { 0.1f, 0.1f, 0.1f };
+    //    lightBlue.diffuse = { 0.9f, 0.9f, 0.9f };
+    //    lightBlue.specular = { 0.5f, 0.5f, 0.5f };
 
-        data.lightPoint.push_back(lightBlue);
+    //    data.lightPoint.push_back(lightBlue);
 
-        ModelShader::Data::LightSpot lightRed;
-        lightRed.position = g_lightPositionWorldSpace;
-        lightRed.direction = -g_lightPositionWorldSpace;
-        lightRed.cutOff = glm::cos(glm::radians(12.5f));
-        lightRed.outerCutOff = glm::cos(glm::radians(17.5f));
-        lightRed.ambient = { 0.1f, 0.1f, 0.1f };
-        lightRed.diffuse = { 1.0f, 0.0f, 0.0f };
-        lightRed.specular = { 0.5f, 0.5f, 0.5f };
-        lightRed.constant = 1.0f;
-        lightRed.linear = 0.09f;
-        lightRed.quadratic = 0.032f;
+    //    ModelShader::Data::LightSpot lightRed;
+    //    lightRed.position = g_lightPositionWorldSpace;
+    //    lightRed.direction = -g_lightPositionWorldSpace;
+    //    lightRed.cutOff = glm::cos(glm::radians(12.5f));
+    //    lightRed.outerCutOff = glm::cos(glm::radians(17.5f));
+    //    lightRed.ambient = { 0.1f, 0.1f, 0.1f };
+    //    lightRed.diffuse = { 1.0f, 0.0f, 0.0f };
+    //    lightRed.specular = { 0.5f, 0.5f, 0.5f };
+    //    lightRed.constant = 1.0f;
+    //    lightRed.linear = 0.09f;
+    //    lightRed.quadratic = 0.032f;
 
-        data.lightSpot.push_back(lightRed);
+    //    data.lightSpot.push_back(lightRed);
 
-        ModelShader::Data::LightSpot lightGreen;
-        lightGreen.position = -g_lightPositionWorldSpace;
-        lightGreen.direction = g_lightPositionWorldSpace;
-        lightGreen.cutOff = glm::cos(glm::radians(12.5f));
-        lightGreen.outerCutOff = glm::cos(glm::radians(17.5f));
-        lightGreen.ambient = { 0.1f, 0.1f, 0.1f };
-        lightGreen.diffuse = { 0.0f, 1.0f, 0.0f };
-        lightGreen.specular = { 0.5f, 0.5f, 0.5f };
-        lightGreen.constant = 1.0f;
-        lightGreen.linear = 0.09f;
-        lightGreen.quadratic = 0.032f;
+    //    ModelShader::Data::LightSpot lightGreen;
+    //    lightGreen.position = -g_lightPositionWorldSpace;
+    //    lightGreen.direction = g_lightPositionWorldSpace;
+    //    lightGreen.cutOff = glm::cos(glm::radians(12.5f));
+    //    lightGreen.outerCutOff = glm::cos(glm::radians(17.5f));
+    //    lightGreen.ambient = { 0.1f, 0.1f, 0.1f };
+    //    lightGreen.diffuse = { 0.0f, 1.0f, 0.0f };
+    //    lightGreen.specular = { 0.5f, 0.5f, 0.5f };
+    //    lightGreen.constant = 1.0f;
+    //    lightGreen.linear = 0.09f;
+    //    lightGreen.quadratic = 0.032f;
 
-        data.lightSpot.push_back(lightGreen);
+    //    data.lightSpot.push_back(lightGreen);
 
-        g_model->Bind(data);
-    }
+    //    g_model->Bind(data);
+    //}
 
     void Draw()
     {
@@ -105,7 +104,9 @@ namespace Application
         //glm::mat4 model = glm::mat4(1.0f);
         //g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-        g_objModel->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace, g_camera.GetPosition());
+        //g_objModel->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace, g_camera.GetPosition());
+        g_objModel->DrawSkyboxReflection(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
+        //g_objModel->DrawSkyboxRefraction(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
 
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);

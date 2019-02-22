@@ -81,6 +81,7 @@ Skybox::Skybox(const std::vector<std::string>& paths)
     {
         glEnableVertexAttribArray(m_positionAttributeLocation);
         glVertexAttribPointer(m_positionAttributeLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glBindVertexArray(0);
     }
 }
 
@@ -111,12 +112,17 @@ void Skybox::Draw(const glm::mat4 & view, const glm::mat4 & projection)
         m_shader.BindBuffer<glm::vec3>(m_vbo, m_positionAttributeLocation);
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
+    m_shader.BindCubemapTexture(m_texture, m_samplerUniformLocation);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
+    CheckGlError("glDrawArrays");
 
     m_shader.CleanUp();
 
     glDepthFunc(GL_LESS); // set depth function back to default
+}
+
+GLuint Skybox::GetSkyboxTexture()
+{
+    return m_texture;
 }
