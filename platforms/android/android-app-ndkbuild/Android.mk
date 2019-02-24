@@ -40,7 +40,9 @@ LOCAL_SRC_FILES :=  \
   ../../../source/ShaderGenerator.cpp \
   ../../../source/TextureManager.cpp \
   ../../../sourceCommon/CommonProject.cpp \
-  ../../../source/Skybox.cpp
+  ../../../source/Skybox.cpp \
+  ../../../source/Framebuffer.cpp \
+  ../../../source/Postprocess.cpp
 
 
 # Linking options

@@ -308,13 +308,13 @@ void Shader::BindCubemapTexture(GLuint texture, GLuint location)
     m_currentTexture++;
 }
 
-void Shader::Begin()
+void Shader::BeginRender()
 {
     glUseProgram(*m_program);
     CheckGlError("glUseProgram");
 }
 
-void Shader::CleanUp()
+void Shader::EndRender()
 {
     if (m_boundVAO)
     {

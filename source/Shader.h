@@ -42,9 +42,8 @@ public:
     void BindCubemapTexture(GLuint texture, const char * locationName);
     void BindCubemapTexture(GLuint texture, GLuint location);
 
-    void Begin();
-    // cleanup after draw
-    void CleanUp();
+    void BeginRender();
+    void EndRender();
 
     operator bool();
 

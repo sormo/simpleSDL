@@ -17,6 +17,7 @@
 #include "Model.h"
 #include "ModelShader.h"
 #include "Skybox.h"
+#include "Postprocess.h"
 
 namespace Application
 {
@@ -25,6 +26,7 @@ namespace Application
     CameraRotate g_camera;
     //CameraKeyboard g_camera;
 
+    std::unique_ptr<Postprocess> g_postprocess;
     std::unique_ptr<ObjModel> g_objModel;
     //std::unique_ptr<Model> g_model;
     std::unique_ptr<Light> g_light;
@@ -94,6 +96,10 @@ namespace Application
 
     void Draw()
     {
+        g_postprocess->BeginRender();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         // drawing single model
         //BindModel();
 
@@ -116,6 +122,8 @@ namespace Application
         g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //glDisable(GL_BLEND);
+
+        g_postprocess->EndRender();
     }
 
     void RecomputeMVPMatrix()
@@ -128,7 +136,6 @@ namespace Application
         if (!InitOpenGL())
         {
             printf("Error initializing OpenGl\n");
-            PrintOpenGlPointers();
             return false;
         }
 
@@ -170,6 +177,8 @@ namespace Application
                                     "skybox/islands/front.jpg",
                                     "skybox/islands/back.jpg" }));
 
+        g_postprocess.reset(new Postprocess(Postprocess::Type::KernelSharpen));
+
         return true;
     }
 
@@ -199,8 +208,6 @@ namespace Application
         glm::mat4 rotationMatrix(1.0f);
         rotationMatrix = glm::rotate(rotationMatrix, glm::radians(0.1f), glm::vec3(0.0, 1.0, 0.0));
         g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Draw();
 

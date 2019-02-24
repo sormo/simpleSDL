@@ -96,7 +96,7 @@ endif()
 if(EMSCRIPTEN)
   # This makes emscripten build a html page in addition to the js code.
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FULL_ES2=1 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['Pointer_stringify']\" --embed-file ${projectDir}/data@/ -s FORCE_FILESYSTEM=1 -s ASSERTIONS=1 -std=c++1z -s ALLOW_MEMORY_GROWTH=1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FULL_ES2=1 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['Pointer_stringify']\" --embed-file ${projectDir}/data@/ -s FORCE_FILESYSTEM=1 -s ASSERTIONS=1 -std=c++1z -s ALLOW_MEMORY_GROWTH=1 -s USE_WEBGL2=1")
 
   # Emscripten requires static linking.
   set(SDL2_LIBRARY SDL2-static)

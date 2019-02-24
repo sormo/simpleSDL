@@ -15,7 +15,11 @@ namespace Common
 {
     std::vector<uint8_t> ReadFile(const char * name);
     std::string ReadFileToString(const char * name);
+    
     std::tuple<int32_t, int32_t> GetWindowSize();
+    int32_t GetWindowWidth();
+    int32_t GetWindowHeight();
+
     // seconds since epoch
     double GetCurrentTimeInSeconds();
 
@@ -36,4 +40,6 @@ namespace Common
 
     std::vector<uint8_t> ConvertBGRToRGB(const uint8_t * data, uint32_t count);
     std::vector<uint8_t> ConvertARGBToRGBA(const uint8_t * data, uint32_t count);
+
+    bool IsPowerOfTwo(int32_t n);
 }

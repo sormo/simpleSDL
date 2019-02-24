@@ -14,4 +14,7 @@ namespace Texture
     // load cubemap
     // textures in following order: right, left, top, bottom, back, front
     std::optional<GLuint> LoadCubemap(const std::vector<std::string> & paths);
+
+    // warning: emscripten accepts only GL_CLAMP_TO_EDGE for non-power of two textures
+    GLint GetCorrectWrapMode(GLint desired, int32_t size);
 }

@@ -46,6 +46,16 @@ PFNGLBUFFERSUBDATAPROC glBufferSubData;
 PFNGLUNIFORM2FPROC glUniform2f;
 PFNGLGETACTIVEUNIFORMPROC glGetActiveUniform;
 PFNGLGETACTIVEATTRIBPROC glGetActiveAttrib;
+PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
+PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
+PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage;
+PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
+PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
+PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
+PFNGLUNIFORM1FVPROC glUniform1fv;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -94,6 +104,16 @@ bool InitOpenGL()
     glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
     glGetActiveUniform = (PFNGLGETACTIVEUNIFORMPROC)SDL_GL_GetProcAddress("glGetActiveUniform");
     glGetActiveAttrib = (PFNGLGETACTIVEATTRIBPROC)SDL_GL_GetProcAddress("glGetActiveAttrib");
+    glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)SDL_GL_GetProcAddress("glGenFramebuffers");
+    glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)SDL_GL_GetProcAddress("glBindFramebuffer");
+    glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)SDL_GL_GetProcAddress("glFramebufferTexture2D");
+    glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)SDL_GL_GetProcAddress("glGenRenderbuffers");
+    glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)SDL_GL_GetProcAddress("glBindRenderbuffer");
+    glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)SDL_GL_GetProcAddress("glRenderbufferStorage");
+    glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)SDL_GL_GetProcAddress("glFramebufferRenderbuffer");
+    glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatus");
+    glDeleteFramebuffers = (PFNGLDELETEFRAMEBUFFERSPROC)SDL_GL_GetProcAddress("glDeleteFramebuffers");
+    glUniform1fv = (PFNGLUNIFORM1FVPROC)SDL_GL_GetProcAddress("glUniform1fv");
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
@@ -108,56 +128,20 @@ bool InitOpenGL()
         glGenBuffers && glDeleteBuffers && glBufferData &&
         glGetAttribLocation && glDisableVertexAttribArray && glDetachShader &&
         glUniform1f && glBufferSubData && glUniform2f &&
-        glGetActiveUniform && glGetActiveAttrib &&
+        glGetActiveUniform && glGetActiveAttrib && glGenFramebuffers &&
+        glBindFramebuffer && glFramebufferTexture2D && glGenRenderbuffers &&
+        glBindRenderbuffer && glRenderbufferStorage && glFramebufferRenderbuffer &&
+        glCheckFramebufferStatus && glUniform1fv &&
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&
 #endif
         glGetUniformLocation && glUniformMatrix4fv && glGenerateMipmap &&
         glUniform1i && glUniform3f && glUniformMatrix3fv;
 }
-
-void PrintOpenGlPointers()
-{
-    printf("glCreateShader %p\nglShaderSource %p\nglCompileShader %p\nglGetShaderiv %p\n"
-        "glGetShaderInfoLog %p\nglDeleteShader %p\nglAttachShader %p\nglCreateProgram %p\n"
-        "glLinkProgram %p\nglValidateProgram %p\nglGetProgramiv %p\nglGetProgramInfoLog %p\n"
-        "glUseProgram %p\nglGenVertexArrays %p\nglBindVertexArray %p\nglDrawArraysEXT %p\n"
-        "glDeleteVertexArrays %p\nglDeleteProgram %p\nglVertexAttribPointer %p\n"
-        "glBindAttribLocation %p\nglEnableVertexAttribArray %p\nglBindBuffer %p\n"
-        "glGenBuffers %p\nglDeleteBuffers %p\nglBufferData %p\n"
-        "glGetAttribLocation %p\nglDisableVertexAttribArray %p\nglDetachShader %p\n"
-        "glUniform1f %p\n glBufferSubData %p\n glUniform2f &p\n"
-        "glGetActiveUniform %p\n glGetActiveAttrib %p\n"
-#ifndef EMSCRIPTEN
-        "glCompressedTexImage2D %p\nglActiveTexture %p\n glGetStringi %p\n"
-#endif
-        "glGetUniformLocation %p\nglUniformMatrix4fv %p\nglGenerateMipmap %p\n"
-        "glUniform1i %p\nglUniform3f %p\nglUniformMatrix3fv %p\n",
-        glCreateShader, glShaderSource, glCompileShader, glGetShaderiv,
-        glGetShaderInfoLog, glDeleteShader, glAttachShader, glCreateProgram,
-        glLinkProgram, glValidateProgram, glGetProgramiv, glGetProgramInfoLog,
-        glUseProgram, glGenVertexArrays, glBindVertexArray, glDrawArraysEXT,
-        glDeleteVertexArrays, glDeleteProgram, glVertexAttribPointer,
-        glBindAttribLocation, glEnableVertexAttribArray, glBindBuffer,
-        glGenBuffers, glDeleteBuffers, glBufferData,
-        glGetAttribLocation, glDisableVertexAttribArray, glDetachShader,
-        glUniform1f, glBufferSubData, glUniform2f,
-        glGetActiveUniform, glGetActiveAttrib,
-#ifndef EMSCRIPTEN
-        glCompressedTexImage2D, glActiveTexture, glGetStringi,
-#endif
-        glGetUniformLocation, glUniformMatrix4fv, glGenerateMipmap,
-        glUniform1i, glUniform3f, glUniformMatrix3fv);
-}
 #else
 bool InitOpenGL()
 {
     return true;
-}
-
-void PrintOpenGlPointers()
-{
-
 }
 #endif
 

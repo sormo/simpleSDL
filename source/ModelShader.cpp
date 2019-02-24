@@ -209,7 +209,7 @@ void ModelShader::Bind<ModelShader::Material, ModelShader::Locations::Material>(
 
 void ModelShader::Bind(const Data & data)
 {
-    m_shader->Begin();
+    m_shader->BeginRender();
 
     if (m_config.light.directional)
         Bind(data.lightDirectional, m_locations.lightDirectional);

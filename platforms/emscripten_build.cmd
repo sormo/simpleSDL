@@ -1,4 +1,4 @@
-call "c:\src\emsdk\emsdk_env.bat"
+call "..\contrib\emsdk\emsdk_env.bat"
 
 mkdir emscripten
 cd emscripten

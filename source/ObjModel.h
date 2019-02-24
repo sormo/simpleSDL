@@ -12,7 +12,7 @@ class ObjModel
     {
         glm::mat4 MVP = projection * view * model;
 
-        shader.Begin();
+        shader.BeginRender();
 
         shader.SetUniform(MVP, "MVP");
         shader.SetUniform(model, "M");
@@ -26,7 +26,7 @@ class ObjModel
 
         glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
 
-        shader.CleanUp();
+        shader.EndRender();
     }
 
 public:
@@ -67,7 +67,7 @@ public:
     {
         glm::mat4 MVP = projection * view * model;
 
-        m_shader.Begin();
+        m_shader.BeginRender();
 
         m_shader.SetUniform(MVP, "MVP");
         m_shader.SetUniform(model, "M");
@@ -99,7 +99,7 @@ public:
 
         glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
 
-        m_shader.CleanUp();
+        m_shader.EndRender();
     }
 
 private:

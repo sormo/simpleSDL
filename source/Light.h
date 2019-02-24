@@ -25,7 +25,7 @@ public:
     {
         glm::mat4 MVP = projection * view * model;
 
-        m_shader.Begin();
+        m_shader.BeginRender();
 
         m_shader.SetUniform(MVP, "MVP");
         m_shader.BindBuffer<glm::vec3>(m_bufferVertex, "positionModelSpace");
@@ -36,7 +36,7 @@ public:
                        GL_UNSIGNED_SHORT, // type
                        (void*)0);         // element array buffer offset
 
-        m_shader.CleanUp();
+        m_shader.EndRender();
     }
 
 private:

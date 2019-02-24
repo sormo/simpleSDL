@@ -66,6 +66,16 @@ extern PFNGLBUFFERSUBDATAPROC glBufferSubData;
 extern PFNGLUNIFORM2FPROC glUniform2f;
 extern PFNGLGETACTIVEUNIFORMPROC glGetActiveUniform;
 extern PFNGLGETACTIVEATTRIBPROC glGetActiveAttrib;
+extern PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+extern PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+extern PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+extern PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
+extern PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
+extern PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage;
+extern PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
+extern PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
+extern PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
+extern PFNGLUNIFORM1FVPROC glUniform1fv;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN
@@ -76,7 +86,6 @@ extern PFNGLACTIVETEXTUREPROC glActiveTexture;
 #endif
 
 bool InitOpenGL();
-void PrintOpenGlPointers();
 
 void CheckGlError(const char * function, const char * file = __FILE__, const int line = __LINE__);
 

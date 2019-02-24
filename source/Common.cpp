@@ -53,6 +53,24 @@ namespace Common
         return { width, height };
     }
 
+    int32_t GetWindowWidth()
+    {
+        int32_t width;
+
+        SDL_GetWindowSize(g_window, &width, nullptr);
+
+        return width;
+    }
+
+    int32_t GetWindowHeight()
+    {
+        int32_t height;
+
+        SDL_GetWindowSize(g_window, nullptr, &height);
+
+        return height;
+    }
+
     double GetCurrentTimeInSeconds()
     {
         double currentTime = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -99,5 +117,22 @@ namespace Common
         if (pos == std::string::npos)
             return "";
         return filePath.substr(0, pos) + "/";
+    }
+
+    bool IsPowerOfTwo(int32_t n)
+    {
+        n = std::abs(n);
+
+        if (n == 0 || n == 1)
+            return false;
+
+        while (n != 1)
+        {
+            if (n % 2)
+                return false;
+            n /= 2;
+        }
+
+        return true;
     }
 }

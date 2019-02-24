@@ -257,10 +257,10 @@ namespace Texture
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
+
         // set the texture wrapping/filtering options (on the currently bound texture object)
-        // warning: emscripten accepts only GL_CLAMP_TO_EDGE for non-power of two textures
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GetCorrectWrapMode(GL_REPEAT, width));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GetCorrectWrapMode(GL_REPEAT, height));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -324,10 +324,19 @@ namespace Texture
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#ifndef ANDROID
+#if !defined(ANDROID) && !defined(EMSCRIPTEN)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 #endif
 
         return result;
+    }
+
+    GLint GetCorrectWrapMode(GLint desired, int32_t size)
+    {
+#ifdef EMSCRIPTEN
+        if (!Common::IsPowerOfTwo(size))
+            return GL_CLAMP_TO_EDGE;
+#endif
+        return desired;
     }
 }

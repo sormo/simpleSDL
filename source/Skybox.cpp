@@ -81,6 +81,7 @@ Skybox::Skybox(const std::vector<std::string>& paths)
     {
         glEnableVertexAttribArray(m_positionAttributeLocation);
         glVertexAttribPointer(m_positionAttributeLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
         glBindVertexArray(0);
     }
 }
@@ -98,7 +99,7 @@ void Skybox::Draw(const glm::mat4 & view, const glm::mat4 & projection)
 
     glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
     
-    m_shader.Begin();
+    m_shader.BeginRender();
 
     m_shader.SetUniform(viewSky, m_viewUnifomtmLocation);
     m_shader.SetUniform(projection, m_projectionUniformLocation);
@@ -117,7 +118,7 @@ void Skybox::Draw(const glm::mat4 & view, const glm::mat4 & projection)
     glDrawArrays(GL_TRIANGLES, 0, 36);
     CheckGlError("glDrawArrays");
 
-    m_shader.CleanUp();
+    m_shader.EndRender();
 
     glDepthFunc(GL_LESS); // set depth function back to default
 }

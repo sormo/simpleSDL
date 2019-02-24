@@ -112,7 +112,7 @@ void Mesh::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4
     glDrawElements(GL_TRIANGLES, m_verticesCount, GL_UNSIGNED_SHORT, (void*)0);
     CheckGlError("glDrawElements");
 
-    m_material->shader->GetShader().CleanUp();
+    m_material->shader->GetShader().EndRender();
 }
 
 template<class T, uint32_t N>
