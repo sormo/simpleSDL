@@ -149,7 +149,11 @@ namespace Application
         glCullFace(GL_BACK);
         glFrontFace(GL_CCW);
 
+        // Multisampling are configured in main before window creation.
         glEnable(GL_MULTISAMPLE);
+
+        // Enable gamma correction for all framebuffers, this is maybe not good idea.
+        glEnable(GL_FRAMEBUFFER_SRGB);
 
         g_camera.Init();
 
