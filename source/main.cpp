@@ -51,6 +51,21 @@ bool init()
         return false;
     }
 
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    // enable multisapling
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
+#if defined(_DEBUG)
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG) != 0)
+    {
+        printf("Error setting debug flag to opengl context.\n");
+    }
+#endif
+
     g_window = SDL_CreateWindow("SimpleSDL", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
     if (!g_window)
     {
@@ -60,10 +75,6 @@ bool init()
         
         return false;
     }
-
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     g_context = SDL_GL_CreateContext(g_window);
     if (!g_context)
@@ -75,13 +86,6 @@ bool init()
 
         return false;
     }
-
-#if defined(_DEBUG)
-    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG) != 0)
-    {
-        printf("Error setting debug flag to opengl context.\n");
-    }
-#endif
 
     if (!Application::Init())
     {

@@ -76,6 +76,11 @@ extern PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
 extern PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
 extern PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 extern PFNGLUNIFORM1FVPROC glUniform1fv;
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
+extern PFNGLTEXIMAGE2DMULTISAMPLEPROC glTexImage2DMultisample;
+extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
+extern PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
+#endif
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN

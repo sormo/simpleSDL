@@ -56,6 +56,9 @@ PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
 PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
 PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 PFNGLUNIFORM1FVPROC glUniform1fv;
+PFNGLTEXIMAGE2DMULTISAMPLEPROC glTexImage2DMultisample;
+PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
+PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -114,12 +117,17 @@ bool InitOpenGL()
     glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatus");
     glDeleteFramebuffers = (PFNGLDELETEFRAMEBUFFERSPROC)SDL_GL_GetProcAddress("glDeleteFramebuffers");
     glUniform1fv = (PFNGLUNIFORM1FVPROC)SDL_GL_GetProcAddress("glUniform1fv");
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
+    glTexImage2DMultisample = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)SDL_GL_GetProcAddress("glTexImage2DMultisample");
+    glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)SDL_GL_GetProcAddress("glRenderbufferStorageMultisample");
+    glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)SDL_GL_GetProcAddress("glBlitFramebuffer");
+#endif
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
     glGetStringi = (PFNGLGETSTRINGIPROC)SDL_GL_GetProcAddress("glGetStringi");
 #endif
-	return glCreateShader && glShaderSource && glCompileShader && glGetShaderiv &&
+    return glCreateShader && glShaderSource && glCompileShader && glGetShaderiv &&
         glGetShaderInfoLog && glDeleteShader && glAttachShader && glCreateProgram &&
         glLinkProgram && glValidateProgram && glGetProgramiv && glGetProgramInfoLog &&
         glUseProgram && glGenVertexArrays && glBindVertexArray && glDrawArraysEXT &&
@@ -132,6 +140,9 @@ bool InitOpenGL()
         glBindFramebuffer && glFramebufferTexture2D && glGenRenderbuffers &&
         glBindRenderbuffer && glRenderbufferStorage && glFramebufferRenderbuffer &&
         glCheckFramebufferStatus && glUniform1fv &&
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
+        glRenderbufferStorageMultisample && glBlitFramebuffer && glTexImage2DMultisample &&
+#endif
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&
 #endif
@@ -200,7 +211,7 @@ const char * ErrorToString(const GLenum errorCode)
     case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW"; // Legacy; not used on GL3+
     case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";  // Legacy; not used on GL3+
     default: return "Unknown GL error";
-    } // switch (errorCode)
+    }
 }
 
 

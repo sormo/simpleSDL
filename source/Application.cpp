@@ -149,6 +149,8 @@ namespace Application
         glCullFace(GL_BACK);
         glFrontFace(GL_CCW);
 
+        glEnable(GL_MULTISAMPLE);
+
         g_camera.Init();
 
         g_lightPositionWorldSpace = glm::vec3(5.0f, 0.0f, 0.0f);

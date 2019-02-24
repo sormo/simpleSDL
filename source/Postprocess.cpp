@@ -53,7 +53,8 @@ std::vector<float> GetKernelForType(Postprocess::Type type)
 }
 
 Postprocess::Postprocess(Type type)
-    : m_shader(Common::ReadFileToString("shaders/vertPostprocess.glsl").c_str(), Common::ReadFileToString(GetShaderForType(type)).c_str())
+    : m_shader(Common::ReadFileToString("shaders/vertPostprocess.glsl").c_str(), Common::ReadFileToString(GetShaderForType(type)).c_str()),
+      m_framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), 4)
 {
     m_kernel = GetKernelForType(type);
 
