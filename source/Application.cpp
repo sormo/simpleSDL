@@ -18,6 +18,7 @@
 #include "ModelShader.h"
 #include "Skybox.h"
 #include "Postprocess.h"
+#include "ShadowScene.h"
 
 namespace Application
 {
@@ -31,6 +32,7 @@ namespace Application
     //std::unique_ptr<Model> g_model;
     std::unique_ptr<Light> g_light;
     std::unique_ptr<Skybox> g_skybox;
+    std::unique_ptr<ShadowScene> g_shadowScene;
 
     //void BindModel()
     //{
@@ -96,7 +98,7 @@ namespace Application
 
     void Draw()
     {
-        g_postprocess->BeginRender();
+        //g_postprocess->BeginRender();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -111,19 +113,21 @@ namespace Application
         //g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //g_objModel->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace, g_camera.GetPosition());
-        g_objModel->DrawSkyboxReflection(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
+        //g_objModel->DrawSkyboxReflection(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
         //g_objModel->DrawSkyboxRefraction(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
 
-        glm::mat4 lightModel = glm::mat4(1.0f);
-        lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
-        lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
-        g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        //glm::mat4 lightModel = glm::mat4(1.0f);
+        //lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
+        //lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
+        //g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-        g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        //g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+
+        g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
 
         //glDisable(GL_BLEND);
 
-        g_postprocess->EndRender();
+        //g_postprocess->EndRender();
     }
 
     void RecomputeMVPMatrix()
@@ -165,55 +169,34 @@ namespace Application
         //    return false;
         //}
 
-        ModelShader::ConfigLight light;
-        light.directional = true;
-        light.pointCount = 1;
-        light.spotCount = 0;
-
         //g_model.reset(new Model("models/moses/scene.model", light));
         //g_model.reset(new Model("models/skull/craneo.model", light));
         //g_model.reset(new Model("models/cube/cube.model", light));
-        g_objModel.reset(new ObjModel());
-        g_light.reset(new Light());
+        //g_objModel.reset(new ObjModel());
+        //g_light.reset(new Light());
 
-        g_skybox.reset(new Skybox({ "skybox/islands/right.jpg",
-                                    "skybox/islands/left.jpg",
-                                    "skybox/islands/top.jpg",
-                                    "skybox/islands/bottom.jpg",
-                                    "skybox/islands/front.jpg",
-                                    "skybox/islands/back.jpg" }));
+        //g_skybox.reset(new Skybox({ "skybox/islands/right.jpg",
+        //                            "skybox/islands/left.jpg",
+        //                            "skybox/islands/top.jpg",
+        //                            "skybox/islands/bottom.jpg",
+        //                            "skybox/islands/front.jpg",
+        //                            "skybox/islands/back.jpg" }));
 
-        g_postprocess.reset(new Postprocess(Postprocess::Type::KernelSharpen));
+        //g_postprocess.reset(new Postprocess(Postprocess::Type::KernelSharpen));
+
+        g_shadowScene.reset(new ShadowScene());
 
         return true;
     }
 
-    void PrintMillisecondsPerFrame()
-    {
-        static double lastTime = Common::GetCurrentTimeInSeconds();
-        static uint32_t numberOfFrames = 0;
-
-        double currentTime = Common::GetCurrentTimeInSeconds();
-        numberOfFrames++;
-
-        if (currentTime - lastTime >= 1.0)
-        {
-            printf("%f ms/frame\n", 1000.0 / (double)numberOfFrames);
-            numberOfFrames = 0;
-            lastTime += 1.0;
-        }
-    }
-
     bool MainLoop()
     {
-        //PrintMillisecondsPerFrame();
-
         RecomputeMVPMatrix();
 
         // rotate light
-        glm::mat4 rotationMatrix(1.0f);
-        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(0.1f), glm::vec3(0.0, 1.0, 0.0));
-        g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
+        //glm::mat4 rotationMatrix(1.0f);
+        //rotationMatrix = glm::rotate(rotationMatrix, glm::radians(0.1f), glm::vec3(0.0, 1.0, 0.0));
+        //g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
 
         Draw();
 

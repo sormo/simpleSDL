@@ -255,6 +255,20 @@ void Shader::SetUniform<glm::vec3>(const glm::vec3 & value, const char * locatio
 }
 
 template<>
+void Shader::SetUniform<glm::vec2>(const glm::vec2 & value, GLuint location)
+{
+    glUniform2f(location, value.x, value.y);
+    CheckGlError("glUniform3f");
+}
+
+template<>
+void Shader::SetUniform<glm::vec2>(const glm::vec2 & value, const char * locationName)
+{
+    GLuint location = GetLocation(locationName, LocationType::Uniform);
+    SetUniform<glm::vec2>(value, location);
+}
+
+template<>
 void Shader::SetUniform<float>(const float & value, GLuint location)
 {
     glUniform1f(location, value);

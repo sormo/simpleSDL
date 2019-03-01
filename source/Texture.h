@@ -1,7 +1,9 @@
 #pragma once
 #include <optional>
 #include <vector>
+#include <functional>
 #include "OpenGL.h"
+#include "Shader.h"
 
 namespace Texture
 {
@@ -17,4 +19,19 @@ namespace Texture
 
     // warning: emscripten accepts only GL_CLAMP_TO_EDGE for non-power of two textures
     GLint GetCorrectWrapMode(GLint desired, int32_t size);
+
+    // expects colorMap sampler in fragment shader
+    class DebugDraw
+    {
+    public:
+        DebugDraw();
+        DebugDraw(const char * vertexShader, const char * fragmentShader);
+        ~DebugDraw();
+
+        void Draw(GLuint texture, std::function<void(Shader & shader)> bindCallback = nullptr);
+    private:
+        GLuint m_vaoQuad;
+        GLuint m_vboQuad;
+        Shader m_shader;
+    };
 }

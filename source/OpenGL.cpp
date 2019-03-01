@@ -196,7 +196,13 @@ bool IsVAOSupported()
 #define VAO_EXTENSION_NAME "GL_ARB_vertex_array_object"
 #endif
 
-    return IsOpenGlExtensionSupported(VAO_EXTENSION_NAME);
+    static bool init = false;
+    static bool value = false;
+
+    if (!init)
+        value = IsOpenGlExtensionSupported(VAO_EXTENSION_NAME);
+
+    return value;
 }
 
 const char * ErrorToString(const GLenum errorCode)

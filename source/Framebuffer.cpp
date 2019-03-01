@@ -24,7 +24,10 @@ Framebuffer::Framebuffer(uint32_t width, uint32_t height, uint32_t samples)
 
 Framebuffer::~Framebuffer()
 {
+    glDeleteTextures(1, &m_texture);
+    glDeleteTextures(1, &m_multisampleTexture);
     glDeleteFramebuffers(1, &m_framebuffer);
+    glDeleteFramebuffers(1, &m_multisampleFramebuffer);
 }
 
 void Framebuffer::BeginRender()
@@ -159,3 +162,46 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateMultisampleFramebuffer(uint32_t 
     return { framebuffer, texture };
 }
 #endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
+{
+    glGenFramebuffers(1, &m_framebuffer);
+    // create depth texture
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+FramebufferDepth::~FramebufferDepth()
+{
+    glDeleteTextures(1, &m_texture);
+    glDeleteFramebuffers(1, &m_framebuffer);
+}
+
+void FramebufferDepth::BeginRender()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+}
+
+void FramebufferDepth::EndRender()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint FramebufferDepth::GetTextureAttachment()
+{
+    return m_texture;
+}

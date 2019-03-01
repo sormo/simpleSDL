@@ -30,3 +30,18 @@ private:
     GLuint m_multisampleFramebuffer;
     GLuint m_multisampleTexture;
 };
+
+class FramebufferDepth
+{
+public:
+    FramebufferDepth(uint32_t width, uint32_t height);
+    ~FramebufferDepth();
+
+    void BeginRender();
+    void EndRender();
+
+    GLuint GetTextureAttachment();
+private:
+    GLuint m_framebuffer;
+    GLuint m_texture;
+};

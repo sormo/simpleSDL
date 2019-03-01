@@ -245,7 +245,7 @@ namespace Texture
 
         stbi_set_flip_vertically_on_load(true);
 
-        uint8_t * imageData = stbi_load_from_memory(data.data(), data.size(), &width, &height, &numberOfColorChannels, 0);
+        uint8_t * imageData = stbi_load_from_memory(data.data(), data.size(), &width, &height, &numberOfColorChannels, STBI_default);
         if (!imageData)
         {
             printf("Error loading image using STB.\n");
@@ -261,12 +261,14 @@ namespace Texture
         // set the texture wrapping/filtering options (on the currently bound texture object)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GetCorrectWrapMode(GL_REPEAT, width));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GetCorrectWrapMode(GL_REPEAT, height));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         GLint format;
         switch (numberOfColorChannels)
         {
+        case 1:
+            format = GL_RED;
         case 3:
             format = GL_RGB;
             break;
@@ -276,7 +278,7 @@ namespace Texture
         }
 
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, imageData);
-        //glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(imageData);
 
@@ -308,6 +310,7 @@ namespace Texture
 
             if (imageData)
             {
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
                 stbi_image_free(imageData);
             }
@@ -338,5 +341,119 @@ namespace Texture
             return GL_CLAMP_TO_EDGE;
 #endif
         return desired;
+    }
+
+    static const float DRAW_VERTICES[] =
+    {
+        // positions        // texture Coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+         1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+         1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+
+    static const char DRAW_VERTEX_SHADER[] = \
+        "#version 100\n"
+        "#ifdef GL_ES\n"
+        "        precision mediump float;\n"
+        "#endif\n"
+        "attribute vec3 position;\n"
+        "attribute vec2 vertexUV;\n"
+        "varying vec2 vertexUVA;\n"
+        "void main()\n"
+        "{\n"
+        "    vertexUVA = vertexUV;\n"
+        "    gl_Position = vec4(position, 1.0);\n"
+        "}\n";
+
+    static const char DRAW_FRAGMENT_SHADER[] = \
+        "#version 100\n"
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "varying vec2 vertexUVA;\n"
+        "uniform sampler2D colorMap;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = texture2D(colorMap, vertexUVA);\n"
+        "}\n";
+
+    DebugDraw::DebugDraw()
+        : DebugDraw(DRAW_VERTEX_SHADER, DRAW_FRAGMENT_SHADER)
+    {
+    }
+
+    DebugDraw::DebugDraw(const char * vertexShader, const char * fragmentShader)
+        : m_shader(vertexShader ? vertexShader : DRAW_VERTEX_SHADER, fragmentShader ? fragmentShader : DRAW_FRAGMENT_SHADER)
+    {
+        if (IsVAOSupported())
+        {
+            glGenVertexArrays(1, &m_vaoQuad);
+            glBindVertexArray(m_vaoQuad);
+        }
+
+        glGenBuffers(1, &m_vboQuad);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vboQuad);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(DRAW_VERTICES), DRAW_VERTICES, GL_STATIC_DRAW);
+
+        if (IsVAOSupported())
+        {
+            GLuint position = m_shader.GetLocation("position", Shader::LocationType::Attrib);
+            GLuint vertexUV = m_shader.GetLocation("vertexUV", Shader::LocationType::Attrib);
+
+            glEnableVertexAttribArray(position);
+            glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(vertexUV);
+            glVertexAttribPointer(vertexUV, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+            glBindVertexArray(0);
+        }
+    }
+    DebugDraw::~DebugDraw()
+    {
+        glDeleteBuffers(1, &m_vboQuad);
+        glDeleteVertexArrays(1, &m_vaoQuad);
+    }
+
+    void DebugDraw::Draw(GLuint texture, std::function<void(Shader & shader)> bindCallback)
+    {
+        m_shader.BeginRender();
+
+        GLuint locationPosition = m_shader.GetLocation("position", Shader::LocationType::Attrib);
+        GLuint locationVertexUV = m_shader.GetLocation("vertexUV", Shader::LocationType::Attrib);
+
+        m_shader.BindTexture(texture, "colorMap");
+
+        if (bindCallback)
+            bindCallback(m_shader);
+
+        if (IsVAOSupported())
+        {
+            glBindVertexArray(m_vaoQuad);
+            CheckGlError("glBindVertexArray");
+        }
+        else
+        {
+            glEnableVertexAttribArray(locationPosition);
+            glVertexAttribPointer(locationPosition, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(locationVertexUV);
+            glVertexAttribPointer(locationVertexUV, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        }
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        CheckGlError("glDrawArrays");
+
+        if (IsVAOSupported())
+        {
+            glBindVertexArray(0);
+            CheckGlError("glBindVertexArray");
+        }
+        else
+        {
+            glDisableVertexAttribArray(locationPosition);
+            glDisableVertexAttribArray(locationVertexUV);
+        }
+
+        m_shader.EndRender();
     }
 }
