@@ -133,38 +133,38 @@ void ShadowScene::InitCube()
     std::tie(m_vaoCube, m_vboCube) = InitCommon(VERTICES_CUBE, sizeof(VERTICES_CUBE));
 }
 
-void ShadowScene::DrawScene(const std::function<void(const glm::mat4 &)> & bindFunction)
+void ShadowScene::DrawScene(Shader & shader)
 {
-    auto drawCube = [this](const std::function<void(const glm::mat4 &)> & bindFunction, const glm::mat4 & model)
+    auto drawCube = [this](Shader & shader, const glm::mat4 & model)
     {
-        bindFunction(model);
+        shader.SetUniform(model, "model");
         DrawCommon(m_vaoCube, m_vboCube, 36);
     };
 
-    auto drawPlane = [this](const std::function<void(const glm::mat4 &)> & bindFunction, const glm::mat4 & model)
+    auto drawPlane = [this](Shader & shader, const glm::mat4 & model)
     {
-        bindFunction(model);
+        shader.SetUniform(model, "model");
         DrawCommon(m_vaoPlane, m_vboPlane, 6);
     };
 
     glm::mat4 model = glm::mat4(1.0f);
-    drawPlane(bindFunction, model);
+    drawPlane(shader, model);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
     model = glm::scale(model, glm::vec3(0.5f));
-    drawCube(bindFunction, model);
+    drawCube(shader, model);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
     model = glm::scale(model, glm::vec3(0.5f));
-    drawCube(bindFunction, model);
+    drawCube(shader, model);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
     model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
     model = glm::scale(model, glm::vec3(0.25));
-    drawCube(bindFunction, model);
+    drawCube(shader, model);
 }
 
 void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition)
@@ -181,16 +181,10 @@ void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection
     m_shaderLight.SetUniform(glm::vec3(0.2f, 0.2f, 0.2f), "light.specular");
     m_shaderLight.SetUniform(LIGHT_SPACE_MATRIX, "lightSpaceMatrix");
     m_shaderLight.SetUniform(glm::vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT), "depthMapSize");
+    m_shaderLight.SetUniform(view, "view");
+    m_shaderLight.SetUniform(projection, "projection");
 
-    std::function<void(const glm::mat4 &)> bindFunction = [this, view, projection](const glm::mat4 & model)
-    {
-        glm::mat4 MVP = projection * view * model;
-
-        m_shaderLight.SetUniform(MVP, "MVP");
-        m_shaderLight.SetUniform(model, "M");
-    };
-
-    DrawScene(bindFunction);
+    DrawScene(m_shaderLight);
 
     m_shaderLight.EndRender();
 }
@@ -201,19 +195,14 @@ void ShadowScene::DrawDepth()
     
     m_framebufferDepth.BeginRender();
 
-    m_shaderDepth.BeginRender();
-    m_shaderDepth.SetUniform(LIGHT_SPACE_MATRIX, "lightSpaceMatrix");
-    
     // viewport must be set after binding framebuffer
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glClear(GL_DEPTH_BUFFER_BIT);
-    
-    std::function<void(const glm::mat4 &)> bindFunction = [this](const glm::mat4 & model)
-    {
-        m_shaderDepth.SetUniform(model, "M");
-    };
 
-    DrawScene(bindFunction);
+    m_shaderDepth.BeginRender();
+    m_shaderDepth.SetUniform(LIGHT_SPACE_MATRIX, "lightSpaceMatrix");
+    
+    DrawScene(m_shaderDepth);
 
     m_framebufferDepth.EndRender();
 

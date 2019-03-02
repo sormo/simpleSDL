@@ -17,7 +17,7 @@ private:
 
     void DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition);
     void DrawDepth();
-    void DrawScene(const std::function<void(const glm::mat4 &)> & bindFunction);
+    void DrawScene(Shader & shader);
     void DrawCommon(GLuint vao, GLuint vbo, GLsizei count);
 
     GLuint m_texture;

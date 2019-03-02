@@ -8,8 +8,9 @@ attribute vec3 positionModelSpace;
 attribute vec3 normalModelSpace;
 attribute vec2 vertexUV;
 
-uniform mat4 MVP;
-uniform mat4 M;
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
 uniform mat4 lightSpaceMatrix;
 
 varying vec3 positionWorldSpace;
@@ -47,10 +48,10 @@ mat3 inverseCustom(mat3 m)
 
 void main(void)
 {
-    gl_Position =  MVP * vec4(positionModelSpace, 1.0);
+    gl_Position = projection * view * model * vec4(positionModelSpace, 1.0);
 
-    positionWorldSpace = vec3(M * vec4(positionModelSpace, 1.0));
-    normalWorldSpace = transposeCustom(inverseCustom(mat3(M))) * normalModelSpace;
+    positionWorldSpace = vec3(model * vec4(positionModelSpace, 1.0));
+    normalWorldSpace = transposeCustom(inverseCustom(mat3(model))) * normalModelSpace;
 
     vertexUVA = vertexUV;
 

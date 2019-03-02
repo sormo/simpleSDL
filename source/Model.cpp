@@ -105,6 +105,8 @@ void Mesh::BindData()
 // render the mesh
 void Mesh::Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection)
 {
+    m_material->shader->GetShader().BeginRender();
+
     BindUniforms(model, view, projection);
 
     BindData();

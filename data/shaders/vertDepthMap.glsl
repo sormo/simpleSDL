@@ -7,9 +7,9 @@ precision mediump float;
 attribute vec3 positionModelSpace;
 
 uniform mat4 lightSpaceMatrix;
-uniform mat4 M;
+uniform mat4 model;
 
 void main()
 {
-    gl_Position = lightSpaceMatrix * M * vec4(positionModelSpace, 1.0);
+    gl_Position = lightSpaceMatrix * model * vec4(positionModelSpace, 1.0);
 }
