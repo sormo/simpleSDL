@@ -91,6 +91,26 @@ extern PFNGLACTIVETEXTUREPROC glActiveTexture;
 
 #endif
 
+#ifndef GL_CLAMP_TO_BORDER
+#ifdef GL_NV_texture_border_clamp
+#define GL_CLAMP_TO_BORDER GL_NV_texture_border_clamp
+#elif GL_EXT_texture_border_clamp
+#define GL_CLAMP_TO_BORDER GL_EXT_texture_border_clamp
+#elif GL_OES_texture_border_clamp
+#define GL_CLAMP_TO_BORDER GL_OES_texture_border_clamp
+#else
+#error "GL_CLAMP_TO_BORDER not defined"
+#endif
+#endif
+
+#ifndef glReadBuffer
+#ifdef glReadBufferNV
+#define glReadBuffer glReadBufferNV
+//#else
+//#error "glReadBuffer not defined"
+#endif
+#endif
+
 bool InitOpenGL();
 
 void CheckGlError(const char * function, const char * file = __FILE__, const int line = __LINE__);

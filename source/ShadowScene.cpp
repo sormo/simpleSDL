@@ -204,9 +204,9 @@ void ShadowScene::DrawDepth()
     
     DrawScene(m_shaderDepth);
 
-    m_framebufferDepth.EndRender();
-
     m_shaderDepth.EndRender();
+
+    m_framebufferDepth.EndRender();
 }
 
 void ShadowScene::DrawCommon(GLuint vao, GLuint vbo, GLsizei count)
@@ -217,10 +217,14 @@ void ShadowScene::DrawCommon(GLuint vao, GLuint vbo, GLsizei count)
     }
     else
     {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
         glEnableVertexAttribArray(m_locationPosition);
         glVertexAttribPointer(m_locationPosition, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        
         glEnableVertexAttribArray(m_locationNormal);
         glVertexAttribPointer(m_locationNormal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        
         glEnableVertexAttribArray(m_locationVertexUV);
         glVertexAttribPointer(m_locationVertexUV, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     }
@@ -238,6 +242,8 @@ void ShadowScene::DrawCommon(GLuint vao, GLuint vbo, GLsizei count)
         glDisableVertexAttribArray(m_locationNormal);
         glDisableVertexAttribArray(m_locationVertexUV);
     }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition)

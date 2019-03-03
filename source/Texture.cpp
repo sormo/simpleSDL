@@ -21,7 +21,7 @@ namespace Texture
 
         if (data.size() < 54)
         {
-            printf("Error, size of BMP file is only %u.\n", data.size());
+            printf("Error, size of BMP file is only %lu.\n", data.size());
             return std::nullopt;
         }
 
@@ -155,7 +155,7 @@ namespace Texture
 
         if (data.size() < 128)
         {
-            printf("Error, size of DDS file is only %u", data.size());
+            printf("Error, size of DDS file is only %lu", data.size());
             return std::nullopt;
         }
 
@@ -268,7 +268,8 @@ namespace Texture
         switch (numberOfColorChannels)
         {
         case 1:
-            format = GL_RED;
+            //format = GL_RED;
+            format = GL_ALPHA;
         case 3:
             format = GL_RGB;
             break;

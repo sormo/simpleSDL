@@ -30,6 +30,7 @@ const char * GetShaderForType(Postprocess::Type type)
     case Postprocess::Type::KernelSharpen:
         return "shaders/fragPostKernel.glsl";
     }
+    return "shaders/fragPostNoChange.glsl";
 }
 
 std::vector<float> GetKernelForType(Postprocess::Type type)

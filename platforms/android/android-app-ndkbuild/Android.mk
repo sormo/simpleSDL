@@ -42,7 +42,8 @@ LOCAL_SRC_FILES :=  \
   ../../../sourceCommon/CommonProject.cpp \
   ../../../source/Skybox.cpp \
   ../../../source/Framebuffer.cpp \
-  ../../../source/Postprocess.cpp
+  ../../../source/Postprocess.cpp \
+  ../../../source/ShadowScene.cpp
 
 
 # Linking options

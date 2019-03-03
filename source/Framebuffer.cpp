@@ -167,21 +167,49 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateMultisampleFramebuffer(uint32_t 
 FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
 {
     glGenFramebuffers(1, &m_framebuffer);
-    // create depth texture
+
+    // prepare depth texture
     glGenTextures(1, &m_texture);
     glBindTexture(GL_TEXTURE_2D, m_texture);
+#if defined(ANDROID) || defined(EMSCRIPTEN)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
+#else
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+#endif
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+#if !defined(ANDROID) && !defined(EMSCRIPTEN)
+    static const float BORDER_COLOR[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, BORDER_COLOR);
+#endif
+
     // attach depth texture as FBO's depth buffer
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture, 0);
+
+#if defined(ANDROID) || defined(EMSCRIPTEN)
+    // for those create color attachment
+    GLuint renderBufferObject;
+    glGenRenderbuffers(1, &renderBufferObject);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA4, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderBufferObject);
+#else
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
+#endif
+    
+    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        printf("Error initializing frame buffer.\n");
+        throw std::runtime_error("Error initializing frame buffer.");
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
