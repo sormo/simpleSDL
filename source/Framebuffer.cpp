@@ -176,6 +176,8 @@ FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
 #else
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 #endif
+    CheckGlError("glTexImage2D");
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -186,18 +188,25 @@ FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, BORDER_COLOR);
 #endif
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     // attach depth texture as FBO's depth buffer
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture, 0);
+    CheckGlError("glBindFramebuffer");
 
-#if defined(ANDROID) || defined(EMSCRIPTEN)
-    // for those create color attachment
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture, 0);
+    CheckGlError("glFramebufferTexture2D");
+
+#if defined(EMSCRIPTEN)
+    // for webgl create color attachment
     GLuint renderBufferObject;
     glGenRenderbuffers(1, &renderBufferObject);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA4, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderBufferObject);
+#elif ANDROID
+    // for android nothing ???
 #else
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);

@@ -1,6 +1,6 @@
 #pragma once
 #include "Shader.h"
-#include "Framebuffer.h"
+#include "Shadow.h"
 #include "Texture.h"
 
 class ShadowScene
@@ -20,16 +20,15 @@ private:
     void DrawScene(Shader & shader);
     void DrawCommon(GLuint vao, GLuint vbo, GLsizei count);
 
-    GLuint m_texture;
-
     GLuint m_vaoPlane;
     GLuint m_vboPlane;
 
     GLuint m_vaoCube;
     GLuint m_vboCube;
 
+    GLuint m_texture;
+
     Shader m_shaderLight;
-    Shader m_shaderDepth;
 
     void InitLocations();
 
@@ -37,7 +36,7 @@ private:
     GLuint m_locationNormal;
     GLuint m_locationVertexUV;
 
-    FramebufferDepth m_framebufferDepth;
-
     Texture::DebugDraw m_debug;
+
+    ShadowDirectional m_shadow;
 };

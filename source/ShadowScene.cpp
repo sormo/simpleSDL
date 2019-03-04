@@ -4,17 +4,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-
 static const glm::vec3 LIGHT_POSITION(-2.0f, 4.0f, -1.0f);
-static const GLsizei SHADOW_WIDTH = 1024;
-static const GLsizei SHADOW_HEIGHT = 1024;
-
-static const float NEAR_PLANE = 1.0f;
-static const float FAR_PLANE = 7.5f;
-
-glm::mat4 LIGHT_PROJECTION = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, NEAR_PLANE, FAR_PLANE);
-glm::mat4 LIGHT_VIEW = glm::lookAt(LIGHT_POSITION, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-glm::mat4 LIGHT_SPACE_MATRIX = LIGHT_PROJECTION * LIGHT_VIEW;
 
 static const float VERTICES_PLANE[] =
 {
@@ -76,8 +66,6 @@ static const float VERTICES_CUBE[] =
 
 ShadowScene::ShadowScene()
     : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadow.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadow.glsl").c_str()),
-      m_shaderDepth(Common::ReadFileToString("shaders/vertDepthMap.glsl").c_str(), Common::ReadFileToString("shaders/fragDepthMap.glsl").c_str()),
-      m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
       m_debug(nullptr, Common::ReadFileToString("shaders/fragDepthDebug.glsl").c_str())
 {
     InitLocations();
@@ -85,6 +73,8 @@ ShadowScene::ShadowScene()
     InitCube();
 
     m_texture = *Texture::Load("wood.png");
+
+    m_shadow.SetLightPosition(LIGHT_POSITION);
 }
 
 void ShadowScene::InitLocations()
@@ -172,15 +162,15 @@ void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection
     m_shaderLight.BeginRender();
 
     m_shaderLight.BindTexture(m_texture, "textureDiffuse");
-    m_shaderLight.BindTexture(m_framebufferDepth.GetTextureAttachment(), "depthMap");
+    m_shaderLight.BindTexture(m_shadow.GetTexture(), "depthMap");
     m_shaderLight.SetUniform(64.0f, "shininess");
     m_shaderLight.SetUniform(cameraPosition, "cameraWorldSpace");
     m_shaderLight.SetUniform(LIGHT_POSITION, "light.position");
     m_shaderLight.SetUniform(glm::vec3(0.1f, 0.1f, 0.1f), "light.ambient");
     m_shaderLight.SetUniform(glm::vec3(1.0f, 1.0f, 1.0f), "light.diffuse");
     m_shaderLight.SetUniform(glm::vec3(0.2f, 0.2f, 0.2f), "light.specular");
-    m_shaderLight.SetUniform(LIGHT_SPACE_MATRIX, "lightSpaceMatrix");
-    m_shaderLight.SetUniform(glm::vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT), "depthMapSize");
+    m_shaderLight.SetUniform(m_shadow.GetLightSpaceMatrix(), "lightSpaceMatrix");
+    m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
     m_shaderLight.SetUniform(view, "view");
     m_shaderLight.SetUniform(projection, "projection");
 
@@ -192,21 +182,11 @@ void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection
 void ShadowScene::DrawDepth()
 {
     // render scene from light's point of view
-    
-    m_framebufferDepth.BeginRender();
+    m_shadow.BeginRender();
 
-    // viewport must be set after binding framebuffer
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    DrawScene(m_shadow.GetShader());
 
-    m_shaderDepth.BeginRender();
-    m_shaderDepth.SetUniform(LIGHT_SPACE_MATRIX, "lightSpaceMatrix");
-    
-    DrawScene(m_shaderDepth);
-
-    m_shaderDepth.EndRender();
-
-    m_framebufferDepth.EndRender();
+    m_shadow.EndRender();
 }
 
 void ShadowScene::DrawCommon(GLuint vao, GLuint vbo, GLsizei count)
@@ -250,12 +230,10 @@ void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, con
 {
     DrawDepth();
 
-    glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     DrawLight(view, projection, cameraPosition);
 
-    //m_debug.Draw(m_framebufferDepth.GetTextureAttachment(), [](Shader & shader)
+    //m_debug.Draw(m_shadow.GetTexture()); //,
+    //[](Shader & shader)
     //{
     //    shader.SetUniform(NEAR_PLANE, "nearPlane");
     //    shader.SetUniform(FAR_PLANE, "farPlane");

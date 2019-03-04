@@ -156,23 +156,24 @@ bool InitOpenGL()
 }
 #endif
 
-bool IsOpenGlExtensionSupported(const char * extension)
+const std::vector<std::string> & GetAllExtensions()
 {
     static std::vector<std::string> extensions;
 
-#if defined(ANDROID) || defined(EMSCRIPTEN)
-    const GLubyte * extensionNames = glGetString(GL_EXTENSIONS);
-
-    std::stringstream extensionsStream((const char *)extensionNames);
-    while (extensionsStream)
-    {
-        std::string name;
-        extensionsStream >> name;
-        extensions.push_back(std::move(name));
-    }
-#else
     if (extensions.empty())
     {
+#if defined(ANDROID) || defined(EMSCRIPTEN)
+        const GLubyte * extensionNames = glGetString(GL_EXTENSIONS);
+
+        std::stringstream extensionsStream((const char *)extensionNames);
+        while (extensionsStream)
+        {
+            std::string name;
+            extensionsStream >> name;
+            extensions.push_back(std::move(name));
+        }
+#else
+
         GLint numberOfExtensions;
         glGetIntegerv(GL_NUM_EXTENSIONS, &numberOfExtensions);
 
@@ -181,8 +182,16 @@ bool IsOpenGlExtensionSupported(const char * extension)
             const GLubyte * extensionName = glGetStringi(GL_EXTENSIONS, i);
             extensions.push_back((const char*)extensionName);
         }
-    }
 #endif
+    }
+
+    return extensions;
+}
+
+bool IsOpenGlExtensionSupported(const char * extension)
+{
+    const std::vector<std::string> & extensions = GetAllExtensions();
+
     auto it = std::find(std::begin(extensions), std::end(extensions), extension);
     return it != std::end(extensions);
 
@@ -220,7 +229,6 @@ const char * ErrorToString(const GLenum errorCode)
     }
 }
 
-
 void CheckGlError(const char * function, const char * file, const int line)
 {
 #ifdef _DEBUG
@@ -230,4 +238,14 @@ void CheckGlError(const char * function, const char * file, const int line)
         throw std::runtime_error("OpenGl error");
     }
 #endif
+}
+
+void PrintAllExtensions()
+{
+    const std::vector<std::string> & extensions = GetAllExtensions();
+
+    printf("OpenGL extensions:\n");
+    for (const std::string & ext : extensions)
+        printf("%s\n", ext.c_str());
+    printf("\n");
 }

@@ -143,6 +143,8 @@ namespace Application
             return false;
         }
 
+        PrintAllExtensions();
+
         glClearColor(0, 0, 0, 0);
         // Enable depth test
         glEnable(GL_DEPTH_TEST);

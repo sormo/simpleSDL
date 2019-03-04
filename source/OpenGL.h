@@ -117,3 +117,5 @@ void CheckGlError(const char * function, const char * file = __FILE__, const int
 
 bool IsOpenGlExtensionSupported(const char * extension);
 bool IsVAOSupported();
+
+void PrintAllExtensions();
