@@ -3,6 +3,18 @@
 #include "OpenGL.h"
 #include "Texture.h"
 
+void CheckRenderBufferSize(uint32_t width, uint32_t height)
+{
+    GLint maxRenderbufferSize;
+    glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxRenderbufferSize);
+
+    if (maxRenderbufferSize < (GLint)width || maxRenderbufferSize < (GLint)height)
+    {
+        printf("Error creating framebuffer %dx%x, GL_MAX_RENDERBUFFER_SIZE is %d", width, height, maxRenderbufferSize);
+        throw std::runtime_error("Error creating framebuffer.");
+    }
+}
+
 Framebuffer::Framebuffer(uint32_t samples)
     : Framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), samples)
 {
@@ -12,6 +24,8 @@ Framebuffer::Framebuffer(uint32_t samples)
 Framebuffer::Framebuffer(uint32_t width, uint32_t height, uint32_t samples)
     : m_width(width), m_height(height), m_samples(samples)
 {
+    CheckRenderBufferSize(width, height);
+
     std::tie(m_framebuffer, m_texture) = GenerateFramebuffer(width, height);
 
 #if !defined(EMSCRIPTEN) && !defined(ANDROID)
@@ -166,6 +180,8 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateMultisampleFramebuffer(uint32_t 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
 {
+    CheckRenderBufferSize(width, height);
+
     glGenFramebuffers(1, &m_framebuffer);
 
     // prepare depth texture
