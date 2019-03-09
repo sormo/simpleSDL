@@ -1,23 +1,25 @@
 #pragma once
 #include "Shader.h"
 #include "Shadow.h"
-#include "Texture.h"
+
+//#define SHADOW_DIRECTIONAL
 
 class ShadowScene
 {
 public:
     ShadowScene();
 
-    void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition);
+    void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition);
 
 private:
     void InitPlane();
     void InitCube();
     std::tuple<GLuint, GLuint> InitCommon(const float * data, size_t size);
 
-    void DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition);
+    void DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition);
     void DrawDepth();
-    void DrawScene(Shader & shader);
+    void DrawScenePlane(Shader & shader);
+    void DrawSceneInside(Shader & shader);
     void DrawCommon(GLuint vao, GLuint vbo, GLsizei count);
 
     GLuint m_vaoPlane;
@@ -36,7 +38,9 @@ private:
     GLuint m_locationNormal;
     GLuint m_locationVertexUV;
 
-    Texture::DebugDraw m_debug;
-
+#ifdef SHADOW_DIRECTIONAL
     ShadowDirectional m_shadow;
+#else
+    ShadowPositional m_shadow;
+#endif
 };

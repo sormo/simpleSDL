@@ -46,12 +46,19 @@ void PrintProgramInfo(GLuint program)
     }
 }
 
-std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char * fragmentData, std::function<void(GLuint)> bindCallback)
+std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char * geometryData, const char * fragmentData, std::function<void(GLuint)> bindCallback)
 {
-    auto vertexShader = CompileShader(vertexData, GL_VERTEX_SHADER);
-    auto fragmentShader = CompileShader(fragmentData, GL_FRAGMENT_SHADER);
+    std::optional<GLuint> vertexShader = CompileShader(vertexData, GL_VERTEX_SHADER);
+    std::optional<GLuint> geometryShader;
+    std::optional<GLuint> fragmentShader = CompileShader(fragmentData, GL_FRAGMENT_SHADER);
 
     if (!vertexShader || !fragmentShader)
+        return std::nullopt;
+
+    if (geometryData)
+        geometryShader = CompileShader(geometryData, GL_GEOMETRY_SHADER);
+
+    if (geometryData && !geometryShader)
         return std::nullopt;
 
     // Create program, attach shaders to it, and link it
@@ -59,6 +66,8 @@ std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char *
 
     glAttachShader(program, *vertexShader);
     glAttachShader(program, *fragmentShader);
+    if (geometryShader)
+        glAttachShader(program, *geometryShader);
 
     // bind locations before linking
     if (bindCallback)
@@ -75,18 +84,6 @@ std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char *
         return std::nullopt;
     }
 
-#ifdef _DEBUG
-    glValidateProgram(program);
-    GLint valid;
-    glGetProgramiv(program, GL_VALIDATE_STATUS, &valid);
-    if (!valid)
-    {
-        PrintProgramInfo(program);
-
-        return std::nullopt;
-    }
-#endif
-
     glDetachShader(program, *vertexShader);
     glDetachShader(program, *fragmentShader);
 
@@ -97,7 +94,7 @@ std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char *
     return program;
 }
 
-std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback)
+std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * geometryFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback)
 {
     printf("Compiling shaders from files: %s %s", vertexFile, fragmentFile);
 
@@ -107,12 +104,24 @@ std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const ch
     auto fragmentData = Common::ReadFile(fragmentFile);
     fragmentData.push_back('\0');
 
-    return CreateAndLinkProgram((const char *)vertexData.data(), (const char *)fragmentData.data(), bindCallback);
+    std::vector<uint8_t> geometryData;
+    if (geometryFile)
+    {
+        geometryData = Common::ReadFile(geometryFile);
+        geometryData.push_back('\0');
+    }
+
+    return CreateAndLinkProgram((const char *)vertexData.data(), geometryData.empty() ? nullptr : (const char *)geometryData.data(), (const char *)fragmentData.data(), bindCallback);
 }
 
 Shader::Shader(const char * vertex, const char * fragment)
 {
-    m_program = CreateAndLinkProgram(vertex, fragment);
+    m_program = CreateAndLinkProgram(vertex, nullptr, fragment);
+}
+
+Shader::Shader(const char * vertex, const char * geometry, const char * fragment)
+{
+    m_program = CreateAndLinkProgram(vertex, geometry, fragment);
 }
 
 Shader::~Shader()
@@ -282,6 +291,20 @@ void Shader::SetUniform<float>(const float & value, const char * locationName)
     SetUniform<float>(value, location);
 }
 
+template<>
+void Shader::SetUniform<GLint>(const GLint & value, GLuint location)
+{
+    glUniform1i(location, value);
+    CheckGlError("glUniform1i");
+}
+
+template<>
+void Shader::SetUniform<GLint>(const GLint & value, const char * locationName)
+{
+    GLuint location = GetLocation(locationName, LocationType::Uniform);
+    SetUniform<GLint>(value, location);
+}
+
 void Shader::BindTexture(GLuint texture, GLuint location)
 {
     glActiveTexture(GL_TEXTURE0 + m_currentTexture);
@@ -330,6 +353,10 @@ void Shader::BeginRender()
 
 void Shader::EndRender()
 {
+#ifdef _DEBUG
+    Validate();
+#endif
+
     if (m_boundVAO)
     {
         glBindVertexArray(0);
@@ -423,6 +450,22 @@ void Shader::PrintAttributes()
         glGetActiveAttrib(*m_program, (GLuint)i, bufSize, &length, &size, &type, name);
 
         printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
+    }
+}
+
+void Shader::Validate()
+{
+    if (m_validated)
+        return;
+    m_validated = true;
+
+    glValidateProgram(*m_program);
+    GLint valid;
+    glGetProgramiv(*m_program, GL_VALIDATE_STATUS, &valid);
+    if (!valid)
+    {
+        PrintProgramInfo(*m_program);
+        throw std::runtime_error("Shader not valid");
     }
 }
 

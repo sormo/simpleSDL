@@ -49,7 +49,7 @@ bool Text2DInitFont()
     glGenBuffers(1, &g_bufferUV);
 
     // Initialize Shader
-    auto program = CreateAndLinkProgramFile("shaders/vertText.glsl", "shaders/fragText.glsl");
+    auto program = CreateAndLinkProgramFile("shaders/vertText.glsl", nullptr, "shaders/fragText.glsl");
     if (!program)
         return false;
     g_program = *program;

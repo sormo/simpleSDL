@@ -81,6 +81,7 @@ extern PFNGLUNIFORM1FVPROC glUniform1fv;
 extern PFNGLTEXIMAGE2DMULTISAMPLEPROC glTexImage2DMultisample;
 extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
 extern PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
+extern PFNGLFRAMEBUFFERTEXTUREPROC glFramebufferTexture;
 #endif
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1

@@ -7,13 +7,15 @@
 #include "glm/glm.hpp"
 #include <functional>
 
-std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback = nullptr);
-std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char * fragmentData, std::function<void(GLuint)> bindCallback = nullptr);
+// geometry shader is optional
+std::optional<GLuint> CreateAndLinkProgramFile(const char * vertexFile, const char * geometryFile, const char * fragmentFile, std::function<void(GLuint)> bindCallback = nullptr);
+std::optional<GLuint> CreateAndLinkProgram(const char * vertexData, const char * geometryData, const char * fragmentData, std::function<void(GLuint)> bindCallback = nullptr);
 
 class Shader
 {
 public:
-    Shader(const char * vertexFile, const char * fragmentFile);
+    Shader(const char * vertex, const char * fragment);
+    Shader(const char * vertex, const char * geometry, const char * fragment);
     ~Shader();
 
     enum class LocationType { Attrib, Uniform };
@@ -51,6 +53,9 @@ public:
     void PrintAttributes();
 
 private:
+
+    void Validate();
+    bool m_validated = false;
 
     std::unordered_map<std::string, GLuint> m_locations;
     std::optional<GLuint> m_program;

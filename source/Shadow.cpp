@@ -5,14 +5,45 @@
 static const GLsizei SHADOW_WIDTH = 1024;
 static const GLsizei SHADOW_HEIGHT = 1024;
 
-static const float NEAR_PLANE = 1.0f;
-static const float FAR_PLANE = 7.5f;
+static const char * DIRECTIONAL_FRAGMENT_SHADER = \
+"#version 100\n"
+"void main()\n"
+"{\n"
+"    // gl_FragDepth = gl_FragCoord.z;\n"
+"}\n";
 
-glm::mat4 LIGHT_PROJECTION = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, NEAR_PLANE, FAR_PLANE);
+static const char * DIRECTIONAL_VERTEX_SHADER = \
+"#version 100\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"attribute vec3 positionModelSpace;\n"
+"uniform mat4 lightSpaceMatrix;\n"
+"uniform mat4 model;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = lightSpaceMatrix * model * vec4(positionModelSpace, 1.0);\n"
+"}\n";
+
+static const char * DIRECTIONAL_DEBUG_FRAGMENT_SHADER = \
+"#version 100\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"varying vec2 vertexUVA;\n"
+"uniform sampler2D colorMap;\n"
+"void main()\n"
+"{\n"
+"    float depthValue = texture2D(colorMap, vertexUVA).r;\n"
+"    gl_FragColor = vec4(vec3(depthValue), 1.0); // orthographic\n"
+"}\n";
 
 ShadowDirectional::ShadowDirectional()
-    : m_shaderDepth(Common::ReadFileToString("shaders/vertDepthMap.glsl").c_str(), Common::ReadFileToString("shaders/fragDepthMap.glsl").c_str()),
-      m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT)
+    : m_shaderDepth(DIRECTIONAL_VERTEX_SHADER, DIRECTIONAL_FRAGMENT_SHADER),
+      m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
+      m_debug(nullptr, DIRECTIONAL_DEBUG_FRAGMENT_SHADER),
+      m_planes(0.1f, 10.0f),
+      m_lightProjection(glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, m_planes.x, m_planes.y))
 {
 
 }
@@ -20,7 +51,7 @@ ShadowDirectional::ShadowDirectional()
 void ShadowDirectional::SetLightPosition(const glm::vec3 & lightPosition)
 {
     glm::mat4 lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    m_lightSpaceMatrix = LIGHT_PROJECTION * lightView;
+    m_lightSpaceMatrix = m_lightProjection * lightView;
 }
 
 void ShadowDirectional::BeginRender()
@@ -46,7 +77,7 @@ void ShadowDirectional::EndRender()
     m_framebufferDepth.EndRender();
 
     glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 Shader & ShadowDirectional::GetShader()
@@ -67,4 +98,126 @@ glm::vec2 ShadowDirectional::GetTextureSize()
 const glm::mat4 ShadowDirectional::GetLightSpaceMatrix()
 {
     return m_lightSpaceMatrix;
+}
+
+void ShadowDirectional::DrawDebug()
+{
+    m_debug.Draw(m_framebufferDepth.GetTextureAttachment());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char * POSITIONAL_VERTEX_SHADER = \
+"#version 150\n"
+"in vec3 positionModelSpace;\n"
+"uniform mat4 model;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = model * vec4(positionModelSpace, 1.0);\n"
+"}\n";
+
+static const char * POSITIONAL_GEOMETRY_SHADER = \
+"#version 150\n"
+"layout (triangles) in;\n"
+"layout (triangle_strip, max_vertices = 18) out;\n"
+"uniform mat4 shadowMatrices[6];\n"
+"out vec4 positionLightSpace;\n"
+"void main()\n"
+"{\n"
+"    for(int face = 0; face < 6; ++face)\n"
+"    {\n"
+"        gl_Layer = face; // built-in variable that specifies to which face we render.\n"
+"        for(int i = 0; i < 3; ++i) // for each triangle's vertices\n"
+"        {\n"
+"            positionLightSpace = gl_in[i].gl_Position;\n"
+"            gl_Position = shadowMatrices[face] * positionLightSpace;\n"
+"            EmitVertex();\n"
+"        }\n"
+"        EndPrimitive();\n"
+"    }\n"
+"}\n";
+
+static const char * POSITIONAL_FRAGMENT_SHADER = \
+"#version 150\n"
+"in vec4 positionLightSpace;\n"
+"uniform vec3 lightPositionWorldSpace;\n"
+"uniform float farPlane;\n"
+"void main()\n"
+"{\n"
+"    float lightDistance = length(positionLightSpace.xyz - lightPositionWorldSpace);\n"
+"    // map to [0;1] range by dividing by farPlane\n"
+"    lightDistance = lightDistance / farPlane;\n"
+"    // write this as modified depth\n"
+"    gl_FragDepth = lightDistance;\n"
+"}\n";
+
+ShadowPositional::ShadowPositional()
+    : m_shaderDepth(POSITIONAL_VERTEX_SHADER, POSITIONAL_GEOMETRY_SHADER, POSITIONAL_FRAGMENT_SHADER),
+      m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
+      m_planes(0.1f, 25.0f),
+      m_shadowProjection(glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, m_planes.x, m_planes.y))
+{
+}
+
+void ShadowPositional::SetLightPosition(const glm::vec3 & lightPosition)
+{
+    m_lightSpaceMatrix.clear();
+
+    m_lightSpaceMatrix.push_back(m_shadowProjection * glm::lookAt(lightPosition, lightPosition + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    m_lightSpaceMatrix.push_back(m_shadowProjection * glm::lookAt(lightPosition, lightPosition + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    m_lightSpaceMatrix.push_back(m_shadowProjection * glm::lookAt(lightPosition, lightPosition + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)));
+    m_lightSpaceMatrix.push_back(m_shadowProjection * glm::lookAt(lightPosition, lightPosition + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)));
+    m_lightSpaceMatrix.push_back(m_shadowProjection * glm::lookAt(lightPosition, lightPosition + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    m_lightSpaceMatrix.push_back(m_shadowProjection * glm::lookAt(lightPosition, lightPosition + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+
+    m_lightPosition = lightPosition;
+}
+
+void ShadowPositional::BeginRender()
+{
+    m_framebufferDepth.BeginRender();
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    m_shaderDepth.BeginRender();
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix[0], "shadowMatrices[0]");
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix[1], "shadowMatrices[1]");
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix[2], "shadowMatrices[2]");
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix[3], "shadowMatrices[3]");
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix[4], "shadowMatrices[4]");
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix[5], "shadowMatrices[5]");
+
+    m_shaderDepth.SetUniform(m_planes.y, "farPlane");
+    m_shaderDepth.SetUniform(m_lightPosition, "lightPositionWorldSpace");
+}
+
+void ShadowPositional::EndRender()
+{
+    m_shaderDepth.EndRender();
+
+    m_framebufferDepth.EndRender();
+
+    glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+Shader & ShadowPositional::GetShader()
+{
+    return m_shaderDepth;
+}
+
+GLuint ShadowPositional::GetTexture()
+{
+    return m_framebufferDepth.GetTextureAttachment();
+}
+
+glm::vec2 ShadowPositional::GetTextureSize()
+{
+    return glm::vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
+}
+
+glm::vec2 ShadowPositional::GetPlanes()
+{
+    return m_planes;
 }

@@ -63,6 +63,7 @@ PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
 PFNGLGETSTRINGIPROC glGetStringi;
+PFNGLFRAMEBUFFERTEXTUREPROC glFramebufferTexture;
 #endif
 
 bool InitOpenGL()
@@ -121,6 +122,7 @@ bool InitOpenGL()
     glTexImage2DMultisample = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)SDL_GL_GetProcAddress("glTexImage2DMultisample");
     glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)SDL_GL_GetProcAddress("glRenderbufferStorageMultisample");
     glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)SDL_GL_GetProcAddress("glBlitFramebuffer");
+    glFramebufferTexture = (PFNGLFRAMEBUFFERTEXTUREPROC)SDL_GL_GetProcAddress("glFramebufferTexture");
 #endif
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
@@ -142,6 +144,7 @@ bool InitOpenGL()
         glCheckFramebufferStatus && glUniform1fv &&
 #if !defined(EMSCRIPTEN) && !defined(ANDROID)
         glRenderbufferStorageMultisample && glBlitFramebuffer && glTexImage2DMultisample &&
+        glFramebufferTexture &&
 #endif
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&

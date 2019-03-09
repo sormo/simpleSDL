@@ -45,3 +45,19 @@ private:
     GLuint m_framebuffer;
     GLuint m_texture;
 };
+
+class FramebufferDepthCube
+{
+public:
+    FramebufferDepthCube(uint32_t width, uint32_t height);
+    ~FramebufferDepthCube();
+
+    void BeginRender();
+    void EndRender();
+
+    GLuint GetTextureAttachment();
+private:
+    GLuint m_framebuffer;
+    GLuint m_texture;
+};
+

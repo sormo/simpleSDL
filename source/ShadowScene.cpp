@@ -4,8 +4,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-static const glm::vec3 LIGHT_POSITION(-2.0f, 4.0f, -1.0f);
-
 static const float VERTICES_PLANE[] =
 {
     // positions            // normals         // texcoords
@@ -65,16 +63,17 @@ static const float VERTICES_CUBE[] =
 };
 
 ShadowScene::ShadowScene()
-    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadow.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadow.glsl").c_str()),
-      m_debug(nullptr, Common::ReadFileToString("shaders/fragDepthDebug.glsl").c_str())
+#ifdef SHADOW_DIRECTIONAL
+    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadow.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadow.glsl").c_str())
+#else
+    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadowPos.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadowPos.glsl").c_str())
+#endif
 {
     InitLocations();
     InitPlane();
     InitCube();
 
     m_texture = *Texture::Load("wood.png");
-
-    m_shadow.SetLightPosition(LIGHT_POSITION);
 }
 
 void ShadowScene::InitLocations()
@@ -123,7 +122,7 @@ void ShadowScene::InitCube()
     std::tie(m_vaoCube, m_vboCube) = InitCommon(VERTICES_CUBE, sizeof(VERTICES_CUBE));
 }
 
-void ShadowScene::DrawScene(Shader & shader)
+void ShadowScene::DrawScenePlane(Shader & shader)
 {
     auto drawCube = [this](Shader & shader, const glm::mat4 & model)
     {
@@ -157,24 +156,82 @@ void ShadowScene::DrawScene(Shader & shader)
     drawCube(shader, model);
 }
 
-void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition)
+void ShadowScene::DrawSceneInside(Shader & shader)
+{
+    auto drawCube = [this](Shader & shader, const glm::mat4 & model)
+    {
+        shader.SetUniform(model, "model");
+        DrawCommon(m_vaoCube, m_vboCube, 36);
+    };
+
+    // room cube
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(5.0f));
+    // note that we disable culling here since we render 'inside' the cube instead of the usual 'outside' which throws off the normal culling methods.
+    glDisable(GL_CULL_FACE);
+    shader.SetUniform(1, "reverseNormals"); // A small little hack to invert normals when drawing cube from the inside so lighting still works.
+    drawCube(shader, model);
+    shader.SetUniform(0, "reverseNormals"); // and of course disable it
+    glEnable(GL_CULL_FACE);
+
+    // cubes
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f));
+    drawCube(shader, model);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
+    model = glm::scale(model, glm::vec3(0.75f));
+    drawCube(shader, model);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f));
+    drawCube(shader, model);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
+    model = glm::scale(model, glm::vec3(0.5f));
+    drawCube(shader, model);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
+    model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+    model = glm::scale(model, glm::vec3(0.75f));
+    drawCube(shader, model);
+}
+
+void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition)
 {
     m_shaderLight.BeginRender();
 
-    m_shaderLight.BindTexture(m_texture, "textureDiffuse");
+#ifdef SHADOW_DIRECTIONAL
     m_shaderLight.BindTexture(m_shadow.GetTexture(), "depthMap");
+    m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
+    m_shaderLight.SetUniform(m_shadow.GetLightSpaceMatrix(), "lightSpaceMatrix");
+#else
+    m_shaderLight.BindCubemapTexture(m_shadow.GetTexture(), "depthMap");
+    m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
+    m_shaderLight.SetUniform(m_shadow.GetPlanes().y, "farPlane");
+#endif
+
+    m_shaderLight.BindTexture(m_texture, "textureDiffuse");
     m_shaderLight.SetUniform(64.0f, "shininess");
     m_shaderLight.SetUniform(cameraPosition, "cameraWorldSpace");
-    m_shaderLight.SetUniform(LIGHT_POSITION, "light.position");
-    m_shaderLight.SetUniform(glm::vec3(0.1f, 0.1f, 0.1f), "light.ambient");
+    m_shaderLight.SetUniform(lightPosition, "light.position");
+    m_shaderLight.SetUniform(glm::vec3(0.2f, 0.2f, 0.2f), "light.ambient");
     m_shaderLight.SetUniform(glm::vec3(1.0f, 1.0f, 1.0f), "light.diffuse");
     m_shaderLight.SetUniform(glm::vec3(0.2f, 0.2f, 0.2f), "light.specular");
-    m_shaderLight.SetUniform(m_shadow.GetLightSpaceMatrix(), "lightSpaceMatrix");
-    m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
+
     m_shaderLight.SetUniform(view, "view");
     m_shaderLight.SetUniform(projection, "projection");
 
-    DrawScene(m_shaderLight);
+#ifdef SHADOW_DIRECTIONAL
+    DrawScenePlane(m_shaderLight);
+#else
+    DrawSceneInside(m_shaderLight);
+#endif
 
     m_shaderLight.EndRender();
 }
@@ -184,7 +241,11 @@ void ShadowScene::DrawDepth()
     // render scene from light's point of view
     m_shadow.BeginRender();
 
-    DrawScene(m_shadow.GetShader());
+#ifdef SHADOW_DIRECTIONAL
+    DrawScenePlane(m_shadow.GetShader());
+#else
+    DrawSceneInside(m_shadow.GetShader());
+#endif
 
     m_shadow.EndRender();
 }
@@ -226,16 +287,11 @@ void ShadowScene::DrawCommon(GLuint vao, GLuint vbo, GLsizei count)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition)
+void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition)
 {
+    m_shadow.SetLightPosition(lightPosition);
+
     DrawDepth();
 
-    DrawLight(view, projection, cameraPosition);
-
-    //m_debug.Draw(m_shadow.GetTexture()); //,
-    //[](Shader & shader)
-    //{
-    //    shader.SetUniform(NEAR_PLANE, "nearPlane");
-    //    shader.SetUniform(FAR_PLANE, "farPlane");
-    //});
+    DrawLight(view, projection, cameraPosition, lightPosition);
 }

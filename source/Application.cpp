@@ -116,14 +116,14 @@ namespace Application
         //g_objModel->DrawSkyboxReflection(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
         //g_objModel->DrawSkyboxRefraction(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
 
-        //glm::mat4 lightModel = glm::mat4(1.0f);
-        //lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
-        //lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
-        //g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        glm::mat4 lightModel = glm::mat4(1.0f);
+        lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
+        lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
+        g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-        g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
+        g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), g_lightPositionWorldSpace);
 
         //glDisable(GL_BLEND);
 
@@ -163,7 +163,7 @@ namespace Application
 
         g_camera.Init();
 
-        g_lightPositionWorldSpace = glm::vec3(5.0f, 0.0f, 0.0f);
+        g_lightPositionWorldSpace = glm::vec3(3.0f, 0.0f, 0.0f);
 
         //if (!Text2DInitFont())
         //{
@@ -175,7 +175,7 @@ namespace Application
         //g_model.reset(new Model("models/skull/craneo.model", light));
         //g_model.reset(new Model("models/cube/cube.model", light));
         //g_objModel.reset(new ObjModel());
-        //g_light.reset(new Light());
+        g_light.reset(new Light());
 
         //g_skybox.reset(new Skybox({ "skybox/islands/right.jpg",
         //                            "skybox/islands/left.jpg",
@@ -196,9 +196,9 @@ namespace Application
         RecomputeMVPMatrix();
 
         // rotate light
-        //glm::mat4 rotationMatrix(1.0f);
-        //rotationMatrix = glm::rotate(rotationMatrix, glm::radians(0.1f), glm::vec3(0.0, 1.0, 0.0));
-        //g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
+        glm::mat4 rotationMatrix(1.0f);
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(0.1f), glm::vec3(0.0, 1.0, 0.0));
+        g_lightPositionWorldSpace = glm::vec3(rotationMatrix * glm::vec4(g_lightPositionWorldSpace, 1.0));
 
         Draw();
 

@@ -15,6 +15,22 @@ void CheckRenderBufferSize(uint32_t width, uint32_t height)
     }
 }
 
+GLenum GetOverridenDataTypeOfPixel(GLenum requested)
+{
+#if defined(ANDROID) || defined(EMSCRIPTEN)
+    if ((requested == GL_FLOAT && !IsOpenGlExtensionSupported("GL_OES_texture_float")) ||
+        (requested == GL_HALF_FLOAT && !IsOpenGlExtensionSupported("GL_OES_texture_float")))
+    {
+        printf("Attention, requsted pixel type not supprted (0x%X) falling back to GL_UNSIGNED_SHORT", requested);
+        return GL_UNSIGNED_SHORT;
+    }
+#endif
+    return requested;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 Framebuffer::Framebuffer(uint32_t samples)
     : Framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), samples)
 {
@@ -178,6 +194,7 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateMultisampleFramebuffer(uint32_t 
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
 {
     CheckRenderBufferSize(width, height);
@@ -187,11 +204,7 @@ FramebufferDepth::FramebufferDepth(uint32_t width, uint32_t height)
     // prepare depth texture
     glGenTextures(1, &m_texture);
     glBindTexture(GL_TEXTURE_2D, m_texture);
-#if defined(ANDROID) || defined(EMSCRIPTEN)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
-#else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-#endif
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GetOverridenDataTypeOfPixel(GL_FLOAT), NULL);
     CheckGlError("glTexImage2D");
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -258,3 +271,52 @@ GLuint FramebufferDepth::GetTextureAttachment()
 {
     return m_texture;
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+FramebufferDepthCube::FramebufferDepthCube(uint32_t width, uint32_t height)
+{
+    CheckRenderBufferSize(width, height);
+
+    glGenFramebuffers(1, &m_framebuffer);
+
+    // prepare depth texture
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
+
+    for (uint32_t i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GetOverridenDataTypeOfPixel(GL_FLOAT), NULL);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    // this is special from opengl 3.1
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_texture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+FramebufferDepthCube::~FramebufferDepthCube()
+{
+    glDeleteTextures(1, &m_texture);
+    glDeleteFramebuffers(1, &m_framebuffer);
+}
+
+void FramebufferDepthCube::BeginRender()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+}
+
+void FramebufferDepthCube::EndRender()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint FramebufferDepthCube::GetTextureAttachment()
+{
+    return m_texture;
+}
+
