@@ -13,6 +13,11 @@
 #define glBindVertexArray glBindVertexArrayOES
 #define glDeleteVertexArrays glDeleteVertexArraysOES
 
+// this will not work but at least compile it
+#ifndef GL_GEOMETRY_SHADER
+#define GL_GEOMETRY_SHADER 0x8DD9
+#endif
+
 #else
 //#ifdef EMSCRIPTEN
 //#include <gl\glew.h>

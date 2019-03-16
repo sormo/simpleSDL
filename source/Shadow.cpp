@@ -193,6 +193,7 @@ void ShadowSpotLight::DrawDebug()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
 static const char * POSITIONAL_VERTEX_SHADER = \
 "#version 150\n"
 "in vec3 positionModelSpace;\n"
@@ -307,3 +308,4 @@ glm::vec2 ShadowPointLight::GetPlanes()
 {
     return m_planes;
 }
+#endif

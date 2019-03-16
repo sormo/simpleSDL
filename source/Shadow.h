@@ -65,6 +65,7 @@ private:
     glm::mat4 m_view;
 };
 
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
 class ShadowPointLight
 {
 public:
@@ -93,3 +94,20 @@ private:
     const glm::vec2 m_planes;
     const glm::mat4 m_shadowProjection;
 };
+#else
+// TODO implementation with 6 render passes
+class ShadowPointLight
+{
+public:
+    ShadowPointLight() : m_shader("", "") {}
+    void SetLightData(const glm::vec3 & position) {}
+    void BeginRender() {}
+    void EndRender() {}
+    Shader & GetShader() { return m_shader; }
+    GLuint GetTexture() { return 0; }
+    glm::vec2 GetTextureSize() { return {}; }
+    glm::vec2 GetPlanes() { return {}; }
+private:
+    Shader m_shader;
+};
+#endif

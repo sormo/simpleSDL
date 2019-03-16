@@ -46,6 +46,7 @@ private:
     GLuint m_texture;
 };
 
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
 class FramebufferDepthCube
 {
 public:
@@ -60,4 +61,14 @@ private:
     GLuint m_framebuffer;
     GLuint m_texture;
 };
-
+#else
+class FramebufferDepthCube
+{
+public:
+    FramebufferDepthCube(uint32_t width, uint32_t height) {}
+    ~FramebufferDepthCube() {}
+    void BeginRender() {}
+    void EndRender() {}
+    GLuint GetTextureAttachment() { return 0; }
+};
+#endif

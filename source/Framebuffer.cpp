@@ -18,12 +18,12 @@ void CheckRenderBufferSize(uint32_t width, uint32_t height)
 GLenum GetOverridenDataTypeOfPixel(GLenum requested)
 {
 #if defined(ANDROID) || defined(EMSCRIPTEN)
-    if ((requested == GL_FLOAT && !IsOpenGlExtensionSupported("GL_OES_texture_float")) ||
-        (requested == GL_HALF_FLOAT && !IsOpenGlExtensionSupported("GL_OES_texture_float")))
-    {
-        printf("Attention, requsted pixel type not supprted (0x%X) falling back to GL_UNSIGNED_SHORT", requested);
-        return GL_UNSIGNED_SHORT;
-    }
+    //if (requested == GL_FLOAT && !IsOpenGlExtensionSupported("GL_OES_texture_float"))
+    //{
+    //    printf("Attention, requsted pixel type not supprted (0x%X) falling back to GL_UNSIGNED_SHORT", requested);
+    //    return GL_UNSIGNED_SHORT;
+    //}
+    return GL_UNSIGNED_SHORT;
 #endif
     return requested;
 }
@@ -273,6 +273,7 @@ GLuint FramebufferDepth::GetTextureAttachment()
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
 FramebufferDepthCube::FramebufferDepthCube(uint32_t width, uint32_t height)
 {
     CheckRenderBufferSize(width, height);
@@ -319,4 +320,4 @@ GLuint FramebufferDepthCube::GetTextureAttachment()
 {
     return m_texture;
 }
-
+#endif
