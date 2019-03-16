@@ -4,12 +4,12 @@
 #include "Texture.h"
 #include <vector>
 
-class ShadowDirectional
+class ShadowDirectionalLight
 {
 public:
-    ShadowDirectional();
+    ShadowDirectionalLight();
 
-    void SetLightPosition(const glm::vec3 & lightPosition);
+    void SetLightData(const glm::vec3 & position);
 
     void BeginRender();
     void EndRender();
@@ -34,12 +34,43 @@ private:
     const glm::mat4 m_lightProjection;
 };
 
-class ShadowPositional
+class ShadowSpotLight
 {
 public:
-    ShadowPositional();
+    ShadowSpotLight();
 
-    void SetLightPosition(const glm::vec3 & lightPosition);
+    void SetLightData(const glm::vec3 & position, const glm::vec3 & direction, float cutoff, float outerCutoff);
+
+    void BeginRender();
+    void EndRender();
+
+    Shader & GetShader();
+
+    GLuint GetTexture();
+    glm::vec2 GetTextureSize();
+    const glm::mat4 GetLightSpaceMatrix();
+
+    void DrawDebug();
+
+private:
+    FramebufferDepth m_framebufferDepth;
+    Shader m_shaderDepth;
+
+    glm::mat4 m_lightSpaceMatrix;
+
+    Texture::DebugDraw m_debug;
+
+    const glm::vec2 m_planes;
+    glm::mat4 m_projection;
+    glm::mat4 m_view;
+};
+
+class ShadowPointLight
+{
+public:
+    ShadowPointLight();
+
+    void SetLightData(const glm::vec3 & position);
 
     void BeginRender();
     void EndRender();

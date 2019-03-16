@@ -204,6 +204,7 @@ void Camera2D::Init()
 {
     auto[width, height] = Common::GetWindowSize();
 
+    // TODO 2d camera should use orthographic projection
     m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, 0.1f, 100.0f);
     RecomputeViewMatrix();
 }

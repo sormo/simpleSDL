@@ -64,9 +64,11 @@ static const float VERTICES_CUBE[] =
 
 ShadowScene::ShadowScene()
 #ifdef SHADOW_DIRECTIONAL
-    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadow.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadow.glsl").c_str())
+    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadow.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadowDirectional.glsl").c_str())
+#elif SHADOW_POINT
+    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadowPositional.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadowPositional.glsl").c_str())
 #else
-    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadowPos.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadowPos.glsl").c_str())
+    : m_shaderLight(Common::ReadFileToString("shaders/vertNormalShadow.glsl").c_str(), Common::ReadFileToString("shaders/fragDiffPosShadowSpot.glsl").c_str())
 #endif
 {
     InitLocations();
@@ -202,7 +204,7 @@ void ShadowScene::DrawSceneInside(Shader & shader)
     drawCube(shader, model);
 }
 
-void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition)
+void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition, const glm::vec3 & lightDirection, float cutoff, float outerCutoff)
 {
     m_shaderLight.BeginRender();
 
@@ -210,7 +212,20 @@ void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection
     m_shaderLight.BindTexture(m_shadow.GetTexture(), "depthMap");
     m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
     m_shaderLight.SetUniform(m_shadow.GetLightSpaceMatrix(), "lightSpaceMatrix");
-#else
+#elif defined(SHADOW_SPOT)
+    m_shaderLight.BindTexture(m_shadow.GetTexture(), "depthMap");
+    m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
+    m_shaderLight.SetUniform(m_shadow.GetLightSpaceMatrix(), "lightSpaceMatrix");
+
+    //m_shaderLight.SetUniform(lightPosition, "light.position");
+    m_shaderLight.SetUniform(lightDirection, "light.direction");
+    m_shaderLight.SetUniform(cutoff, "light.cutoff");
+    m_shaderLight.SetUniform(outerCutoff, "light.outerCutoff");
+    
+    m_shaderLight.SetUniform(1.0f, "light.constant");
+    m_shaderLight.SetUniform(0.03f, "light.linear");
+    m_shaderLight.SetUniform(0.006f, "light.quadratic");
+#else 
     m_shaderLight.BindCubemapTexture(m_shadow.GetTexture(), "depthMap");
     m_shaderLight.SetUniform(m_shadow.GetTextureSize(), "depthMapSize");
     m_shaderLight.SetUniform(m_shadow.GetPlanes().y, "farPlane");
@@ -220,14 +235,14 @@ void ShadowScene::DrawLight(const glm::mat4 & view, const glm::mat4 & projection
     m_shaderLight.SetUniform(64.0f, "shininess");
     m_shaderLight.SetUniform(cameraPosition, "cameraWorldSpace");
     m_shaderLight.SetUniform(lightPosition, "light.position");
-    m_shaderLight.SetUniform(glm::vec3(0.2f, 0.2f, 0.2f), "light.ambient");
+    m_shaderLight.SetUniform(glm::vec3(0.1f, 0.1f, 0.1f), "light.ambient");
     m_shaderLight.SetUniform(glm::vec3(1.0f, 1.0f, 1.0f), "light.diffuse");
-    m_shaderLight.SetUniform(glm::vec3(0.2f, 0.2f, 0.2f), "light.specular");
+    m_shaderLight.SetUniform(glm::vec3(0.1f, 0.1f, 0.1f), "light.specular");
 
     m_shaderLight.SetUniform(view, "view");
     m_shaderLight.SetUniform(projection, "projection");
 
-#ifdef SHADOW_DIRECTIONAL
+#if defined(SHADOW_DIRECTIONAL) || defined(SHADOW_SPOT)
     DrawScenePlane(m_shaderLight);
 #else
     DrawSceneInside(m_shaderLight);
@@ -241,7 +256,7 @@ void ShadowScene::DrawDepth()
     // render scene from light's point of view
     m_shadow.BeginRender();
 
-#ifdef SHADOW_DIRECTIONAL
+#if defined(SHADOW_DIRECTIONAL) || defined(SHADOW_SPOT)
     DrawScenePlane(m_shadow.GetShader());
 #else
     DrawSceneInside(m_shadow.GetShader());
@@ -289,9 +304,19 @@ void ShadowScene::DrawCommon(GLuint vao, GLuint vbo, GLsizei count)
 
 void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition)
 {
-    m_shadow.SetLightPosition(lightPosition);
+    Draw(view, projection, cameraPosition, lightPosition, {}, 0.0f, 0.0f);
+}
+
+void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition, const glm::vec3 & lightDirection, float cutoff, float outerCutoff)
+{
+#ifdef SHADOW_SPOT
+    m_shadow.SetLightData(lightPosition, lightDirection, cutoff, outerCutoff);
+#else
+    m_shadow.SetLightData(lightPosition);
+#endif
 
     DrawDepth();
 
-    DrawLight(view, projection, cameraPosition, lightPosition);
+    //m_shadow.DrawDebug();
+    DrawLight(view, projection, cameraPosition, lightPosition, lightDirection, cutoff, outerCutoff);
 }

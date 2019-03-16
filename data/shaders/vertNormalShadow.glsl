@@ -48,12 +48,13 @@ mat3 inverseCustom(mat3 m)
 
 void main(void)
 {
+    // output position in camera space
     gl_Position = projection * view * model * vec4(positionModelSpace, 1.0);
 
     positionWorldSpace = vec3(model * vec4(positionModelSpace, 1.0));
+    positionLightSpace = lightSpaceMatrix * vec4(positionWorldSpace, 1.0);
+    // normal for light
     normalWorldSpace = transposeCustom(inverseCustom(mat3(model))) * normalModelSpace;
 
     vertexUVA = vertexUV;
-
-    positionLightSpace = lightSpaceMatrix * vec4(positionWorldSpace, 1.0);
 }

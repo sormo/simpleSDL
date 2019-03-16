@@ -3,6 +3,8 @@
 #include "Shadow.h"
 
 //#define SHADOW_DIRECTIONAL
+//#define SHADOW_POINT
+#define SHADOW_SPOT
 
 class ShadowScene
 {
@@ -10,13 +12,14 @@ public:
     ShadowScene();
 
     void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition);
+    void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition, const glm::vec3 & lightDirection, float cutoff, float outerCutoff);
 
 private:
     void InitPlane();
     void InitCube();
     std::tuple<GLuint, GLuint> InitCommon(const float * data, size_t size);
 
-    void DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition);
+    void DrawLight(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const glm::vec3 & lightPosition, const glm::vec3 & lightDirection, float cutoff, float outerCutoff);
     void DrawDepth();
     void DrawScenePlane(Shader & shader);
     void DrawSceneInside(Shader & shader);
@@ -39,8 +42,10 @@ private:
     GLuint m_locationVertexUV;
 
 #ifdef SHADOW_DIRECTIONAL
-    ShadowDirectional m_shadow;
+    ShadowDirectionalLight m_shadow;
+#elif SHADOW_POINT
+    ShadowPointLight m_shadow;
 #else
-    ShadowPositional m_shadow;
+    ShadowSpotLight m_shadow;
 #endif
 };

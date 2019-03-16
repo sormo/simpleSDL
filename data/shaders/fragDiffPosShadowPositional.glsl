@@ -4,6 +4,8 @@
 precision mediump float;
 #endif
 
+#extension GL_NV_shadow_samplers_cube : enable
+
 varying vec3 positionWorldSpace;
 varying vec4 positionLightSpace;
 varying vec3 normalWorldSpace;

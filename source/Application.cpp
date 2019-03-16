@@ -123,7 +123,7 @@ namespace Application
 
         //g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-        g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), g_lightPositionWorldSpace);
+        g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), g_lightPositionWorldSpace, -g_lightPositionWorldSpace, glm::cos(glm::radians(75.0f)), glm::cos(glm::radians(80.0f)));
 
         //glDisable(GL_BLEND);
 

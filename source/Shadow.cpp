@@ -38,7 +38,7 @@ static const char * DIRECTIONAL_DEBUG_FRAGMENT_SHADER = \
 "    gl_FragColor = vec4(vec3(depthValue), 1.0); // orthographic\n"
 "}\n";
 
-ShadowDirectional::ShadowDirectional()
+ShadowDirectionalLight::ShadowDirectionalLight()
     : m_shaderDepth(DIRECTIONAL_VERTEX_SHADER, DIRECTIONAL_FRAGMENT_SHADER),
       m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
       m_debug(nullptr, DIRECTIONAL_DEBUG_FRAGMENT_SHADER),
@@ -48,13 +48,13 @@ ShadowDirectional::ShadowDirectional()
 
 }
 
-void ShadowDirectional::SetLightPosition(const glm::vec3 & lightPosition)
+void ShadowDirectionalLight::SetLightData(const glm::vec3 & lightPosition)
 {
     glm::mat4 lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
     m_lightSpaceMatrix = m_lightProjection * lightView;
 }
 
-void ShadowDirectional::BeginRender()
+void ShadowDirectionalLight::BeginRender()
 {
     m_framebufferDepth.BeginRender();
 
@@ -68,7 +68,7 @@ void ShadowDirectional::BeginRender()
     glCullFace(GL_FRONT);
 }
 
-void ShadowDirectional::EndRender()
+void ShadowDirectionalLight::EndRender()
 {
     glCullFace(GL_BACK);
 
@@ -80,27 +80,113 @@ void ShadowDirectional::EndRender()
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-Shader & ShadowDirectional::GetShader()
+Shader & ShadowDirectionalLight::GetShader()
 {
     return m_shaderDepth;
 }
 
-GLuint ShadowDirectional::GetTexture()
+GLuint ShadowDirectionalLight::GetTexture()
 {
     return m_framebufferDepth.GetTextureAttachment();
 }
 
-glm::vec2 ShadowDirectional::GetTextureSize()
+glm::vec2 ShadowDirectionalLight::GetTextureSize()
 {
     return glm::vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
 }
 
-const glm::mat4 ShadowDirectional::GetLightSpaceMatrix()
+const glm::mat4 ShadowDirectionalLight::GetLightSpaceMatrix()
 {
     return m_lightSpaceMatrix;
 }
 
-void ShadowDirectional::DrawDebug()
+void ShadowDirectionalLight::DrawDebug()
+{
+    m_debug.Draw(m_framebufferDepth.GetTextureAttachment());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char * SPOT_DEBUG_FRAGMENT_SHADER = \
+"#version 100\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
+"varying vec2 vertexUVA;\n"
+"uniform sampler2D colorMap;\n"
+"void main()\n"
+"{\n"
+"    float depthValue = texture2D(colorMap, vertexUVA).r;\n"
+"    depthValue = 1.0 - (1.0 - depthValue) * 25.0;"
+"    gl_FragColor = vec4(vec3(depthValue), 1.0); // projection\n"
+"}\n";
+
+ShadowSpotLight::ShadowSpotLight()
+    : m_shaderDepth(DIRECTIONAL_VERTEX_SHADER, DIRECTIONAL_FRAGMENT_SHADER),
+    m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
+    m_debug(nullptr, SPOT_DEBUG_FRAGMENT_SHADER),
+    m_planes(0.1f, 25.0f)
+{
+
+}
+
+void ShadowSpotLight::SetLightData(const glm::vec3 & position, const glm::vec3 & direction, float cutoff, float outerCutoff)
+{
+    m_projection = glm::perspective(2.0f*glm::acos(outerCutoff), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, m_planes.x, m_planes.y);
+    m_view = glm::lookAt(position, position + direction, glm::vec3(0.0, 1.0, 0.0));
+    
+    m_lightSpaceMatrix = m_projection * m_view;
+}
+
+// looks like all of those functions are same
+
+void ShadowSpotLight::BeginRender()
+{
+    m_framebufferDepth.BeginRender();
+
+    // viewport must be set after binding framebuffer
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    m_shaderDepth.BeginRender();
+    m_shaderDepth.SetUniform(m_lightSpaceMatrix, "lightSpaceMatrix");
+
+    //glCullFace(GL_FRONT);
+}
+
+void ShadowSpotLight::EndRender()
+{
+    //glCullFace(GL_BACK);
+
+    m_shaderDepth.EndRender();
+
+    m_framebufferDepth.EndRender();
+
+    glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+Shader & ShadowSpotLight::GetShader()
+{
+    return m_shaderDepth;
+}
+
+GLuint ShadowSpotLight::GetTexture()
+{
+    return m_framebufferDepth.GetTextureAttachment();
+}
+
+glm::vec2 ShadowSpotLight::GetTextureSize()
+{
+    return glm::vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
+}
+
+const glm::mat4 ShadowSpotLight::GetLightSpaceMatrix()
+{
+    return m_lightSpaceMatrix;
+}
+
+void ShadowSpotLight::DrawDebug()
 {
     m_debug.Draw(m_framebufferDepth.GetTextureAttachment());
 }
@@ -151,7 +237,7 @@ static const char * POSITIONAL_FRAGMENT_SHADER = \
 "    gl_FragDepth = lightDistance;\n"
 "}\n";
 
-ShadowPositional::ShadowPositional()
+ShadowPointLight::ShadowPointLight()
     : m_shaderDepth(POSITIONAL_VERTEX_SHADER, POSITIONAL_GEOMETRY_SHADER, POSITIONAL_FRAGMENT_SHADER),
       m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
       m_planes(0.1f, 25.0f),
@@ -159,7 +245,7 @@ ShadowPositional::ShadowPositional()
 {
 }
 
-void ShadowPositional::SetLightPosition(const glm::vec3 & lightPosition)
+void ShadowPointLight::SetLightData(const glm::vec3 & lightPosition)
 {
     m_lightSpaceMatrix.clear();
 
@@ -173,7 +259,7 @@ void ShadowPositional::SetLightPosition(const glm::vec3 & lightPosition)
     m_lightPosition = lightPosition;
 }
 
-void ShadowPositional::BeginRender()
+void ShadowPointLight::BeginRender()
 {
     m_framebufferDepth.BeginRender();
 
@@ -192,7 +278,7 @@ void ShadowPositional::BeginRender()
     m_shaderDepth.SetUniform(m_lightPosition, "lightPositionWorldSpace");
 }
 
-void ShadowPositional::EndRender()
+void ShadowPointLight::EndRender()
 {
     m_shaderDepth.EndRender();
 
@@ -202,22 +288,22 @@ void ShadowPositional::EndRender()
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-Shader & ShadowPositional::GetShader()
+Shader & ShadowPointLight::GetShader()
 {
     return m_shaderDepth;
 }
 
-GLuint ShadowPositional::GetTexture()
+GLuint ShadowPointLight::GetTexture()
 {
     return m_framebufferDepth.GetTextureAttachment();
 }
 
-glm::vec2 ShadowPositional::GetTextureSize()
+glm::vec2 ShadowPointLight::GetTextureSize()
 {
     return glm::vec2((float)SHADOW_WIDTH, (float)SHADOW_HEIGHT);
 }
 
-glm::vec2 ShadowPositional::GetPlanes()
+glm::vec2 ShadowPointLight::GetPlanes()
 {
     return m_planes;
 }
