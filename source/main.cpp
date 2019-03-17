@@ -9,14 +9,57 @@
 #include "Application.h"
 #include "Common.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_gles2.h"
+
+#include "OpenGL.h"
+
 static int g_done = 0;
 static SDL_GLContext g_context = nullptr;
 // window is not static because it's used in common
 SDL_Window* g_window = nullptr;
 
+void guiInit()
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.Fonts->AddFontDefault();
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+
+    ImGui_ImplSdlGLES2_Init(g_window);
+}
+
+void guiDeinit()
+{
+    ImGui_ImplSdlGLES2_Shutdown();
+    ImGui::DestroyContext();
+}
+
+void guiRender()
+{
+    static bool showDemoWindow = true;
+
+    ImGui_ImplSdlGLES2_NewFrame(g_window);
+
+    if (showDemoWindow)
+        ImGui::ShowDemoWindow(&showDemoWindow);
+ 
+    //glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
+    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ImGui::Render();
+}
+
 void release()
 {
     Application::Deinit();
+
+    guiDeinit();
 
     if (g_context)
     {
@@ -87,6 +130,8 @@ bool init()
         return false;
     }
 
+    guiInit();
+
     if (!Application::Init())
     {
         printf("Initializing application failed.\n");
@@ -107,6 +152,8 @@ void renderFrame()
     if (!Application::MainLoop())
         g_done = true;
 
+    guiRender();
+
     SDL_GL_SwapWindow(g_window);
 }
 
@@ -115,6 +162,8 @@ void mainLoop()
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
+        ImGui_ImplSdlGLES2_ProcessEvent(&event);
+
         if (event.type == SDL_QUIT)
         {
             printf("Event: SDL_QUIT\n");

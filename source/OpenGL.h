@@ -18,7 +18,7 @@
 #define GL_GEOMETRY_SHADER 0x8DD9
 #endif
 
-#else
+#else // ANDROID not defined
 //#ifdef EMSCRIPTEN
 //#include <gl\glew.h>
 //#else
@@ -28,6 +28,7 @@
 #ifndef EMSCRIPTEN
 #include <Windows.h>
 #endif
+
 #include <gl\GL.h>
 #include <SDL_opengl_glext.h>
 
@@ -81,21 +82,21 @@ extern PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
 extern PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
 extern PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 extern PFNGLUNIFORM1FVPROC glUniform1fv;
-// TODO those functions are defined on opengl es 3.1
-#if !defined(EMSCRIPTEN) && !defined(ANDROID)
-extern PFNGLTEXIMAGE2DMULTISAMPLEPROC glTexImage2DMultisample;
-extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
-extern PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
-extern PFNGLFRAMEBUFFERTEXTUREPROC glFramebufferTexture;
-#endif
+extern PFNGLBLENDEQUATIONSEPARATEPROC glBlendEquationSeparate;
+extern PFNGLBLENDFUNCSEPARATEEXTPROC glBlendFuncSeparate;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN
 extern PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 extern PFNGLACTIVETEXTUREPROC glActiveTexture;
+extern PFNGLTEXIMAGE2DMULTISAMPLEPROC glTexImage2DMultisample;
+extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
+extern PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
+extern PFNGLFRAMEBUFFERTEXTUREPROC glFramebufferTexture;
+extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation;
 #endif
 
-#endif
+#endif// ANDROID
 
 #ifndef GL_CLAMP_TO_BORDER
 #ifdef GL_NV_texture_border_clamp

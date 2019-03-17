@@ -44,7 +44,12 @@ LOCAL_SRC_FILES :=  \
   ../../../source/Framebuffer.cpp \
   ../../../source/Postprocess.cpp \
   ../../../source/ShadowScene.cpp \
-  ../../../source/Shadow.cpp
+  ../../../source/Shadow.cpp \
+  ../../../source/imgui/imgui.cpp \
+  ../../../source/imgui/imgui_demo.cpp \
+  ../../../source/imgui/imgui_draw.cpp \
+  ../../../source/imgui/imgui_impl_gles2.cpp \
+  ../../../source/imgui/imgui_widgets.cpp
 
 
 # Linking options
