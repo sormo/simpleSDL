@@ -4,10 +4,10 @@
 #include "ObjLoader.h"
 #include "VboIndexer.h"
 
-class Light
+class LightObject
 {
 public:
-    Light()
+    LightObject()
         : m_shader(Common::ReadFileToString("shaders/vertLight.glsl").c_str(), Common::ReadFileToString("shaders/fragLight.glsl").c_str())
     {
         m_verticesCount = InitBuffers();
@@ -15,7 +15,7 @@ public:
             throw std::runtime_error("Error loading buffers for Light.");
     }
 
-    ~Light()
+    ~LightObject()
     {
         glDeleteBuffers(1, &m_bufferVertex);
         glDeleteBuffers(1, &m_bufferIndex);

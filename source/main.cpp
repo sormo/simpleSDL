@@ -80,7 +80,7 @@ bool init()
 {
     static const int width = 800;
     static const int height = 600;
-    Uint32 flags = SDL_WINDOW_OPENGL;
+    Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
 #if defined(ANDROID)
     flags |= SDL_WINDOW_FULLSCREEN;
@@ -163,6 +163,9 @@ void mainLoop()
     while (SDL_PollEvent(&event))
     {
         ImGui_ImplSdlGLES2_ProcessEvent(&event);
+
+        if (ImGui::GetIO().WantCaptureMouse)
+            continue;
 
         if (event.type == SDL_QUIT)
         {

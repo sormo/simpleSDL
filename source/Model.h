@@ -8,15 +8,7 @@
 
 struct ModelMaterial
 {
-    struct Textures
-    {
-        std::vector<GLuint> ambient;
-        std::vector<GLuint> diffuse;
-        std::vector<GLuint> specular;
-        std::vector<GLuint> normal;
-        std::vector<GLuint> lightmap;
-    };
-    Textures textures;
+    Textures::Data textures;
     std::unique_ptr<ModelShader> shader;
 };
 
@@ -40,8 +32,7 @@ private:
     // bind mesh specific uniforms
     void BindUniforms(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
 
-    // bind mesh specific data
-    void BindData();
+    void BindBuffers();
 
     GLuint m_vao;
 
@@ -61,12 +52,19 @@ private:
 class Model
 {
 public:
-    Model(const char * path, ModelShader::ConfigLight light);
+    Model(const char * path, Light::Config light);
     ~Model();
+
+    struct Data
+    {
+        Material::Data material;
+        Light::Data light;
+        glm::vec3 cameraWorldSpace;
+    };
 
     // bind must be called before drawing
     // camera and light positions should be in world space
-    void Bind(const ModelShader::Data & data);
+    void Bind(const Data & data);
     
     void Draw(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
 
@@ -84,7 +82,7 @@ private:
 
     void DrawInternal(Tree & tree, const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
 
-    const ModelShader::ConfigLight m_configLight;
+    const Light::Config m_configLight;
 
     std::unique_ptr<ModelMaterial> CreateMaterial(const std::string & root, ModelData::MaterialT & material);
     std::vector<std::unique_ptr<ModelMaterial>> m_materials;

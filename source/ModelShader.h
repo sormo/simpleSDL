@@ -1,18 +1,86 @@
 #pragma once
 #include "Shader.h"
 
-class ModelShader
+namespace Light
 {
-public:
-    // right now lights are part of shader config which is possibly not necessary
-    struct ConfigLight
+    struct Config
     {
         bool directional = false;
         uint32_t pointCount = 0;
         uint32_t spotCount = 0;
     };
 
-    struct Material
+    struct Data
+    {
+        struct Light
+        {
+            glm::vec3 ambient;
+            glm::vec3 diffuse;
+            glm::vec3 specular;
+        };
+
+        struct LightDirectional : Light
+        {
+            glm::vec3 direction;
+        };
+
+        struct LightPoint : Light
+        {
+            glm::vec3 position;
+
+            float constant;
+            float linear;
+            float quadratic;
+        };
+
+        struct LightSpot : LightPoint
+        {
+            glm::vec3 direction;
+
+            float cutOff;
+            float outerCutOff;
+        };
+
+        LightDirectional lightDirectional;
+        std::vector<LightPoint> lightPoint;
+        std::vector<LightSpot> lightSpot;
+    };
+
+    struct Locations
+    {
+        // lights
+        struct Light
+        {
+            GLuint ambient;
+            GLuint diffuse;
+            GLuint specular;
+        };
+        struct LightDirectional : Light
+        {
+            GLuint direction;
+        };
+        struct LightPoint : Light
+        {
+            GLuint position;
+            GLuint constant;
+            GLuint linear;
+            GLuint quadratic;
+        };
+        struct LightSpot : LightPoint
+        {
+            GLuint direction;
+            GLuint cutOff;
+            GLuint outerCutOff;
+        };
+        LightDirectional lightDirectional;
+        std::vector<LightPoint> lightPoint;
+        std::vector<LightSpot> lightSpot;
+    };
+}
+
+namespace Material
+{
+    struct Data
     {
         glm::vec3 ambient;
         glm::vec3 diffuse;
@@ -22,6 +90,53 @@ public:
         float shininessStrength = 1.0f;
     };
 
+    struct Locations
+    {
+        GLuint ambient;
+        GLuint diffuse;
+        GLuint specular;
+        GLuint shininess;
+        GLuint shininessStrength;
+    };
+}
+
+namespace Textures
+{
+    struct Data
+    {
+        std::vector<GLuint> ambient;
+        std::vector<GLuint> diffuse;
+        std::vector<GLuint> specular;
+        std::vector<GLuint> normal;
+        std::vector<GLuint> lightmap;
+    };
+
+    struct Locations
+    {
+        std::vector<GLuint> textureAmbient;
+        std::vector<GLuint> textureDiffuse;
+        std::vector<GLuint> textureSpecular;
+        std::vector<GLuint> textureNormal;
+        // TODO lightmaps are not yet used in shader
+        std::vector<GLuint> textureLightmaps;
+    };
+}
+
+namespace Buffers
+{
+    struct Locations
+    {
+        GLuint positions;
+        GLuint normals;
+        std::vector<GLuint> texCoords;
+        GLuint tangents;
+        GLuint bitangents;
+    };
+}
+
+class ModelShader
+{
+public:
     struct TextureStackEntry
     {
         enum class Operation
@@ -68,11 +183,11 @@ public:
             UseRuntimeMaterial = 0x0001
         };
 
-        Material material;
+        Material::Data material;
 
         TextureMaps textures;
 
-        ConfigLight light;
+        Light::Config light;
 
         uint32_t flags = 0;
 
@@ -89,103 +204,13 @@ public:
 
     struct Locations
     {
-        // VBOs
-        GLuint positions;
-        GLuint normals;
-        std::vector<GLuint> texCoords;
-        GLuint tangents;
-        GLuint bitangents;
-        // std::vector<GLuint> colors;
-
-        struct Material
-        {
-            GLuint ambient;
-            GLuint diffuse;
-            GLuint specular;
-            GLuint shininess;
-        };
-
-        // material
-        Material material;
+        Buffers::Locations buffers;
 
         GLuint cameraWorldSpace;
 
-        // textures
-        std::vector<GLuint> textureAmbient;
-        std::vector<GLuint> textureDiffuse;
-        std::vector<GLuint> textureSpecular;
-        std::vector<GLuint> textureNormal;
-        // TODO lightmaps are not yet used in shader
-        std::vector<GLuint> textureLightmaps;
-
-        // lights
-        struct Light
-        {
-            GLuint ambient;
-            GLuint diffuse;
-            GLuint specular;
-        };
-        struct LightDirectional : Light
-        {
-            GLuint direction;
-        };
-        struct LightPoint : Light
-        {
-            GLuint position;
-            GLuint constant;
-            GLuint linear;
-            GLuint quadratic;
-        };
-        struct LightSpot : LightPoint
-        {
-            GLuint direction;
-            GLuint cutOff;
-            GLuint outerCutOff;
-        };
-        LightDirectional lightDirectional;
-        std::vector<LightPoint> lightPoint;
-        std::vector<LightSpot> lightSpot;
-    };
-
-    struct Data
-    {
-        Material material;
-
-        glm::vec3 cameraWorldSpace;
-
-        struct Light
-        {
-            glm::vec3 ambient;
-            glm::vec3 diffuse;
-            glm::vec3 specular;
-        };
-
-        struct LightDirectional : Light
-        {
-            glm::vec3 direction;
-        };
-
-        LightDirectional lightDirectional;
-
-        struct LightPoint : Light
-        {
-            glm::vec3 position;
-
-            float constant;
-            float linear;
-            float quadratic;
-        };
-
-        struct LightSpot : LightPoint
-        {
-            glm::vec3 direction;
-
-            float cutOff;
-            float outerCutOff;
-        };
-
-        std::vector<LightPoint> lightPoint;
-        std::vector<LightSpot> lightSpot;
+        Material::Locations material;
+        Light::Locations light;
+        Textures::Locations textures;
     };
 
     ModelShader(Config config);
@@ -194,7 +219,17 @@ public:
     const Locations & GetLocations();
     Shader & GetShader();
 
-    void Bind(const Data & data);
+    void BeginRender();
+    void EndRender();
+
+    // also buffers must be bound like this:
+    // shader->GetShader().BindBuffer<glm::vec3>(m_positions, m_material->shader->GetLocations().buffers.positions);
+
+    void BindTransform(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
+    void BindMaterial(const Material::Data & data);
+    void BindLight(const Light::Data & data);
+    void BindTextures(const Textures::Data & data);
+    void BindCamera(const glm::vec3 & cameraWorldSpace);
 
 private:
     template<class T, class L>

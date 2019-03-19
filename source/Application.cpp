@@ -13,12 +13,13 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <inttypes.h>
 #include "ObjModel.h"
-#include "Light.h"
+#include "LightObject.h"
 #include "Model.h"
 #include "ModelShader.h"
 #include "Skybox.h"
 #include "Postprocess.h"
 #include "ShadowScene.h"
+#include "Scene.h"
 
 namespace Application
 {
@@ -29,86 +30,116 @@ namespace Application
 
     std::unique_ptr<Postprocess> g_postprocess;
     std::unique_ptr<ObjModel> g_objModel;
-    //std::unique_ptr<Model> g_model;
-    std::unique_ptr<Light> g_light;
+    std::unique_ptr<Model> g_model;
+    std::unique_ptr<LightObject> g_light;
     std::unique_ptr<Skybox> g_skybox;
     std::unique_ptr<ShadowScene> g_shadowScene;
+    std::unique_ptr<Scene> g_scene;
 
-    //void BindModel()
-    //{
-    //    //Model::Material material;
-    //    //material.ambient = { 1.0f, 1.0f, 1.0f };
-    //    //material.diffuse = { 1.0f, 0.0f, 0.0f };
-    //    //material.specular = { 0.0f, 1.0f, 0.0f };
-    //    //material.shininess = 32.0f;
+    void InitScene()
+    {
+        Light::Config light;
+        light.directional = true;
 
-    //    ModelShader::Data data;
-    //    data.material.shininess = 10.0f;
-    //    data.cameraWorldSpace = g_camera.GetPosition();
-    //    data.material.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
-    //    data.material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-    //    data.material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+        g_scene = std::make_unique<Scene>(light);
 
-    //    data.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
-    //    data.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
-    //    data.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
-    //    data.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+        Material::Data material;
+        material.ambient = material.diffuse = material.specular = glm::vec3(1.0, 1.0, 1.0);
+        material.shininess = 15.0f;
+        material.shininessStrength = 1.0f;
 
-    //    ModelShader::Data::LightPoint lightBlue;
-    //    lightBlue.position = g_lightPositionWorldSpace;
-    //    lightBlue.constant = 1.0f;
-    //    lightBlue.linear = 0.09f;
-    //    lightBlue.quadratic = 0.032f;
-    //    lightBlue.ambient = { 0.1f, 0.1f, 0.1f };
-    //    lightBlue.diffuse = { 0.9f, 0.9f, 0.9f };
-    //    lightBlue.specular = { 0.5f, 0.5f, 0.5f };
+        glm::mat4 model(1.0f);
+        model = glm::scale(model, glm::vec3(10.0f, 0.5f, 10.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f));
+        g_scene->AddCube(model, material);
 
-    //    data.lightPoint.push_back(lightBlue);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        g_scene->AddCube(model, material);
 
-    //    ModelShader::Data::LightSpot lightRed;
-    //    lightRed.position = g_lightPositionWorldSpace;
-    //    lightRed.direction = -g_lightPositionWorldSpace;
-    //    lightRed.cutOff = glm::cos(glm::radians(12.5f));
-    //    lightRed.outerCutOff = glm::cos(glm::radians(17.5f));
-    //    lightRed.ambient = { 0.1f, 0.1f, 0.1f };
-    //    lightRed.diffuse = { 1.0f, 0.0f, 0.0f };
-    //    lightRed.specular = { 0.5f, 0.5f, 0.5f };
-    //    lightRed.constant = 1.0f;
-    //    lightRed.linear = 0.09f;
-    //    lightRed.quadratic = 0.032f;
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        g_scene->AddCube(model, material);
 
-    //    data.lightSpot.push_back(lightRed);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+        model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        model = glm::scale(model, glm::vec3(0.25));
+        g_scene->AddCube(model, material);
+    }
 
-    //    ModelShader::Data::LightSpot lightGreen;
-    //    lightGreen.position = -g_lightPositionWorldSpace;
-    //    lightGreen.direction = g_lightPositionWorldSpace;
-    //    lightGreen.cutOff = glm::cos(glm::radians(12.5f));
-    //    lightGreen.outerCutOff = glm::cos(glm::radians(17.5f));
-    //    lightGreen.ambient = { 0.1f, 0.1f, 0.1f };
-    //    lightGreen.diffuse = { 0.0f, 1.0f, 0.0f };
-    //    lightGreen.specular = { 0.5f, 0.5f, 0.5f };
-    //    lightGreen.constant = 1.0f;
-    //    lightGreen.linear = 0.09f;
-    //    lightGreen.quadratic = 0.032f;
+    void DrawScene()
+    {
+        Light::Data light;
+        light.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
+        light.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
+        light.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
+        light.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
 
-    //    data.lightSpot.push_back(lightGreen);
+        g_scene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), light);
+    }
 
-    //    g_model->Bind(data);
-    //}
+    void BindModel()
+    {
+        Model::Data data;
+        
+        data.cameraWorldSpace = g_camera.GetPosition();
+        
+        data.material.shininess = 10.0f;
+        data.material.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
+        data.material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+        data.material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+
+        data.light.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
+        data.light.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
+        data.light.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
+        data.light.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+
+        //Light::Data::LightPoint pointLight;
+        //pointLight.position = g_lightPositionWorldSpace;
+        //pointLight.constant = 1.0f;
+        //pointLight.linear = 0.09f;
+        //pointLight.quadratic = 0.032f;
+        //pointLight.ambient = { 0.1f, 0.1f, 0.1f };
+        //pointLight.diffuse = { 0.9f, 0.9f, 0.9f };
+        //pointLight.specular = { 0.5f, 0.5f, 0.5f };
+
+        //data.light.lightPoint.push_back(pointLight);
+
+        Light::Data::LightSpot spotLight;
+        spotLight.position = g_lightPositionWorldSpace;
+        spotLight.direction = -g_lightPositionWorldSpace;
+        spotLight.cutOff = glm::cos(glm::radians(12.5f));
+        spotLight.outerCutOff = glm::cos(glm::radians(17.5f));
+        spotLight.ambient = { 0.1f, 0.1f, 0.1f };
+        spotLight.diffuse = { 1.0f, 0.0f, 0.0f };
+        spotLight.specular = { 0.5f, 0.5f, 0.5f };
+        spotLight.constant = 1.0f;
+        spotLight.linear = 0.09f;
+        spotLight.quadratic = 0.032f;
+
+        data.light.lightSpot.push_back(spotLight);
+
+        g_model->Bind(data);
+    }
 
     void Draw()
     {
         //g_postprocess->BeginRender();
 
+        glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // drawing single model
-        //BindModel();
 
         // enable blending
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
+        DrawScene();
+
+        // drawing single model
+        //BindModel();
         //glm::mat4 model = glm::mat4(1.0f);
         //g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
@@ -123,7 +154,7 @@ namespace Application
 
         //g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
-        g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), g_lightPositionWorldSpace, -g_lightPositionWorldSpace, glm::cos(glm::radians(75.0f)), glm::cos(glm::radians(80.0f)));
+        //g_shadowScene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), g_lightPositionWorldSpace, -g_lightPositionWorldSpace, glm::cos(glm::radians(75.0f)), glm::cos(glm::radians(80.0f)));
 
         //glDisable(GL_BLEND);
 
@@ -171,11 +202,16 @@ namespace Application
         //    return false;
         //}
 
+        InitScene();
+
+        //Light::Config light;
+        //light.directional = true;
+        //light.spotCount = 1;
         //g_model.reset(new Model("models/moses/scene.model", light));
-        //g_model.reset(new Model("models/skull/craneo.model", light));
+        //g_model.reset(new Model("models/craneo/craneo.model", light));
         //g_model.reset(new Model("models/cube/cube.model", light));
         //g_objModel.reset(new ObjModel());
-        g_light.reset(new Light());
+        g_light.reset(new LightObject());
 
         //g_skybox.reset(new Skybox({ "skybox/islands/right.jpg",
         //                            "skybox/islands/left.jpg",
@@ -186,7 +222,7 @@ namespace Application
 
         //g_postprocess.reset(new Postprocess(Postprocess::Type::KernelSharpen));
 
-        g_shadowScene.reset(new ShadowScene());
+        //g_shadowScene.reset(new ShadowScene());
 
         return true;
     }
@@ -243,6 +279,11 @@ namespace Application
         else if (event.type == SDL_MOUSEMOTION)
         {
             g_camera.Move({ (float)event.motion.x, (float)event.motion.y }, 0);
+        }
+        else if (event.type == SDL_WINDOWEVENT)
+        {
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                g_camera.Init();
         }
 #endif
     }

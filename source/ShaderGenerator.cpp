@@ -42,8 +42,8 @@ void AppendUniformsMaterial(const ModelShader::Config & config, std::string & re
         result += "    vec3 ambient;\n";
         result += "    vec3 diffuse;\n";
         result += "    vec3 specular;\n";
-        result += "    vec3 shininess;\n";
-        result += "    vec3 shininessStrength;\n";
+        result += "    float shininess;\n";
+        result += "    float shininessStrength;\n";
         result += "};\n";
         result += "uniform Material material;\n";
     }
