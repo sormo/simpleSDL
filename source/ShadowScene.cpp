@@ -317,6 +317,6 @@ void ShadowScene::Draw(const glm::mat4 & view, const glm::mat4 & projection, con
 
     DrawDepth();
 
-    //m_shadow.DrawDebug();
-    DrawLight(view, projection, cameraPosition, lightPosition, lightDirection, cutoff, outerCutoff);
+    m_shadow.DrawDebug();
+    //DrawLight(view, projection, cameraPosition, lightPosition, lightDirection, cutoff, outerCutoff);
 }

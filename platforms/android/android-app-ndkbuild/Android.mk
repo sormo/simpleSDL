@@ -49,7 +49,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/imgui/imgui_demo.cpp \
   ../../../source/imgui/imgui_draw.cpp \
   ../../../source/imgui/imgui_impl_gles2.cpp \
-  ../../../source/imgui/imgui_widgets.cpp
+  ../../../source/imgui/imgui_widgets.cpp \
+  ../../../source/Scene.cpp
 
 
 # Linking options

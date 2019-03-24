@@ -1,5 +1,6 @@
 #pragma once
 #include "Shader.h"
+#include "Shadow.h"
 
 namespace Light
 {
@@ -54,6 +55,11 @@ namespace Light
             GLuint ambient;
             GLuint diffuse;
             GLuint specular;
+            // shadow specific:
+            GLuint depthMap;
+            GLuint depthMapSize;
+            GLuint lightSpaceMatrix;
+            GLuint farPlane;
         };
         struct LightDirectional : Light
         {
@@ -222,10 +228,25 @@ public:
     void BeginRender();
     void EndRender();
 
-    // also buffers must be bound like this:
-    // shader->GetShader().BindBuffer<glm::vec3>(m_positions, m_material->shader->GetLocations().buffers.positions);
+    // Render passes for each light.
+    // While BeginRenderShadow returns true, scene must be rendered like this:
+    // while(BeginRenderShadow(lightData))
+    // {
+    //      ... draw scene
+    //      ... for each model call BindShadowTransform
+    //      EndRenderShadow();
+    // }
+    // After that bind data and draw scene.
+    // Begin render shadow must be called after BeginRender()
+    bool BeginRenderShadow(const Light::Data & data);
+    void EndRenderShadow();
 
+    // Also buffers must be bound like this (vao or vbo):
+    //      shader.GetShader().BindVAO(vao);
+    //      shader.GetShader().BindBuffer<glm::vec3>(vbo, shader.GetLocations().buffers.positions);
+    // See Buffers::Locations structure.
     void BindTransform(const glm::mat4 & model, const glm::mat4 & view, const glm::mat4 & projection);
+    void BindTransformShadow(const glm::mat4 & model);
     void BindMaterial(const Material::Data & data);
     void BindLight(const Light::Data & data);
     void BindTextures(const Textures::Data & data);
@@ -246,6 +267,21 @@ private:
     Config m_config;
     Locations m_locations;
     std::unique_ptr<Shader> m_shader;
+
+    struct ShadowState
+    {
+        bool directionalState;
+        uint32_t pointCounter;
+        uint32_t spotCounter;
+
+        std::unique_ptr<ShadowDirectionalLight> directional;
+        std::vector<std::unique_ptr<ShadowPointLight>> point;
+        std::vector<std::unique_ptr<ShadowSpotLight>> spot;
+
+    } m_shadows;
+    void ResetShadowState();
+    void InitShadows();
+    void BindShadows();
 };
 
 using ModelShaderPtr = std::shared_ptr<ModelShader>;

@@ -2,9 +2,9 @@
 #include "Shader.h"
 #include "Shadow.h"
 
-//#define SHADOW_DIRECTIONAL
+#define SHADOW_DIRECTIONAL
 //#define SHADOW_POINT
-#define SHADOW_SPOT
+//#define SHADOW_SPOT
 
 class ShadowScene
 {

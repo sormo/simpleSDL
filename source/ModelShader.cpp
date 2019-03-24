@@ -15,6 +15,10 @@ void ModelShader::InitLocation<Light::Locations::Light>(const std::string & path
     location.ambient = m_shader->GetLocation(path + "ambient", Shader::LocationType::Uniform);
     location.diffuse = m_shader->GetLocation(path + "diffuse", Shader::LocationType::Uniform);
     location.specular = m_shader->GetLocation(path + "specular", Shader::LocationType::Uniform);
+
+    location.depthMapSize = m_shader->GetLocation(path + "depthMapSize", Shader::LocationType::Uniform);
+    location.lightSpaceMatrix = m_shader->GetLocation(path + "lightSpaceMatrix", Shader::LocationType::Uniform);
+    location.farPlane = m_shader->GetLocation(path + "farPlane", Shader::LocationType::Uniform);
 }
 
 template<>
@@ -60,13 +64,16 @@ ModelShader::ModelShader(Config config)
 
     m_shader = std::make_unique<Shader>(shaders.vertex.c_str(), shaders.fragment.c_str());
 
-    if (m_shader)
+    if (*m_shader)
     {
         m_shader->PrintUniforms();
         m_shader->PrintAttributes();
 
         InitModelLocations();
         InitMeshLocations();
+
+        InitShadows();
+        ResetShadowState();
     }
 }
 
@@ -135,18 +142,23 @@ void ModelShader::InitMeshLocations()
 void ModelShader::InitModelLocations()
 {
     if (m_config.light.directional)
+    {
         InitLocation("lightDirectional.", m_locations.light.lightDirectional);
+        m_locations.light.lightDirectional.depthMap = m_shader->GetLocation("lightDirectionalDepthMap", Shader::LocationType::Uniform);
+    }
 
     for (size_t i = 0; i < m_config.light.pointCount; ++i)
     {
         m_locations.light.lightPoint.push_back({});
         InitLocation("lightPoint[" + std::to_string(i) + "].", m_locations.light.lightPoint.back());
+        m_locations.light.lightPoint.back().depthMap = m_shader->GetLocation("lightPointDepthMaps[" + std::to_string(i) + "]", Shader::LocationType::Uniform);
     }
 
     for (size_t i = 0; i < m_config.light.spotCount; ++i)
     {
         m_locations.light.lightSpot.push_back({});
         InitLocation("lightSpot[" + std::to_string(i) + "].", m_locations.light.lightSpot.back());
+        m_locations.light.lightSpot.back().depthMap = m_shader->GetLocation("lightSpotDepthMaps[" + std::to_string(i) + "]", Shader::LocationType::Uniform);
     }
 
     if (m_config.flags & (uint32_t)Config::Flags::UseRuntimeMaterial)
@@ -217,6 +229,10 @@ void ModelShader::BeginRender()
 void ModelShader::EndRender()
 {
     m_shader->EndRender();
+
+    ResetShadowState();
+
+    //m_shadows.directional->DrawDebug();
 }
 
 void ModelShader::BindMaterial(const Material::Data & data)
@@ -234,6 +250,44 @@ void ModelShader::BindLight(const Light::Data & data)
 
     for (size_t i = 0; i < m_config.light.spotCount; ++i)
         Bind(data.lightSpot[i], m_locations.light.lightSpot[i]);
+}
+
+void ModelShader::BindShadows()
+{
+    auto BindData = [this](const glm::mat4 & matrix, GLuint depthMap, const glm::vec2 & depthMapSize, float farPlane, const Light::Locations::Light & locations)
+    {
+        m_shader->SetUniform(matrix, locations.lightSpaceMatrix);
+        m_shader->BindTexture(depthMap, locations.depthMap);
+        m_shader->SetUniform(depthMapSize, locations.depthMapSize);
+        m_shader->SetUniform(farPlane, locations.farPlane);
+    };
+
+    auto BindCubeData = [this](GLuint depthCubeMap, const glm::vec2 & depthMapSize, float farPlane, const Light::Locations::Light & locations)
+    {
+        m_shader->BindCubemapTexture(depthCubeMap, locations.depthMap);
+        m_shader->SetUniform(depthMapSize, locations.depthMapSize);
+        m_shader->SetUniform(farPlane, locations.farPlane);
+    };
+
+    if (m_config.light.directional)
+        BindData(m_shadows.directional->GetLightSpaceMatrix(),
+                 m_shadows.directional->GetTexture(),
+                 m_shadows.directional->GetTextureSize(),
+                 m_shadows.directional->GetPlanes().y,
+                 m_locations.light.lightDirectional);
+
+    for (size_t i = 0; i < m_config.light.pointCount; ++i)
+        BindCubeData(m_shadows.point[i]->GetTexture(),
+                     m_shadows.point[i]->GetTextureSize(),
+                     m_shadows.point[i]->GetPlanes().y,
+                     (const Light::Locations::Light&)m_locations.light.lightPoint[i]);
+
+    for (size_t i = 0; i < m_config.light.spotCount; ++i)
+        BindData(m_shadows.spot[i]->GetLightSpaceMatrix(),
+                 m_shadows.spot[i]->GetTexture(),
+                 m_shadows.spot[i]->GetTextureSize(),
+                 m_shadows.spot[i]->GetPlanes().y,
+                (const Light::Locations::Light&)m_locations.light.lightSpot[i]);
 }
 
 void ModelShader::BindCamera(const glm::vec3 & cameraWorldSpace)
@@ -265,4 +319,96 @@ void ModelShader::BindTextures(const Textures::Data & data)
 
     for (size_t i = 0; i < m_config.textures.lightmap.size(); ++i)
         m_shader->BindTexture(data.lightmap[i], m_locations.textures.textureLightmaps[i]);
+}
+
+void ModelShader::InitShadows()
+{
+    if (m_config.light.directional)
+        m_shadows.directional = std::make_unique<ShadowDirectionalLight>();
+    for (uint32_t i = 0; i < m_config.light.pointCount; ++i)
+        m_shadows.point.emplace_back(std::make_unique<ShadowPointLight>());
+    for (uint32_t i = 0; i < m_config.light.spotCount; ++i)
+        m_shadows.spot.emplace_back(std::make_unique<ShadowSpotLight>());
+}
+
+void ModelShader::ResetShadowState()
+{
+    m_shadows.directionalState = m_config.light.directional;
+    m_shadows.pointCounter = 0;
+    m_shadows.spotCounter = 0;
+}
+
+bool ModelShader::BeginRenderShadow(const Light::Data & light)
+{
+    if (m_config.light.directional && m_shadows.directionalState)
+    {
+        m_shadows.directional->SetLightData(light.lightDirectional.direction);
+        m_shadows.directional->BeginRender();
+        return true;
+    }
+
+    if (m_shadows.pointCounter < m_config.light.pointCount)
+    {
+        m_shadows.point[m_shadows.pointCounter]->SetLightData(light.lightPoint[m_shadows.pointCounter].position);
+        m_shadows.point[m_shadows.pointCounter]->BeginRender();
+        return true;
+    }
+
+    if (m_shadows.spotCounter < m_config.light.spotCount)
+    {
+        m_shadows.spot[m_shadows.spotCounter]->SetLightData(light.lightSpot[m_shadows.spotCounter].position, light.lightSpot[m_shadows.spotCounter].direction,
+                                                            light.lightSpot[m_shadows.spotCounter].cutOff, light.lightSpot[m_shadows.spotCounter].outerCutOff);
+        m_shadows.spot[m_shadows.spotCounter]->BeginRender();
+        return true;
+    }
+
+    BeginRender();
+    BindShadows();
+
+    return false;
+}
+
+void ModelShader::EndRenderShadow()
+{
+    if (m_config.light.directional && m_shadows.directionalState)
+    {
+        m_shadows.directional->EndRender();
+        m_shadows.directionalState = false;
+        return;
+    }
+
+    if (m_shadows.pointCounter < m_config.light.pointCount)
+    {
+        m_shadows.point[m_shadows.pointCounter]->EndRender();
+        m_shadows.pointCounter++;
+        return;
+    }
+
+    if (m_shadows.spotCounter < m_config.light.spotCount)
+    {
+        m_shadows.spot[m_shadows.spotCounter]->EndRender();
+        m_shadows.spotCounter++;
+        return;
+    }
+}
+
+void ModelShader::BindTransformShadow(const glm::mat4 & model)
+{
+    if (m_config.light.directional && m_shadows.directionalState)
+    {
+        m_shadows.directional->GetShader().SetUniform(model, "model");
+        return;
+    }
+
+    if (m_shadows.pointCounter < m_config.light.pointCount)
+    {
+        m_shadows.point[m_shadows.pointCounter]->GetShader().SetUniform(model, "model");
+        return;
+    }
+
+    if (m_shadows.spotCounter < m_config.light.spotCount)
+    {
+        m_shadows.spot[m_shadows.spotCounter]->GetShader().SetUniform(model, "model");
+        return;
+    }
 }

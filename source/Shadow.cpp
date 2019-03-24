@@ -42,16 +42,19 @@ ShadowDirectionalLight::ShadowDirectionalLight()
     : m_shaderDepth(DIRECTIONAL_VERTEX_SHADER, DIRECTIONAL_FRAGMENT_SHADER),
       m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
       m_debug(nullptr, DIRECTIONAL_DEBUG_FRAGMENT_SHADER),
-      m_planes(0.1f, 10.0f),
-      m_lightProjection(glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, m_planes.x, m_planes.y))
+      m_planes(0.1f, 15.0f),
+      m_lightProjection(glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, m_planes.x, m_planes.y))
 {
 
 }
 
-void ShadowDirectionalLight::SetLightData(const glm::vec3 & lightPosition)
+void ShadowDirectionalLight::SetLightData(const glm::vec3 & direction)
 {
-    glm::mat4 lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    m_lightSpaceMatrix = m_lightProjection * lightView;
+    // TODO looking at 0.0f point
+    glm::vec3 position = -direction;
+
+    glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    m_lightSpaceMatrix = m_lightProjection * view;
 }
 
 void ShadowDirectionalLight::BeginRender()
@@ -65,12 +68,12 @@ void ShadowDirectionalLight::BeginRender()
     m_shaderDepth.BeginRender();
     m_shaderDepth.SetUniform(m_lightSpaceMatrix, "lightSpaceMatrix");
 
-    glCullFace(GL_FRONT);
+    //glCullFace(GL_FRONT);
 }
 
 void ShadowDirectionalLight::EndRender()
 {
-    glCullFace(GL_BACK);
+    //glCullFace(GL_BACK);
 
     m_shaderDepth.EndRender();
 
@@ -103,6 +106,11 @@ const glm::mat4 ShadowDirectionalLight::GetLightSpaceMatrix()
 void ShadowDirectionalLight::DrawDebug()
 {
     m_debug.Draw(m_framebufferDepth.GetTextureAttachment());
+}
+
+glm::vec2 ShadowDirectionalLight::GetPlanes()
+{
+    return m_planes;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +197,11 @@ const glm::mat4 ShadowSpotLight::GetLightSpaceMatrix()
 void ShadowSpotLight::DrawDebug()
 {
     m_debug.Draw(m_framebufferDepth.GetTextureAttachment());
+}
+
+glm::vec2 ShadowSpotLight::GetPlanes()
+{
+    return m_planes;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

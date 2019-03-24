@@ -72,7 +72,7 @@ float ShadowCalculation()
     float currentDepth = length(fragmentToLightWorldSpace);
     // now test for shadows
     //float bias = 0.05; 
-    //float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+    //float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
     float shadow = ApplyPCF(currentDepth, fragmentToLightWorldSpace);
 
     return shadow;

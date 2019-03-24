@@ -135,6 +135,19 @@ void Scene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm
 {
     m_shader->BeginRender();
 
+    while (m_shader->BeginRenderShadow(data))
+    {
+        m_cube->Bind();
+
+        for (const auto &[model, _] : m_cubes)
+        {
+            m_shader->BindTransformShadow(model);
+            m_cube->Draw();
+        }
+
+        m_shader->EndRenderShadow();
+    }
+
     m_shader->BindCamera(cameraPosition);
     m_shader->BindLight(data);
 

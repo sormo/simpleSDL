@@ -71,8 +71,13 @@ void AppendUniformsLight(const ModelShader::Config & config, std::string & resul
         result += "    vec3 ambient;\n";
         result += "    vec3 diffuse;\n";
         result += "    vec3 specular;\n";
+        // begin shadow specific
+        result += "    mat4 lightSpaceMatrix;\n";
+        result += "    vec2 depthMapSize;\n";
+        // end shadow specific
         result += "};\n";
         result += "uniform LightDirectional lightDirectional;\n";
+        result += "uniform sampler2D lightDirectionalDepthMap;\n";
     }
     if (config.light.pointCount)
     {
@@ -85,8 +90,14 @@ void AppendUniformsLight(const ModelShader::Config & config, std::string & resul
         result += "    float constant;\n";
         result += "    float linear;\n";
         result += "    float quadratic;\n";
+        // begin shadow specific
+        result += "    mat4 lightSpaceMatrix;\n";
+        result += "    vec2 depthMapSize;\n";
+        result += "    float farPlane;\n";
+        // end shadow specific
         result += "};\n";
         result += "uniform LightPoint lightPoint[" + std::to_string(config.light.pointCount) + "];\n";
+        result += "uniform samplerCube lightPointDepthMaps[" + std::to_string(config.light.pointCount) + "];\n";
     }
     if (config.light.spotCount)
     {
@@ -102,8 +113,13 @@ void AppendUniformsLight(const ModelShader::Config & config, std::string & resul
         result += "    float constant;\n";
         result += "    float linear;\n";
         result += "    float quadratic;\n";
+        // begin shadow specific
+        result += "    mat4 lightSpaceMatrix;\n";
+        result += "    vec2 depthMapSize;\n";
+        // end shadow specific
         result += "};\n";
         result += "uniform LightSpot lightSpot[" + std::to_string(config.light.spotCount) + "];\n";
+        result += "uniform sampler2D lightSpotDepthMaps[" + std::to_string(config.light.spotCount) + "];\n";
     }
     result += "// **********************\n";
 }
@@ -200,17 +216,17 @@ void AppendFunctionLightCommon(std::string & result, const std::string & shinine
 
 void AppendFunctionLightDirectional(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
 {
-    result += "vec3 CalcLightDirectional(LightDirectional light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
+    result += "vec3 CalcLightDirectional(LightDirectional light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal, float shadow)\n";
     result += "{\n";
     result += "    vec3 ligthDirectionWorldSpace = normalize(-light.direction);\n";
     AppendFunctionLightCommon(result, shininess, model);
-    result += "    return (ambient + diffuse + specular);\n";
+    result += "    return ambient + (diffuse + specular)*(1.0 - shadow);\n";
     result += "}\n";
 }
 
 void AppendFunctionLightPoint(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
 {
-    result += "vec3 CalcLightPoint(LightPoint light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
+    result += "vec3 CalcLightPoint(LightPoint light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal, float shadow)\n";
     result += "{\n";
     result += "    vec3 ligthDirectionWorldSpace = normalize(light.position - positionWorldSpace);\n";
     AppendFunctionLightCommon(result, shininess, model);
@@ -220,13 +236,13 @@ void AppendFunctionLightPoint(std::string & result, const std::string & shinines
     result += "    ambient *= attenuation;\n";
     result += "    diffuse *= attenuation;\n";
     result += "    specular *= attenuation;\n\n";
-    result += "    return (ambient + diffuse + specular);\n";
+    result += "    return ambient + (diffuse + specular)*(1.0 - shadow);\n";
     result += "}\n";
 }
 
 void AppendFunctionLightSpot(std::string & result, const std::string & shininess, ModelShader::ShadingModel model)
 {
-    result += "vec3 CalcLightSpot(LightSpot light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal)\n";
+    result += "vec3 CalcLightSpot(LightSpot light, vec3 ambientColor, vec3 diffuseColor, vec3 specularColor, vec3 cameraDirectionWorldSpace, vec3 normal, float shadow)\n";
     result += "{\n";
     result += "    vec3 ligthDirectionWorldSpace = normalize(light.position - positionWorldSpace);\n";
     AppendFunctionLightCommon(result, shininess, model);
@@ -240,7 +256,7 @@ void AppendFunctionLightSpot(std::string & result, const std::string & shininess
     result += "    ambient *= attenuation * intensity;\n";
     result += "    diffuse *= attenuation * intensity;\n";
     result += "    specular *= attenuation * intensity;\n\n";
-    result += "    return (ambient + diffuse + specular);\n";
+    result += "    return ambient + (diffuse + specular)*(1.0 - shadow);\n";
     result += "}\n";
 }
 
@@ -257,6 +273,163 @@ void AppendFunctionLight(const ModelShader::Config & config, std::string & resul
         AppendFunctionLightPoint(result, shininess, config.shading);
     if (config.light.spotCount)
         AppendFunctionLightSpot(result, shininess, config.shading);
+    result += "// ***********************\n";
+}
+
+void AppendFunctionShadowDirectional(const ModelShader::Config & config, std::string & result)
+{
+    result += "float ShadowCalculationDirectional(LightDirectional light, in sampler2D depthMap, vec3 normal)\n";
+    result += "{\n";
+    result += "    vec4 position = light.lightSpaceMatrix * vec4(positionWorldSpace, 1.0);\n";
+    result += "    vec3 lightDirection = normalize(light.direction);\n";
+    result += "    // perform perspective divide, result is in [-1, 1]\n";
+    result += "    vec3 projCoords = position.xyz / position.w;\n";
+    result += "    // tansform to range [0, 1], this is screen coordinates for sampling in depth map\n";
+    result += "    projCoords = projCoords * 0.5 + 0.5;\n";
+    result += "    // get closest depth value from light's perspective (using [0,1] range positionLightSpace as coords)\n";
+    result += "    float closestDepth = texture2D(depthMap, projCoords.xy).r;\n";
+    result += "    // get depth of current fragment from light's perspective\n";
+    result += "    float currentDepth = projCoords.z;\n";
+    result += "    // check whether current frag pos is in shadow\n";
+    result += "    // bias to prevent shadow acne\n";
+    //result += "    float bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);\n";
+    result += "    float bias = 0.005;\n";
+    result += "    // check whether current frag pos is in shadow\n";
+    //result += "    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.1;\n";
+    result += "    // PCF\n";
+    result += "    float shadow = 0.1;\n";
+    result += "    vec2 texelSize = 1.0 / light.depthMapSize;\n";
+    result += "    for(int x = -1; x <= 1; ++x)\n";
+    result += "    {\n";
+    result += "        for(int y = -1; y <= 1; ++y)\n";
+    result += "        {\n";
+    result += "            float pcfDepth = texture2D(depthMap, projCoords.xy + vec2(x, y) * texelSize).r;\n";
+    result += "            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.1;\n";
+    result += "        }\n";
+    result += "    }\n";
+    result += "    shadow /= 9.0;\n";
+    result += "    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.\n";
+    result += "    if(projCoords.z > 1.0)\n";
+    result += "        shadow = 0.1;\n";
+    result += "    return shadow;\n";
+    result += "}\n";
+}
+
+void AppendFunctionShadowPoint(const ModelShader::Config & config, std::string & result)
+{
+    //result += "vec3 SAMPLE_OFFSET_DIRECTIONS[20] = vec3[](\n";
+    ////result += "(\n";
+    //result += "   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),\n";
+    //result += "   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),\n";
+    //result += "   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),\n";
+    //result += "   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),\n";
+    //result += "   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)\n";
+    //result += ");\n";
+    result += "vec3 SAMPLE_OFFSET_DIRECTIONS(in int i)\n";
+    result += "{\n";
+    result += "    if (i == 0)       return vec3( 1,  1,  1);\n";
+    result += "    else if (i == 1)  return vec3( 1, -1,  1);\n";
+    result += "    else if (i == 2)  return vec3(-1, -1,  1);\n";
+    result += "    else if (i == 3)  return vec3(-1,  1,  1);\n";
+    result += "    else if (i == 4)  return vec3( 1,  1, -1);\n";
+    result += "    else if (i == 5)  return vec3( 1, -1, -1);\n";
+    result += "    else if (i == 6)  return vec3(-1, -1, -1);\n";
+    result += "    else if (i == 7)  return vec3(-1,  1, -1);\n";
+    result += "    else if (i == 8)  return vec3( 1,  1,  0);\n";
+    result += "    else if (i == 9)  return vec3( 1, -1,  0);\n";
+    result += "    else if (i == 10) return vec3(-1, -1,  0);\n";
+    result += "    else if (i == 11) return vec3(-1,  1,  0);\n";
+    result += "    else if (i == 12) return vec3( 1,  0,  1);\n";
+    result += "    else if (i == 13) return vec3(-1,  0,  1);\n";
+    result += "    else if (i == 14) return vec3( 1,  0, -1);\n";
+    result += "    else if (i == 15) return vec3(-1,  0, -1);\n";
+    result += "    else if (i == 16) return vec3( 0,  1,  1);\n";
+    result += "    else if (i == 17) return vec3( 0, -1,  1);\n";
+    result += "    else if (i == 18) return vec3( 0, -1, -1);\n";
+    result += "    else if (i == 19) return vec3( 0,  1, -1);\n";
+    result += "    return vec3(1, 1, 1);\n";
+    result += "}\n";
+
+    result += "\n";
+    result += "float ApplyCubePCF(in samplerCube depthMap, float farPlane, float currentDepth, vec3 fragmentToLightWorldSpace)\n";
+    result += "{\n";
+    result += "    float shadow = 0.0;\n";
+    result += "    float bias   = 0.15;\n";
+    result += "    const int samples  = 20;\n";
+    result += "    float viewDistance = length(cameraWorldSpace - positionWorldSpace);\n";
+    result += "    float diskRadius = (1.0 + (viewDistance / farPlane)) / 25.0;\n";
+    result += "\n";
+    result += "    for(int i = 0; i < samples; ++i)\n";
+    result += "    {\n";
+    //result += "        float closestDepth = textureCube(depthMap, fragmentToLightWorldSpace + SAMPLE_OFFSET_DIRECTIONS[i] * diskRadius).r;\n";
+    result += "        float closestDepth = textureCube(depthMap, fragmentToLightWorldSpace + SAMPLE_OFFSET_DIRECTIONS(i) * diskRadius).r;\n";
+    result += "        closestDepth *= farPlane; // Undo mapping [0;1]\n";
+    result += "        if(currentDepth - bias > closestDepth)\n";
+    result += "            shadow += 1.0;\n";
+    result += "    }\n";
+    result += "\n";
+    result += "    shadow /= float(samples);\n";
+    result += "\n";
+    result += "    return shadow;\n";
+    result += "}\n";
+    result += "\n";
+    result += "float ShadowCalculationPoint(LightPoint light, in samplerCube depthMap)\n";
+    result += "{\n";
+    result += "    // get vector from fragment to light\n";
+    result += "    vec3 fragmentToLightWorldSpace = positionWorldSpace - light.position;\n";
+    result += "    // use the light to fragment vector to sample from the depth map\n";
+    result += "    float closestDepth = textureCube(depthMap, fragmentToLightWorldSpace).r;\n";
+    result += "    // it is currently in linear range between [0,1]. Re-transform back to original value\n";
+    result += "    closestDepth *= light.farPlane;\n";
+    result += "    // now get current linear depth as the length between the fragment and light position\n";
+    result += "    float currentDepth = length(fragmentToLightWorldSpace);\n";
+    result += "    // now test for shadows\n";
+    result += "    //float bias = 0.05;\n";
+    result += "    //float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;\n";
+    result += "    float shadow = ApplyCubePCF(depthMap, light.farPlane, currentDepth, fragmentToLightWorldSpace);\n";
+    result += "\n";
+    result += "    return shadow;\n";
+    result += "    //return closestDepth;\n";
+    result += "}\n";
+}
+
+void AppendFunctionShadowSpot(const ModelShader::Config & config, std::string & result)
+{
+    result += "float ShadowCalculationSpot(LightSpot light, in sampler2D depthMap, vec3 normal)\n";
+    result += "{\n";
+    result += "    vec4 position = light.lightSpaceMatrix * vec4(positionWorldSpace, 1.0);\n";
+    result += "    vec3 projCoords = position.xyz / position.w;\n";
+    result += "    projCoords = projCoords * 0.5 + 0.5;\n";
+    result += "    float closestDepth = texture2D(depthMap, projCoords.xy).r;\n";
+    result += "    float currentDepth = projCoords.z;\n";
+    result += "    float bias = 0.005;\n";
+    result += "    // PCF\n";
+    result += "    float shadow = 0.1;\n";
+    result += "    vec2 texelSize = 1.0 / light.depthMapSize;\n";
+    result += "    for(int x = -1; x <= 1; ++x)\n";
+    result += "    {\n";
+    result += "        for(int y = -1; y <= 1; ++y)\n";
+    result += "        {\n";
+    result += "            float pcfDepth = texture2D(depthMap, projCoords.xy + vec2(x, y) * texelSize).r;\n";
+    result += "            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.1;\n";
+    result += "        }\n";
+    result += "    }\n";
+    result += "    shadow /= 9.0;\n";
+    result += "    if(projCoords.z > 1.0)\n";
+    result += "        shadow = 0.1;\n";
+    result += "    return shadow;\n";
+    result += "}\n";
+}
+
+void AppendFunctionShadow(const ModelShader::Config & config, std::string & result)
+{
+    result += "// *** shadow functions ***\n";
+    if (config.light.directional)
+        AppendFunctionShadowDirectional(config, result);
+    if (config.light.pointCount)
+        AppendFunctionShadowPoint(config, result);
+    if (config.light.spotCount)
+        AppendFunctionShadowSpot(config, result);
     result += "// ***********************\n";
 }
 
@@ -376,17 +549,34 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
     {
         result += "    normal = normalize(normalWorldSpace);\n\n";
     }
+
+    // shadow calculation
+    result += "    float shadow = 0.0;\n\n";
     if (config.light.directional)
-        result += "    result = CalcLightDirectional(lightDirectional, ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
+        result += "    shadow += ShadowCalculationDirectional(lightDirectional, lightDirectionalDepthMap, normal);\n\n";
     if (config.light.pointCount)
     {
         result += "    for(int i = 0; i < " + std::to_string(config.light.pointCount) + "; i++)\n";
-        result += "        result += CalcLightPoint(lightPoint[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
+        result += "        shadow += ShadowCalculationPoint(lightPoint[i], lightPointDepthMaps[i]);\n\n";
     }
     if (config.light.spotCount)
     {
         result += "    for(int i = 0; i < " + std::to_string(config.light.spotCount) + "; i++)\n";
-        result += "        result += CalcLightSpot(lightSpot[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal);\n\n";
+        result += "        shadow += ShadowCalculationSpot(lightSpot[i], lightSpotDepthMaps[i], normal);\n\n";
+    }
+
+    // light calculations
+    if (config.light.directional)
+        result += "    result = CalcLightDirectional(lightDirectional, ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal, shadow);\n\n";
+    if (config.light.pointCount)
+    {
+        result += "    for(int i = 0; i < " + std::to_string(config.light.pointCount) + "; i++)\n";
+        result += "        result += CalcLightPoint(lightPoint[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal, shadow);\n\n";
+    }
+    if (config.light.spotCount)
+    {
+        result += "    for(int i = 0; i < " + std::to_string(config.light.spotCount) + "; i++)\n";
+        result += "        result += CalcLightSpot(lightSpot[i], ambientColor, diffuseColor, specularColor, cameraDirectionWorldSpace, normal, shadow);\n\n";
     }
 
     // final color is changed by lightmap
@@ -423,6 +613,7 @@ std::string GenerateFragment(const ModelShader::Config & config)
     AppendUniformsLight(config, result);
     AppendVaryings(config, result);
     AppendFunctionLight(config, result);
+    AppendFunctionShadow(config, result);
     AppendFunctionColorOperations(result);
     AppendFunctionColor(config, result);
     AppendBodyFragment(config, result);

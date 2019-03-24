@@ -40,6 +40,8 @@ namespace Application
     {
         Light::Config light;
         light.directional = true;
+        light.spotCount = 1;
+        light.pointCount = 1;
 
         g_scene = std::make_unique<Scene>(light);
 
@@ -49,7 +51,7 @@ namespace Application
         material.shininessStrength = 1.0f;
 
         glm::mat4 model(1.0f);
-        model = glm::scale(model, glm::vec3(10.0f, 0.5f, 10.0f));
+        model = glm::scale(model, glm::vec3(20.0f, 0.5f, 20.0f));
         model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f));
         g_scene->AddCube(model, material);
 
@@ -73,10 +75,34 @@ namespace Application
     void DrawScene()
     {
         Light::Data light;
-        light.lightDirectional.direction = glm::vec3(1.0f, -1.0f, 0.0f);
+
+        light.lightDirectional.direction = -g_lightPositionWorldSpace;
         light.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
         light.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
         light.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+
+        Light::Data::LightSpot spotLight;
+        spotLight.position = g_lightPositionWorldSpace;
+        spotLight.direction = -g_lightPositionWorldSpace;
+        spotLight.cutOff = glm::cos(glm::radians(60.0f));
+        spotLight.outerCutOff = glm::cos(glm::radians(70.0f));
+        spotLight.ambient = { 0.1f, 0.1f, 0.1f };
+        spotLight.diffuse = { 1.0f, 1.0f, 1.0f };
+        spotLight.specular = { 0.5f, 0.5f, 0.5f };
+        spotLight.constant = 1.0f;
+        spotLight.linear = 0.09f;
+        spotLight.quadratic = 0.032f;
+        light.lightSpot.push_back(spotLight);
+
+        Light::Data::LightPoint pointLight;
+        pointLight.position = g_lightPositionWorldSpace;
+        pointLight.ambient = { 0.1f, 0.1f, 0.1f };
+        pointLight.diffuse = { 1.0f, 1.0f, 1.0f };
+        pointLight.specular = { 0.5f, 0.5f, 0.5f };
+        pointLight.constant = 1.0f;
+        pointLight.linear = 0.09f;
+        pointLight.quadratic = 0.032f;
+        light.lightPoint.push_back(pointLight);
 
         g_scene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), light);
     }
@@ -194,7 +220,7 @@ namespace Application
 
         g_camera.Init();
 
-        g_lightPositionWorldSpace = glm::vec3(3.0f, 0.0f, 0.0f);
+        g_lightPositionWorldSpace = glm::vec3(3.0f, 2.5f, 0.0f);
 
         //if (!Text2DInitFont())
         //{
@@ -222,7 +248,7 @@ namespace Application
 
         //g_postprocess.reset(new Postprocess(Postprocess::Type::KernelSharpen));
 
-        //g_shadowScene.reset(new ShadowScene());
+        g_shadowScene.reset(new ShadowScene());
 
         return true;
     }

@@ -9,7 +9,7 @@ class ShadowDirectionalLight
 public:
     ShadowDirectionalLight();
 
-    void SetLightData(const glm::vec3 & position);
+    void SetLightData(const glm::vec3 & direction);
 
     void BeginRender();
     void EndRender();
@@ -19,6 +19,8 @@ public:
     GLuint GetTexture();
     glm::vec2 GetTextureSize();
     const glm::mat4 GetLightSpaceMatrix();
+
+    glm::vec2 GetPlanes();
 
     void DrawDebug();
 
@@ -49,6 +51,8 @@ public:
     GLuint GetTexture();
     glm::vec2 GetTextureSize();
     const glm::mat4 GetLightSpaceMatrix();
+
+    glm::vec2 GetPlanes();
 
     void DrawDebug();
 
@@ -81,7 +85,7 @@ public:
     GLuint GetTexture();
     glm::vec2 GetTextureSize();
 
-    // return near and far plane of frustrum
+    // return near and far plane of frustum
     glm::vec2 GetPlanes();
 
 private:
