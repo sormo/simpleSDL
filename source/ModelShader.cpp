@@ -362,7 +362,8 @@ bool ModelShader::BeginRenderShadow(const Light::Data & light)
         return true;
     }
 
-    BeginRender();
+    // At this point all shadows has been rendered and main shader is bound (see EndRenderShadow()).
+    // So bind data to shader.
     BindShadows();
 
     return false;
@@ -374,22 +375,21 @@ void ModelShader::EndRenderShadow()
     {
         m_shadows.directional->EndRender();
         m_shadows.directionalState = false;
-        return;
     }
-
-    if (m_shadows.pointCounter < m_config.light.pointCount)
+    else if (m_shadows.pointCounter < m_config.light.pointCount)
     {
         m_shadows.point[m_shadows.pointCounter]->EndRender();
         m_shadows.pointCounter++;
-        return;
     }
-
-    if (m_shadows.spotCounter < m_config.light.spotCount)
+    else if (m_shadows.spotCounter < m_config.light.spotCount)
     {
         m_shadows.spot[m_shadows.spotCounter]->EndRender();
         m_shadows.spotCounter++;
-        return;
     }
+
+    // expect render shadow is called within BeginRender() - EndRender()
+    // so restore previos BeginRender
+    BeginRender();
 }
 
 void ModelShader::BindTransformShadow(const glm::mat4 & model)
