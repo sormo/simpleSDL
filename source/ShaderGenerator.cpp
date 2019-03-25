@@ -293,24 +293,24 @@ void AppendFunctionShadowDirectional(const ModelShader::Config & config, std::st
     result += "    // check whether current frag pos is in shadow\n";
     result += "    // bias to prevent shadow acne\n";
     //result += "    float bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);\n";
-    result += "    float bias = 0.005;\n";
+    result += "    float bias = 0.001;\n";
     result += "    // check whether current frag pos is in shadow\n";
     //result += "    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.1;\n";
     result += "    // PCF\n";
-    result += "    float shadow = 0.1;\n";
+    result += "    float shadow = 0.0;\n";
     result += "    vec2 texelSize = 1.0 / light.depthMapSize;\n";
     result += "    for(int x = -1; x <= 1; ++x)\n";
     result += "    {\n";
     result += "        for(int y = -1; y <= 1; ++y)\n";
     result += "        {\n";
     result += "            float pcfDepth = texture2D(depthMap, projCoords.xy + vec2(x, y) * texelSize).r;\n";
-    result += "            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.1;\n";
+    result += "            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;\n";
     result += "        }\n";
     result += "    }\n";
     result += "    shadow /= 9.0;\n";
     result += "    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.\n";
     result += "    if(projCoords.z > 1.0)\n";
-    result += "        shadow = 0.1;\n";
+    result += "        shadow = 0.0;\n";
     result += "    return shadow;\n";
     result += "}\n";
 }
@@ -402,21 +402,21 @@ void AppendFunctionShadowSpot(const ModelShader::Config & config, std::string & 
     result += "    projCoords = projCoords * 0.5 + 0.5;\n";
     result += "    float closestDepth = texture2D(depthMap, projCoords.xy).r;\n";
     result += "    float currentDepth = projCoords.z;\n";
-    result += "    float bias = 0.005;\n";
+    result += "    float bias = 0.001;\n";
     result += "    // PCF\n";
-    result += "    float shadow = 0.1;\n";
+    result += "    float shadow = 0.0;\n";
     result += "    vec2 texelSize = 1.0 / light.depthMapSize;\n";
     result += "    for(int x = -1; x <= 1; ++x)\n";
     result += "    {\n";
     result += "        for(int y = -1; y <= 1; ++y)\n";
     result += "        {\n";
     result += "            float pcfDepth = texture2D(depthMap, projCoords.xy + vec2(x, y) * texelSize).r;\n";
-    result += "            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.1;\n";
+    result += "            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;\n";
     result += "        }\n";
     result += "    }\n";
     result += "    shadow /= 9.0;\n";
     result += "    if(projCoords.z > 1.0)\n";
-    result += "        shadow = 0.1;\n";
+    result += "        shadow = 0.0;\n";
     result += "    return shadow;\n";
     result += "}\n";
 }
@@ -431,6 +431,11 @@ void AppendFunctionShadow(const ModelShader::Config & config, std::string & resu
     if (config.light.spotCount)
         AppendFunctionShadowSpot(config, result);
     result += "// ***********************\n";
+}
+
+uint32_t GetTotalLightCount(const ModelShader::Config & config)
+{
+    return config.light.pointCount + config.light.spotCount + (config.light.directional ? 1 : 0);
 }
 
 void AppendFunctionColorOperations(std::string & result)
@@ -557,13 +562,15 @@ void AppendBodyFragment(const ModelShader::Config & config, std::string & result
     if (config.light.pointCount)
     {
         result += "    for(int i = 0; i < " + std::to_string(config.light.pointCount) + "; i++)\n";
-        result += "        shadow += ShadowCalculationPoint(lightPoint[i], lightPointDepthMaps[i]);\n\n";
+        result += "        shadow += ShadowCalculationPoint(lightPoint[i], lightPointDepthMaps[i]);\n";
     }
     if (config.light.spotCount)
     {
         result += "    for(int i = 0; i < " + std::to_string(config.light.spotCount) + "; i++)\n";
-        result += "        shadow += ShadowCalculationSpot(lightSpot[i], lightSpotDepthMaps[i], normal);\n\n";
+        result += "        shadow += ShadowCalculationSpot(lightSpot[i], lightSpotDepthMaps[i], normal);\n";
     }
+    if (GetTotalLightCount(config))
+        result += "    shadow /= " + std::to_string(GetTotalLightCount(config)) + ".0;\n\n";
 
     // light calculations
     if (config.light.directional)
