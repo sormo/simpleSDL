@@ -25,6 +25,7 @@ public:
     Scene(const Light::Config & light);
 
     void AddCube(const glm::mat4 & model, const Material::Data & material);
+    void PopCube() { m_cubes.pop_back(); }
 
     void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light::Data & data);
 

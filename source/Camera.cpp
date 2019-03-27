@@ -10,10 +10,10 @@
 void CameraKeyboard::Init()
 {
     RecomputeMatrices();
-    ModifyFoV(0.0f);
+    Wheel(0.0f);
 }
 
-const glm::vec3 & CameraKeyboard::GetPosition()
+const glm::vec3 & CameraKeyboard::GetPosition() const
 {
     return m_position;
 }
@@ -87,21 +87,23 @@ void CameraKeyboard::RecomputeMatrices()
     lastTime = currentTime;
 }
 
-void CameraKeyboard::ModifyFoV(float value)
+bool CameraKeyboard::Wheel(float value)
 {
     auto[width, height] = Common::GetWindowSize();
 
     m_FoV += 0.1f*value;
     // Projection matrix : 45° Field of View, ratio, display range : 0.1 unit <-> 100 units
-    m_projectionMatrix = glm::perspective(m_FoV, (float)width/(float)height, 0.1f, 100.0f);
+    m_projectionMatrix = glm::perspective(m_FoV, (float)width/(float)height, GetPlanes().x, GetPlanes().y);
+
+    return true;
 }
 
-const glm::mat4 & CameraKeyboard::GetViewMatrix()
+const glm::mat4 & CameraKeyboard::GetViewMatrix() const
 {
     return m_viewMatrix;
 }
 
-const glm::mat4 & CameraKeyboard::GetProjectionMatrix()
+const glm::mat4 & CameraKeyboard::GetProjectionMatrix() const
 {
     return m_projectionMatrix;
 }
@@ -110,30 +112,34 @@ void CameraRotate::Init()
 {
     auto[width, height] = Common::GetWindowSize();
 
-    m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, 0.1f, 100.0f);
+    m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
     RecomputeViewMatrix();
 }
 
-const glm::vec3 & CameraRotate::GetPosition()
+const glm::vec3 & CameraRotate::GetPosition() const
 {
     return m_position;
 }
 
-void CameraRotate::Press(const glm::vec2 & position, int64_t id)
+bool CameraRotate::Press(const glm::vec2 & position, int64_t id)
 {
     m_positions[id] = position;
+
+    return true;
 }
 
-void CameraRotate::Release(const glm::vec2 & position, int64_t id)
+bool CameraRotate::Release(const glm::vec2 & position, int64_t id)
 {
     m_positions.erase(id);
+
+    return true;
 }
 
-void CameraRotate::Move(const glm::vec2 & position, int64_t id)
+bool CameraRotate::Move(const glm::vec2 & position, int64_t id)
 {
     auto it = m_positions.find(id);
     if (it == std::end(m_positions))
-        return;
+        return false;
 
     if (m_positions.size() == 1)
     {
@@ -169,14 +175,18 @@ void CameraRotate::Move(const glm::vec2 & position, int64_t id)
     }
 
     RecomputeViewMatrix();
+
+    return true;
 }
 
-void CameraRotate::Wheel(float value)
+bool CameraRotate::Wheel(float value)
 {
     static const float WHEEL_FACTOR = 0.1f;
 
     m_distance += WHEEL_FACTOR * value;
     RecomputeViewMatrix();
+
+    return true;
 }
 
 void CameraRotate::RecomputeViewMatrix()
@@ -190,12 +200,12 @@ void CameraRotate::RecomputeViewMatrix()
     m_viewMatrix = glm::lookAt(m_position, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f });
 }
 
-const glm::mat4 & CameraRotate::GetViewMatrix()
+const glm::mat4 & CameraRotate::GetViewMatrix() const
 {
     return m_viewMatrix;
 }
 
-const glm::mat4 & CameraRotate::GetProjectionMatrix()
+const glm::mat4 & CameraRotate::GetProjectionMatrix() const
 {
     return m_projectionMatrix;
 }
@@ -205,25 +215,29 @@ void Camera2D::Init()
     auto[width, height] = Common::GetWindowSize();
 
     // TODO 2d camera should use orthographic projection
-    m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, 0.1f, 100.0f);
+    m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
     RecomputeViewMatrix();
 }
 
-void Camera2D::Press(const glm::vec2 & position, int64_t id)
+bool Camera2D::Press(const glm::vec2 & position, int64_t id)
 {
     m_positions[id] = position;
+
+    return true;
 }
 
-void Camera2D::Release(const glm::vec2 & position, int64_t id)
+bool Camera2D::Release(const glm::vec2 & position, int64_t id)
 {
     m_positions.erase(id);
+
+    return true;
 }
 
-void Camera2D::Move(const glm::vec2 & position, int64_t id)
+bool Camera2D::Move(const glm::vec2 & position, int64_t id)
 {
     auto it = m_positions.find(id);
     if (it == std::end(m_positions))
-        return;
+        return false;
 
     if (m_positions.size() == 1)
     {
@@ -254,14 +268,18 @@ void Camera2D::Move(const glm::vec2 & position, int64_t id)
     }
 
     RecomputeViewMatrix();
+
+    return true;
 }
 
-void Camera2D::Wheel(float value)
+bool Camera2D::Wheel(float value)
 {
     static const float WHEEL_FACTOR = 0.1f;
 
     m_distance += WHEEL_FACTOR * value;
     RecomputeViewMatrix();
+
+    return true;
 }
 
 void Camera2D::RecomputeViewMatrix()
@@ -269,12 +287,17 @@ void Camera2D::RecomputeViewMatrix()
     m_viewMatrix = glm::lookAt({m_position.x, m_position.y, m_distance}, m_position, glm::vec3{ 0.0f, 1.0f, 0.0f });
 }
 
-const glm::mat4 & Camera2D::GetViewMatrix()
+const glm::mat4 & Camera2D::GetViewMatrix() const
 {
     return m_viewMatrix;
 }
 
-const glm::mat4 & Camera2D::GetProjectionMatrix()
+const glm::mat4 & Camera2D::GetProjectionMatrix() const
 {
     return m_projectionMatrix;
+}
+
+const glm::vec3 & Camera2D::GetPosition() const
+{
+    return m_position;
 }

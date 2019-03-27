@@ -47,10 +47,8 @@ void guiRender()
 
     if (showDemoWindow)
         ImGui::ShowDemoWindow(&showDemoWindow);
- 
-    //glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
-    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    Application::Gui();
 
     ImGui::Render();
 }
@@ -179,6 +177,8 @@ void mainLoop()
     renderFrame();
 
     SDL_Delay(5);
+
+    Common::Frame::Signal();
 }
 
 int main(int argc, char* argv[])

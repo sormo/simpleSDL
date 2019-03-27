@@ -122,7 +122,8 @@ void ModelShader::InitMeshLocations()
 {
     // VBOs
     m_locations.buffers.positions = m_shader->GetLocation("positionModelSpace", Shader::LocationType::Attrib);
-    m_locations.buffers.normals = m_shader->GetLocation("normalModelSpace", Shader::LocationType::Attrib);
+    if (m_config.light.directional || m_config.light.pointCount || m_config.light.spotCount)
+        m_locations.buffers.normals = m_shader->GetLocation("normalModelSpace", Shader::LocationType::Attrib);
     for (uint32_t i = 0; i < m_config.GetUVChannelsCount(); ++i)
         m_locations.buffers.texCoords.push_back(m_shader->GetLocation("vertexUV" + std::to_string(i), Shader::LocationType::Attrib));
     if (m_config.textures.normal.size())

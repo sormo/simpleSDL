@@ -3,9 +3,10 @@
 
 namespace Application
 {
-	bool Init();
-	bool MainLoop();
-	void Deinit();
+    bool Init();
+    bool MainLoop();
+    void Deinit();
+    void Gui();
 
     void Dispatch(const SDL_Event & event);
 }

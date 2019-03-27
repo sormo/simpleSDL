@@ -20,6 +20,9 @@
 #include "Postprocess.h"
 #include "ShadowScene.h"
 #include "Scene.h"
+#include "UserInterface.h"
+#include "MouseDispatcher.h"
+#include "Editor.h"
 
 namespace Application
 {
@@ -28,6 +31,9 @@ namespace Application
     CameraRotate g_camera;
     //CameraKeyboard g_camera;
 
+    UserInterface g_userInterface;
+    MouseDispatcher g_mouseDispatcher;
+
     std::unique_ptr<Postprocess> g_postprocess;
     std::unique_ptr<ObjModel> g_objModel;
     std::unique_ptr<Model> g_model;
@@ -35,13 +41,14 @@ namespace Application
     std::unique_ptr<Skybox> g_skybox;
     std::unique_ptr<ShadowScene> g_shadowScene;
     std::unique_ptr<Scene> g_scene;
+    std::unique_ptr<Editor> g_editor;
 
     void InitScene()
     {
         Light::Config light;
         light.directional = true;
-        light.spotCount = 1;
-        light.pointCount = 1;
+        light.spotCount = 0;
+        light.pointCount = 0;
 
         g_scene = std::make_unique<Scene>(light);
 
@@ -250,6 +257,11 @@ namespace Application
 
         g_shadowScene.reset(new ShadowScene());
 
+        g_editor.reset(new Editor(*g_scene, g_userInterface, g_camera));
+
+        g_mouseDispatcher.Add(g_editor.get());
+        g_mouseDispatcher.Add(&g_camera);
+
         return true;
     }
 
@@ -271,42 +283,11 @@ namespace Application
 
     void Dispatch(const SDL_Event & event)
     {
-        // touch events
-        if (event.type == SDL_FINGERDOWN)
-        {
-            auto[width, height] = Common::GetWindowSize();
-            g_camera.Press({ event.tfinger.x * (float)width, event.tfinger.y * (float)height }, event.tfinger.fingerId);
-        }
-        else if (event.type == SDL_FINGERUP)
-        {
-            auto[width, height] = Common::GetWindowSize();
-            g_camera.Release({ event.tfinger.x * (float)width, event.tfinger.y * (float)height }, event.tfinger.fingerId);
-        }
-        else if (event.type == SDL_FINGERMOTION)
-        {
-            auto[width, height] = Common::GetWindowSize();
-            g_camera.Move({ event.tfinger.x * (float)width, event.tfinger.y * (float)height }, event.tfinger.fingerId);
-        }
+        if (g_mouseDispatcher.Dispatch(event))
+            return;
+
 #if !defined(__ANDROID__)
-        // looks like mouse events are sent also on android for some reason
-        else if (event.type == SDL_MOUSEWHEEL)
-        {
-            //g_camera.ModifyFoV(event.wheel.y);
-            g_camera.Wheel((float)event.wheel.y);
-        }
-        else if (event.type == SDL_MOUSEBUTTONDOWN)
-        {
-            g_camera.Press({ (float)event.button.x, (float)event.button.y }, 0);
-        }
-        else if (event.type == SDL_MOUSEBUTTONUP)
-        {
-            g_camera.Release({ (float)event.button.x, (float)event.button.y }, 0);
-        }
-        else if (event.type == SDL_MOUSEMOTION)
-        {
-            g_camera.Move({ (float)event.motion.x, (float)event.motion.y }, 0);
-        }
-        else if (event.type == SDL_WINDOWEVENT)
+    if (event.type == SDL_WINDOWEVENT)
         {
             if (event.window.event == SDL_WINDOWEVENT_RESIZED)
                 g_camera.Init();
@@ -317,5 +298,10 @@ namespace Application
     void Deinit()
     {
         //Text2DCleanup();
+    }
+
+    void Gui()
+    {
+        g_userInterface.Generate();
     }
 }

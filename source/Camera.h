@@ -1,22 +1,30 @@
 #pragma once
 #include "glm/glm.hpp"
 #include <map>
+#include "MouseDispatcher.h"
 
-// TODO maybe inheritance from common Camera base
+class Camera
+{
+public:
+    virtual const glm::mat4 & GetViewMatrix() const = 0;
+    virtual const glm::mat4 & GetProjectionMatrix() const = 0;
+    virtual const glm::vec3 & GetPosition() const = 0;
+    virtual const glm::vec2 GetPlanes() const { return glm::vec2(0.1f, 100.0f); }
+};
 
-class CameraKeyboard
+class CameraKeyboard : public MouseReceiver, public Camera
 {
 public:
     // we may use constructor but window size is needed in camera initialization
     void Init();
 
     void RecomputeMatrices();
-    const glm::mat4 & GetViewMatrix();
-    const glm::mat4 & GetProjectionMatrix();
 
-    const glm::vec3 & GetPosition();
+    const glm::mat4 & GetViewMatrix() const override;
+    const glm::mat4 & GetProjectionMatrix() const override;
+    const glm::vec3 & GetPosition() const override;
 
-    void ModifyFoV(float value);
+    bool Wheel(float value) override;
 
 private:
     glm::mat4 m_viewMatrix;
@@ -33,22 +41,21 @@ private:
 };
 
 // this camera rotates around center 0, 0, 0 point
-class CameraRotate
+class CameraRotate : public MouseReceiver, public Camera
 {
 public:
     // we may use constructor but window size is needed in camera initialization
     void Init();
 
     // inputs provided by application
-    void Press(const glm::vec2 & position, int64_t id);
-    void Release(const glm::vec2 &  position, int64_t id);
-    void Move(const glm::vec2 &  position, int64_t id);
-    void Wheel(float value);
+    bool Press(const glm::vec2 & position, int64_t id) override;
+    bool Release(const glm::vec2 &  position, int64_t id) override;
+    bool Move(const glm::vec2 &  position, int64_t id) override;
+    bool Wheel(float value) override;
 
-    const glm::mat4 & GetViewMatrix();
-    const glm::mat4 & GetProjectionMatrix();
-
-    const glm::vec3 & GetPosition();
+    const glm::mat4 & GetViewMatrix() const override;
+    const glm::mat4 & GetProjectionMatrix() const override;
+    const glm::vec3 & GetPosition() const override;
 
 private:
     void RecomputeViewMatrix();
@@ -65,20 +72,22 @@ private:
     glm::vec3 m_position;
 };
 
-class Camera2D
+class Camera2D : public MouseReceiver, public Camera
 {
 public:
     // we may use constructor but window size is needed in camera initialization
     void Init();
 
     // inputs provided by application
-    void Press(const glm::vec2 & position, int64_t id);
-    void Release(const glm::vec2 &  position, int64_t id);
-    void Move(const glm::vec2 &  position, int64_t id);
-    void Wheel(float value);
+    bool Press(const glm::vec2 & position, int64_t id) override;
+    bool Release(const glm::vec2 &  position, int64_t id) override;
+    bool Move(const glm::vec2 &  position, int64_t id) override;
+    bool Wheel(float value) override;
 
-    const glm::mat4 & GetViewMatrix();
-    const glm::mat4 & GetProjectionMatrix();
+    const glm::mat4 & GetViewMatrix() const override;
+    const glm::mat4 & GetProjectionMatrix() const override;
+    const glm::vec3 & GetPosition() const override;
+
 private:
     void RecomputeViewMatrix();
 

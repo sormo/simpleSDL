@@ -50,7 +50,10 @@ LOCAL_SRC_FILES :=  \
   ../../../source/imgui/imgui_draw.cpp \
   ../../../source/imgui/imgui_impl_gles2.cpp \
   ../../../source/imgui/imgui_widgets.cpp \
-  ../../../source/Scene.cpp
+  ../../../source/Scene.cpp \
+  ../../../source/Editor.cpp \
+  ../../../source/MouseDispatcher.cpp \
+  ../../../source/UserInterface.cpp
 
 
 # Linking options

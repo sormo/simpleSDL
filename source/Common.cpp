@@ -5,6 +5,8 @@
 #include <chrono>
 #include <inttypes.h>
 #include <cmath>
+#include "glm/gtc/matrix_transform.hpp"
+#include "Camera.h"
 
 extern SDL_Window* g_window;
 
@@ -134,5 +136,62 @@ namespace Common
         }
 
         return true;
+    }
+
+    namespace Frame
+    {
+        std::chrono::high_resolution_clock timer;
+        std::chrono::time_point<std::chrono::high_resolution_clock> begin;
+        std::chrono::time_point<std::chrono::high_resolution_clock> end;
+
+        void Signal()
+        {
+            begin = end;
+            end = timer.now();
+        }
+
+        float GetFPS()
+        {
+            using ms = std::chrono::duration<float, std::milli>;
+
+            static float result = std::chrono::duration_cast<ms>(end - begin).count();
+
+            static int32_t counter = 0;
+            if (counter < 100)
+            {
+                counter++;
+                return result;
+            }
+            counter = 0;
+
+            result = std::chrono::duration_cast<ms>(end - begin).count();
+
+            return result;
+        }
+    }
+
+    float LinearizeDepth(float depth, float nearPlane, float farPlane)
+    {
+        depth = 2.0f * depth - 1.0f;
+        float linear = 2.0f * nearPlane * farPlane / (farPlane + nearPlane - depth * (farPlane - nearPlane));
+        return linear;
+    }
+
+    float MakeDepth(float distance, float nearPlane, float farPlane)
+    {
+        float nonLinear = (farPlane + nearPlane - 2.0f * nearPlane * farPlane / distance) / (farPlane - nearPlane);
+        nonLinear = (nonLinear + 1.0f) / 2.0f;
+        return nonLinear;
+    }
+
+    glm::vec3 GetPointWorldSpace(const glm::vec2 & position, float distance, const Camera & camera)
+    {
+        float depthValue = MakeDepth(distance, camera.GetPlanes().x, camera.GetPlanes().y);
+
+        glm::vec3 worldPosition = glm::unProject(glm::vec3(position.x, (float)Common::GetWindowHeight() - position.y - 1.0f, depthValue),
+            camera.GetViewMatrix(), camera.GetProjectionMatrix(),
+            glm::vec4(0.0f, 0.0f, (float)Common::GetWindowWidth(), (float)Common::GetWindowHeight()));
+
+        return worldPosition;
     }
 }

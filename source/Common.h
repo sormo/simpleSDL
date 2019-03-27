@@ -11,6 +11,8 @@
 #include <cstdio>
 #endif
 
+class Camera;
+
 namespace Common
 {
     std::vector<uint8_t> ReadFile(const char * name);
@@ -42,4 +44,17 @@ namespace Common
     std::vector<uint8_t> ConvertARGBToRGBA(const uint8_t * data, uint32_t count);
 
     bool IsPowerOfTwo(int32_t n);
+
+    namespace Frame
+    {
+        void Signal();
+        float GetFPS();
+    }
+
+    // from depth value [0, 1] make distance [nearPlane, farPlane]
+    float LinearizeDepth(float depth, float nearPlane, float farPlane);
+    // from distance [nearPlane, farPlane] make depth [0, 1]
+    float MakeDepth(float distance, float nearPlane, float farPlane);
+    // from screen point ([0,0] in upper left) make point in world space with distance from camera (in [nearPlane, farPlane])
+    glm::vec3 GetPointWorldSpace(const glm::vec2 & position, float distance, const Camera & camera);
 }
