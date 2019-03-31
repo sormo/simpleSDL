@@ -57,4 +57,6 @@ namespace Common
     float MakeDepth(float distance, float nearPlane, float farPlane);
     // from screen point ([0,0] in upper left) make point in world space with distance from camera (in [nearPlane, farPlane])
     glm::vec3 GetPointWorldSpace(const glm::vec2 & position, float distance, const Camera & camera);
+    glm::vec3 GetPointWorldSpaceManual(const glm::vec2 & position, float distance, const Camera & camera);
+    glm::vec3 GetPointWorldSpaceDirection(const glm::vec2 & position, float distance, const Camera & camera);
 }

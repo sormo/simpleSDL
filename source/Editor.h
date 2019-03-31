@@ -18,11 +18,18 @@ private:
     void ResetEditCube();
     void AddEditCube(const glm::vec3 & color);
 
+    void TranslateCube(const glm::vec2 & position);
+    void RotateCube(const glm::vec2 & position);
+    void ScaleCube(const glm::vec2 & position);
+
+    // Line is defined by 'A' (point), 't' (vector)
+    // Plane is defined by 'point' and is parallel to constant plane (m_gui.cubeEditAxis)
+    glm::vec3 GetPointOfLineAndPlane(const glm::vec3 & A, glm::vec3 & v, const glm::vec3 & point);
+
     Scene & m_scene;
     UserInterface & m_gui;
     Camera & m_camera;
 
-    glm::vec2 m_cursorPosition;
-    glm::vec2 m_cubeScreenPosition;
     bool m_isPressed = false;
+    glm::vec2 m_cursorPosition;
 };

@@ -4,3 +4,4 @@ Expected following dependencies:
  flatbuffers
  SDL
  emsdk 
+ bullet3

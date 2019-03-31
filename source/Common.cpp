@@ -194,4 +194,60 @@ namespace Common
 
         return worldPosition;
     }
+
+    glm::vec3 GetPointWorldSpaceManual(const glm::vec2 & position, float distance, const Camera & camera)
+    {
+        glm::vec4 ndc;
+
+        ndc.x = position.x / (float)Common::GetWindowWidth();
+        ndc.y = 1.0f - position.y / (float)Common::GetWindowHeight();
+        ndc.z = MakeDepth(distance, camera.GetPlanes().x, camera.GetPlanes().y);
+        ndc.w = 1.0f;
+
+        ndc = ndc * 2.0f - 1.0f;
+
+        glm::mat4 tranform = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+        tranform = glm::inverse(tranform);
+
+        glm::vec4 result = tranform * ndc;
+
+        // perspective division
+        result *= (1.0f / result.w);
+
+        return result;
+    }
+
+    glm::vec3 GetPointWorldSpaceDirection(const glm::vec2 & position, float distance, const Camera & camera)
+    {
+        // 0.5 offset is to have ray go through the center of pixel
+        glm::vec2 pixelNdc;
+        pixelNdc.x = (position.x + 0.5f) / (float)Common::GetWindowWidth();
+        pixelNdc.y = (position.y + 0.5f) / (float)Common::GetWindowHeight();
+
+        glm::vec2 pixelScreen;
+        pixelScreen.x = 2.0f * pixelNdc.x - 1.0f;
+        pixelScreen.y = 1.0f - 2.0f * pixelNdc.y;
+
+        // this code assumes that width > height
+        // in other case height should be divided by width and aspectRatio should be multiplied by y coordinate
+        float aspectRatio = (float)Common::GetWindowWidth() / (float)Common::GetWindowHeight();
+        float fovPart = glm::tan(camera.GetFoV() / 2.0f);
+
+        glm::vec2 pixelCamera;
+        pixelCamera.x = pixelScreen.x * aspectRatio * fovPart;
+        pixelCamera.y = pixelScreen.y * fovPart;
+
+        // 
+        glm::vec3 cameraSpace(pixelCamera.x, pixelCamera.y, -1.0f);
+
+        // origin is in [0,0,0] so no need to substract from it
+        glm::vec4 directionCameraSpace(cameraSpace, 0.0f);
+        directionCameraSpace = glm::normalize(directionCameraSpace);
+
+        glm::mat4 transform = glm::inverse(camera.GetViewMatrix());
+
+        glm::vec3 directionWorldSpace = transform * directionCameraSpace;
+
+        return directionWorldSpace * distance;
+    }
 }

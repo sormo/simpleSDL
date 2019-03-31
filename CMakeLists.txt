@@ -32,6 +32,13 @@ set(SDL2MAIN_LIBRARY SDL2main)
 set(SDL2_LIBRARY SDL2)
 
 #
+# bullet
+#
+#set(bulletDir "${projectDir}/contrib/bullet3")
+#add_subdirectory(${bulletDir} EXCLUDE_FROM_ALL)
+#set(BULLET_LIBRARY bullet)
+
+#
 # Sources (relative to the project root dir).
 #
 file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
@@ -129,6 +136,7 @@ endif()
 target_link_libraries(${targetName}
   ${SDL2MAIN_LIBRARY}
   ${SDL2_LIBRARY}
+  #${BULLET_LIBRARY}
   ${OPENGL_LIBRARY}
 )
 

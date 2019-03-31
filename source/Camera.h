@@ -10,6 +10,12 @@ public:
     virtual const glm::mat4 & GetProjectionMatrix() const = 0;
     virtual const glm::vec3 & GetPosition() const = 0;
     virtual const glm::vec2 GetPlanes() const { return glm::vec2(0.1f, 100.0f); }
+    
+    float GetFoV() const { return m_FoV; }
+
+protected:
+    // Field of View in radians
+    float m_FoV = 0.785f;
 };
 
 class CameraKeyboard : public MouseReceiver, public Camera
@@ -36,8 +42,6 @@ private:
     float m_horizontalAngle = 3.14f;
     // Initial vertical angle : none
     float m_verticalAngle = 0.0f;
-    // Initial Field of View
-    float m_FoV = 0.785f;
 };
 
 // this camera rotates around center 0, 0, 0 point

@@ -112,7 +112,7 @@ void CameraRotate::Init()
 {
     auto[width, height] = Common::GetWindowSize();
 
-    m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
+    m_projectionMatrix = glm::perspective(m_FoV, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
     RecomputeViewMatrix();
 }
 
@@ -181,7 +181,7 @@ bool CameraRotate::Move(const glm::vec2 & position, int64_t id)
 
 bool CameraRotate::Wheel(float value)
 {
-    static const float WHEEL_FACTOR = 0.1f;
+    static const float WHEEL_FACTOR = 0.3f;
 
     m_distance += WHEEL_FACTOR * value;
     RecomputeViewMatrix();
@@ -215,7 +215,7 @@ void Camera2D::Init()
     auto[width, height] = Common::GetWindowSize();
 
     // TODO 2d camera should use orthographic projection
-    m_projectionMatrix = glm::perspective(0.785f, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
+    m_projectionMatrix = glm::perspective(m_FoV, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
     RecomputeViewMatrix();
 }
 

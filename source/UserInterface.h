@@ -10,9 +10,11 @@ struct UserInterface
     bool cubeEdit = false;
     std::function<void()> cubeEditClicked;
     std::function<void()> cubeAcceptClicked;
-    float cubeDistance = 10.0f;
     glm::vec3 cubePosition;
-    enum class CubeEditMode { Position, Distance, Camera } cubeEditMode;
+    glm::vec3 cubeRotation;
+    glm::vec3 cubeScale;
+    enum class CubeEditMode { Translate, Rotate, Scale, Camera } cubeEditMode;
+    enum class CubeEditAxis { XY, XZ, YZ } cubeEditAxis;
 
     void Generate();
     UserInterface();

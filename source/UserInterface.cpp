@@ -3,7 +3,7 @@
 #include <SDL.h>
 
 static const ImVec2 WINDOW_SIZE_DEFAULT(160.0f, 80.0);
-static const ImVec2 WINDOW_SIZE_CUBE_EDIT(160.0f, 160.0f);
+static const ImVec2 WINDOW_SIZE_CUBE_EDIT(160.0f, 200.0f);
 
 UserInterface::UserInterface()
     : windowSize(WINDOW_SIZE_DEFAULT)
@@ -70,16 +70,33 @@ void UserInterface::Generate()
         }
 
         ImGui::Text("%06.2f %06.2f %06.2f", cubePosition.x, cubePosition.y, cubePosition.z);
-
-        static int e = 0;
-        ImGui::RadioButton("position", &e, 0);
-        ImGui::RadioButton("distance", &e, 1);
-        ImGui::RadioButton("camera", &e, 2);
-        switch (e)
         {
-        case 0: cubeEditMode = CubeEditMode::Position; break;
-        case 1: cubeEditMode = CubeEditMode::Distance; break;
-        case 2: cubeEditMode = CubeEditMode::Camera; break;
+            static int32_t e = 0;
+            ImGui::RadioButton("translate", &e, 0);
+            ImGui::RadioButton("rotate", &e, 1);
+            ImGui::RadioButton("scale", &e, 2);
+            ImGui::RadioButton("camera", &e, 3);
+            switch (e)
+            {
+            case 0: cubeEditMode = CubeEditMode::Translate; break;
+            case 1: cubeEditMode = CubeEditMode::Rotate; break;
+            case 2: cubeEditMode = CubeEditMode::Scale; break;
+            case 3: cubeEditMode = CubeEditMode::Camera; break;
+            }
+        }
+
+        if (cubeEditMode == CubeEditMode::Translate || cubeEditMode == CubeEditMode::Scale)
+        {
+            static int a = 0;
+            ImGui::RadioButton("XY", &a, 0); ImGui::SameLine();
+            ImGui::RadioButton("XZ", &a, 1); ImGui::SameLine();
+            ImGui::RadioButton("YZ", &a, 2);
+            switch (a)
+            {
+            case 0: cubeEditAxis = CubeEditAxis::XY; break;
+            case 1: cubeEditAxis = CubeEditAxis::XZ; break;
+            case 2: cubeEditAxis = CubeEditAxis::YZ; break;
+            }
         }
     }
 
