@@ -61,6 +61,9 @@ public:
     const glm::mat4 & GetProjectionMatrix() const override;
     const glm::vec3 & GetPosition() const override;
 
+    // set point at which camera is looking
+    void SetLookPoint(const glm::vec3 & lookPoint);
+
 private:
     void RecomputeViewMatrix();
 
@@ -74,6 +77,7 @@ private:
     float m_verticalAngle = 0.0f;
 
     glm::vec3 m_position;
+    glm::vec3 m_lookPoint;
 };
 
 class Camera2D : public MouseReceiver, public Camera

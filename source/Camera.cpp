@@ -110,6 +110,8 @@ const glm::mat4 & CameraKeyboard::GetProjectionMatrix() const
 
 void CameraRotate::Init()
 {
+    m_lookPoint = glm::vec3(0.0f, 0.0f, 0.0f);
+
     auto[width, height] = Common::GetWindowSize();
 
     m_projectionMatrix = glm::perspective(m_FoV, (float)width / (float)height, GetPlanes().x, GetPlanes().y);
@@ -197,7 +199,7 @@ void CameraRotate::RecomputeViewMatrix()
         m_distance * std::cos(m_verticalAngle) * std::cos(m_horizontalAngle)
     );
 
-    m_viewMatrix = glm::lookAt(m_position, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f });
+    m_viewMatrix = glm::lookAt(m_position, m_lookPoint, glm::vec3{ 0.0f, 1.0f, 0.0f });
 }
 
 const glm::mat4 & CameraRotate::GetViewMatrix() const
@@ -208,6 +210,13 @@ const glm::mat4 & CameraRotate::GetViewMatrix() const
 const glm::mat4 & CameraRotate::GetProjectionMatrix() const
 {
     return m_projectionMatrix;
+}
+
+void CameraRotate::SetLookPoint(const glm::vec3 & lookPoint)
+{
+    m_lookPoint = lookPoint;
+
+    RecomputeViewMatrix();
 }
 
 void Camera2D::Init()
