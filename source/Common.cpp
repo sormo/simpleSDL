@@ -79,11 +79,6 @@ namespace Common
         return (double)currentTime / 1000.0f;
     }
 
-    bool IsNear(float a, float b, float sigma)
-    {
-        return std::fabs(a - b) < sigma;
-    }
-
     std::vector<uint8_t> ConvertBGRToRGB(const uint8_t * data, uint32_t count)
     {
         std::vector<uint8_t> result(count * 3);
@@ -121,21 +116,91 @@ namespace Common
         return filePath.substr(0, pos) + "/";
     }
 
-    bool IsPowerOfTwo(int32_t n)
+    namespace Math
     {
-        n = std::abs(n);
-
-        if (n == 0 || n == 1)
-            return false;
-
-        while (n != 1)
+        bool IsPowerOfTwo(int32_t n)
         {
-            if (n % 2)
+            n = std::abs(n);
+
+            if (n == 0 || n == 1)
                 return false;
-            n /= 2;
+
+            while (n != 1)
+            {
+                if (n % 2)
+                    return false;
+                n /= 2;
+            }
+
+            return true;
         }
 
-        return true;
+        bool IsNear(float a, float b, float sigma)
+        {
+            return std::fabs(a - b) < sigma;
+        }
+
+        Line Line::CreateFromPoints(const glm::vec3 & p1, const glm::vec3 & p2)
+        {
+            Line result;
+
+            result.point = p1;
+            result.vector = p2 - p1;
+
+            return result;
+        }
+
+        Plane Plane::CreateFromPoints(const glm::vec3 & p1, const glm::vec3 & p2, const glm::vec3 & p3)
+        {
+            Plane result;
+
+            result.normal = glm::cross(p2 - p1, p3 - p1);
+            result.value = -result.normal.x * p1.x - result.normal.y * p1.y - result.normal.z * p1.z;
+
+            return result;
+        }
+
+        void Plane::Translate(const glm::vec3 & vector)
+        {
+            value += normal.x * vector.x + normal.y * vector.y + normal.z * vector.z;
+        }
+
+        void Plane::Rotate(const glm::vec3 & radians)
+        {
+            glm::mat4 model(1.0f);
+            model = glm::rotate(model, radians.x, glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::rotate(model, radians.y, glm::vec3(0.0f, 1.0f, 0.0f));
+            model = glm::rotate(model, radians.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+            normal = glm::vec3(model * glm::vec4(normal, 0.0f));
+        }
+
+        glm::vec3 GetIntersection(const Plane & plane, const Line & line)
+        {
+            const float & d = plane.value;
+            const glm::vec3 & n = plane.normal;
+            const glm::vec3 & a = line.point;
+            const glm::vec3 & v = line.vector;
+
+            // plug parametric equations of line to euqation of plane and compute t
+            float t = (d - n.x * a.x - n.y * a.y - n.z * a.z) / (n.x * v.x + n.y * v.y + n.z * v.z);
+            // use t in parametrix equation of line
+            glm::vec3 result;
+
+            result = a + v * t;
+
+            return result;
+        }
+    }
+
+    Math::Line GetRay(const glm::vec2 & position, const Camera & camera)
+    {
+        Math::Line result;
+
+        result.point = camera.GetPosition();
+        result.vector = Common::GetPointWorldSpace(position, 10.0f, camera) - result.point;
+
+        return result;
     }
 
     namespace Frame

@@ -1,5 +1,4 @@
 #include "Editor.h"
-#include "Common.h"
 #include "glm/gtc/matrix_transform.hpp"
 
 static const glm::vec3 EDIT_COLOR(0.0f, 1.0f, 0.0f);
@@ -71,66 +70,57 @@ bool Editor::Move(const glm::vec2 & position, int64_t id)
     return true;
 }
 
-glm::vec3 Editor::GetPointOfLineAndPlane(const glm::vec3 & A, glm::vec3 & v, const glm::vec3 & point)
+Common::Math::Plane Editor::GetEditPlane()
 {
-    glm::vec3 t = (point - A) / v;
-    glm::vec3 result = point;
+    glm::vec3 a, b;
 
     switch (m_gui.cubeEditAxis)
     {
     case UserInterface::CubeEditAxis::XY:
-        result.x = A.x + v.x * t.z;
-        result.y = A.y + v.y * t.z;
+        a = glm::vec3(1.0f, 0.0f, 0.0f);
+        b = glm::vec3(0.0f, 1.0f, 0.0f);
         break;
     case UserInterface::CubeEditAxis::XZ:
-        result.x = A.x + v.x * t.y;
-        result.z = A.z + v.z * t.y;
+        a = glm::vec3(1.0f, 0.0f, 0.0f);
+        b = glm::vec3(0.0f, 0.0f, 1.0f);
         break;
     case UserInterface::CubeEditAxis::YZ:
-        result.z = A.z + v.z * t.x;
-        result.y = A.y + v.y * t.x;
+        a = glm::vec3(0.0f, 1.0f, 0.0f);
+        b = glm::vec3(0.0f, 0.0f, 1.0f);
         break;
     }
 
-    return result;
+    return Common::Math::Plane::CreateFromPoints({0.0f, 0.0f, 0.0f}, a, b);
 }
 
 void Editor::ScaleCube(const glm::vec2 & position)
 {
-    static const float SCALE_FACTOR = 0.1f;
+    Common::Math::Plane plane = GetEditPlane();
+
+    plane.Translate(m_gui.cubePosition);
+    plane.Rotate(m_gui.cubeRotation);
 
     glm::vec3 p1;
     {
-        glm::vec3 A(m_camera.GetPosition());
-        glm::vec3 v = Common::GetPointWorldSpace(m_cursorPosition, 10.0f, m_camera) - A;
-
-        p1 = GetPointOfLineAndPlane(A, v, { 0.0f, 0.0f, 0.0f });
+        Common::Math::Line ray = Common::GetRay(m_cursorPosition, m_camera);
+        p1 = Common::Math::GetIntersection(plane, ray);
     }
     glm::vec3 p2;
     {
-        glm::vec3 A(m_camera.GetPosition());
-        glm::vec3 v = Common::GetPointWorldSpace(position, 10.0f, m_camera) - A;
-
-        p2 = GetPointOfLineAndPlane(A, v, { 0.0f, 0.0f, 0.0f });
+        Common::Math::Line ray = Common::GetRay(position, m_camera);
+        p2 = Common::Math::GetIntersection(plane, ray);
     }
 
-    glm::vec3 scaleVector(p2 - p1);
-    glm::mat4 model(1.0f);
-    model = glm::rotate(model, m_gui.cubeRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, m_gui.cubeRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, m_gui.cubeRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-    scaleVector = model * glm::vec4(scaleVector, 0.0f);
+    glm::vec3 scaleVector(p1 - p2);
 
     m_gui.cubeScale += scaleVector;
-    //m_gui.cubeScale += p2 - p1;
+    
+    static const float MINIMUM_SCALE = 0.1f;
+    m_gui.cubeScale.x = m_gui.cubeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.cubeScale.x;
+    m_gui.cubeScale.y = m_gui.cubeScale.y < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.cubeScale.y;
+    m_gui.cubeScale.z = m_gui.cubeScale.z < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.cubeScale.z;
 
-    //glm::vec2 delta = position - m_cursorPosition;
     m_cursorPosition = position;
-
-    //m_gui.cubeScale.x += delta.x * SCALE_FACTOR;
-    //m_gui.cubeScale.y += delta.y * SCALE_FACTOR;
-
-
 }
 
 void Editor::RotateCube(const glm::vec2 & position)
@@ -156,28 +146,12 @@ void Editor::TranslateCube(const glm::vec2 & position)
     // result.z = m_gui.cubePosition.z;
     // ***********************************************************************
 
-    glm::vec3 A(m_camera.GetPosition());
-    glm::vec3 v = Common::GetPointWorldSpace(position, 10.0f, m_camera) - A;
+    Common::Math::Line ray = Common::GetRay(position, m_camera);
+    Common::Math::Plane plane = GetEditPlane();
 
-    m_gui.cubePosition = GetPointOfLineAndPlane(A, v, m_gui.cubePosition);
+    plane.Translate(m_gui.cubePosition);
 
-    //glm::vec3 t = (m_gui.cubePosition - A) / v;
-
-    //switch (m_gui.cubeEditAxis)
-    //{
-    //case UserInterface::CubeEditAxis::XY:
-    //    m_gui.cubePosition.x = A.x + v.x * t.z;
-    //    m_gui.cubePosition.y = A.y + v.y * t.z;
-    //    break;
-    //case UserInterface::CubeEditAxis::XZ:
-    //    m_gui.cubePosition.x = A.x + v.x * t.y;
-    //    m_gui.cubePosition.z = A.z + v.z * t.y;
-    //    break;
-    //case UserInterface::CubeEditAxis::YZ:
-    //    m_gui.cubePosition.z = A.z + v.z * t.x;
-    //    m_gui.cubePosition.y = A.y + v.y * t.x;
-    //    break;
-    //}
+    m_gui.cubePosition = Common::Math::GetIntersection(plane, ray);
 }
 
 void Editor::AddEditCube(const glm::vec3 & color)
@@ -187,11 +161,13 @@ void Editor::AddEditCube(const glm::vec3 & color)
     material.shininess = 10.0f;
 
     glm::mat4 model(1.0f);
-    
+ 
     model = glm::translate(model, m_gui.cubePosition);
+
     model = glm::rotate(model, m_gui.cubeRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, m_gui.cubeRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::rotate(model, m_gui.cubeRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
     model = glm::scale(model, m_gui.cubeScale);
 
     m_scene.AddCube(model, material);

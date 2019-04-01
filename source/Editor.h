@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "MouseDispatcher.h"
 #include "Camera.h"
+#include "Common.h"
 
 class Editor : public MouseReceiver
 {
@@ -22,9 +23,7 @@ private:
     void RotateCube(const glm::vec2 & position);
     void ScaleCube(const glm::vec2 & position);
 
-    // Line is defined by 'A' (point), 't' (vector)
-    // Plane is defined by 'point' and is parallel to constant plane (m_gui.cubeEditAxis)
-    glm::vec3 GetPointOfLineAndPlane(const glm::vec3 & A, glm::vec3 & v, const glm::vec3 & point);
+    Common::Math::Plane GetEditPlane();
 
     Scene & m_scene;
     UserInterface & m_gui;
