@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.6.0 FATAL_ERROR)
 project(simpleSDL C CXX)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 #
 # Set some helper variables.
 #
@@ -34,9 +36,22 @@ set(SDL2_LIBRARY SDL2)
 #
 # bullet
 #
-#set(bulletDir "${projectDir}/contrib/bullet3")
-#add_subdirectory(${bulletDir} EXCLUDE_FROM_ALL)
-#set(BULLET_LIBRARY bullet)
+OPTION(BUILD_UNIT_TESTS "Build Unit Tests"	ON)
+OPTION(BUILD_BULLET2_DEMOS "Set when you want to build the Bullet 2 demos" ON)
+OPTION(BUILD_OPENGL3_DEMOS "Set when you want to build Bullet 3 OpenGL3+ demos" ON)
+OPTION(BUILD_EXTRAS "Set when you want to build the extras" ON)
+
+set(BUILD_UNIT_TESTS OFF)
+set(BUILD_BULLET2_DEMOS OFF)
+set(BUILD_OPENGL3_DEMOS OFF)
+set(BUILD_EXTRAS OFF)
+set(BUILD_SHARED_LIBS OFF)
+
+set(bulletDir "${projectDir}/contrib/bullet3")
+add_subdirectory(${bulletDir})
+set(BULLET_DYNAMICS_LIBRARY BulletDynamics)
+set(BULLET_COLLISION_LIBRARY BulletCollision)
+set(BULLET_LINEAR_MATH_LIBRARY LinearMath)
 
 #
 # Sources (relative to the project root dir).
@@ -136,7 +151,9 @@ endif()
 target_link_libraries(${targetName}
   ${SDL2MAIN_LIBRARY}
   ${SDL2_LIBRARY}
-  #${BULLET_LIBRARY}
+  ${BULLET_DYNAMICS_LIBRARY}
+  ${BULLET_COLLISION_LIBRARY}
+  ${BULLET_LINEAR_MATH_LIBRARY}
   ${OPENGL_LIBRARY}
 )
 
@@ -144,7 +161,21 @@ target_include_directories(${targetName}
   PUBLIC ${projectIncludeDirs}
 )
 
+set_target_properties(${SDL2MAIN_LIBRARY} PROPERTIES FOLDER "SDL")
+set_target_properties(${SDL2_LIBRARY} PROPERTIES FOLDER "SDL")
+
+set_target_properties(BulletDynamics PROPERTIES FOLDER "Bullet")
+set_target_properties(BulletCollision PROPERTIES FOLDER "Bullet")
+set_target_properties(BulletSoftBody PROPERTIES FOLDER "Bullet")
+set_target_properties(Bullet2FileLoader PROPERTIES FOLDER "Bullet")
+set_target_properties(Bullet3Collision PROPERTIES FOLDER "Bullet")
+set_target_properties(Bullet3Common PROPERTIES FOLDER "Bullet")
+set_target_properties(Bullet3Dynamics PROPERTIES FOLDER "Bullet")
+set_target_properties(Bullet3Geometry PROPERTIES FOLDER "Bullet")
+set_target_properties(Bullet3OpenCL_clew PROPERTIES FOLDER "Bullet")
+set_target_properties(BulletInverseDynamics PROPERTIES FOLDER "Bullet")
+set_target_properties(LinearMath PROPERTIES FOLDER "Bullet")
+
 message("CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}")
 
 set_target_properties(SimpleExample PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/data")
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)

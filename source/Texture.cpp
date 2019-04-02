@@ -338,7 +338,7 @@ namespace Texture
     GLint GetCorrectWrapMode(GLint desired, int32_t size)
     {
 #ifdef EMSCRIPTEN
-        if (!Common::IsPowerOfTwo(size))
+        if (!Common::Math::IsPowerOfTwo(size))
             return GL_CLAMP_TO_EDGE;
 #endif
         return desired;
