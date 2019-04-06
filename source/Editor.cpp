@@ -160,17 +160,7 @@ void Editor::AddEditCube(const glm::vec3 & color)
     material.ambient = material.diffuse = material.specular = color;
     material.shininess = 10.0f;
 
-    glm::mat4 model(1.0f);
- 
-    model = glm::translate(model, m_gui.cubePosition);
-
-    model = glm::rotate(model, m_gui.cubeRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, m_gui.cubeRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, m_gui.cubeRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
-    model = glm::scale(model, m_gui.cubeScale);
-
-    m_scene.AddCube(model, material);
+    m_scene.AddCube(m_gui.cubePosition, m_gui.cubeRotation, m_gui.cubeScale, material, color == EDIT_COLOR);
 }
 
 void Editor::ResetEditCube()

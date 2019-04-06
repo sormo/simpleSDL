@@ -40,12 +40,14 @@ OPTION(BUILD_UNIT_TESTS "Build Unit Tests"	ON)
 OPTION(BUILD_BULLET2_DEMOS "Set when you want to build the Bullet 2 demos" ON)
 OPTION(BUILD_OPENGL3_DEMOS "Set when you want to build Bullet 3 OpenGL3+ demos" ON)
 OPTION(BUILD_EXTRAS "Set when you want to build the extras" ON)
+OPTION(USE_MSVC_RUNTIME_LIBRARY_DLL "Use MSVC Runtime Library DLL (/MD or /MDd)" OFF)
 
 set(BUILD_UNIT_TESTS OFF)
 set(BUILD_BULLET2_DEMOS OFF)
 set(BUILD_OPENGL3_DEMOS OFF)
 set(BUILD_EXTRAS OFF)
 set(BUILD_SHARED_LIBS OFF)
+set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
 
 set(bulletDir "${projectDir}/contrib/bullet3")
 add_subdirectory(${bulletDir})
@@ -91,6 +93,7 @@ set(projectIncludeDirs ${projectIncludeDirs}
   "${sdlDir}/include"
   "${flatbuffersDir}/include"
   "${modelConvertDir}/include"
+  "${bulletDir}/src"
   "${includeForGlm}"
 )
 

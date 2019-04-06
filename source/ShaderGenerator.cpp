@@ -504,7 +504,7 @@ void AppendFunctionColorTextureStack(std::string name, const std::string & base,
     result += "}\n";
 }
 
-std::string Convert(const glm::vec3 & c)
+static std::string Convert(const glm::vec3 & c)
 {
     return "vec3(" + std::to_string(c.r) + ", " + std::to_string(c.g) + ", " + std::to_string(c.b) + ")";
 }

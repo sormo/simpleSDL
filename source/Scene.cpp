@@ -1,4 +1,7 @@
 #include "Scene.h"
+#include "glm/gtc/matrix_transform.hpp"
+
+static const glm::vec3 WORLD_GRAVITY(0.0f, -10.0f, 0.0f);
 
 static const float VERTICES_CUBE[] =
 {
@@ -115,6 +118,7 @@ void Shape::Cube::Draw()
 }
 
 Scene::Scene(const Light::Config & light)
+    : m_world(WORLD_GRAVITY)
 {
     ModelShader::Config config;
 
@@ -126,9 +130,42 @@ Scene::Scene(const Light::Config & light)
     m_cube = std::make_unique<Shape::Cube>(*m_shader.get());
 }
 
-void Scene::AddCube(const glm::mat4 & model, const Material::Data & material)
+void Scene::AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic)
 {
-    m_cubes.push_back({ model, material });
+    btRigidBody * body = m_world.AddBox(position, rotation, scale, isStatic);
+
+    m_cubes.push_back({ glm::mat4(1.0f), scale, material, body });
+    RefreshCubeModel(m_cubes.back());
+}
+
+void Scene::PopCube()
+{
+    CubeData & cube = m_cubes.back();
+    m_world.RemoveBody(cube.body);
+
+    m_cubes.pop_back();
+}
+
+void Scene::RefreshCubeModels()
+{
+    for (auto & cube : m_cubes)
+    {
+        // TODO some optimization, no need to get transform for sleeping bodies
+        RefreshCubeModel(cube);
+    }
+}
+
+void Scene::RefreshCubeModel(CubeData & cube)
+{
+    cube.body->getWorldTransform().getOpenGLMatrix(&cube.model[0][0]);
+    cube.model = glm::scale(cube.model, cube.scale);
+}
+
+void Scene::Step()
+{
+    m_world.Step();
+
+    RefreshCubeModels();
 }
 
 void Scene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light::Data & data)
@@ -139,9 +176,9 @@ void Scene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm
     {
         m_cube->Bind();
 
-        for (const auto &[model, _] : m_cubes)
+        for (const auto & cube : m_cubes)
         {
-            m_shader->BindTransformShadow(model);
+            m_shader->BindTransformShadow(cube.model);
             m_cube->Draw();
         }
 
@@ -153,13 +190,18 @@ void Scene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm
 
     m_cube->Bind();
 
-    for (const auto & [model, material] : m_cubes)
+    for (const auto & cube : m_cubes)
     {
-        m_shader->BindMaterial(material);
-        m_shader->BindTransform(model, view, projection);
+        m_shader->BindMaterial(cube.material);
+        m_shader->BindTransform(cube.model, view, projection);
 
         m_cube->Draw();
     }
 
     m_shader->EndRender();
+}
+
+void Scene::DrawDebug(const glm::mat4 & view, const glm::mat4 & projection)
+{
+    m_world.DebugDraw(view, projection);
 }

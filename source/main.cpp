@@ -41,12 +41,11 @@ void guiDeinit()
 
 void guiRender()
 {
-    static bool showDemoWindow = true;
-
     ImGui_ImplSdlGLES2_NewFrame(g_window);
 
-    if (showDemoWindow)
-        ImGui::ShowDemoWindow(&showDemoWindow);
+    //static bool showDemoWindow = true;
+    //if (showDemoWindow)
+    //    ImGui::ShowDemoWindow(&showDemoWindow);
 
     Application::Gui();
 

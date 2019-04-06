@@ -89,6 +89,8 @@ namespace Common
         };
 
         glm::vec3 GetIntersection(const Plane & plane, const Line & line);
+
+        glm::vec3 GetRotation(float radians, const glm::vec3 & axis);
     }
 
     // get ray from camera going through position in screen coordinates

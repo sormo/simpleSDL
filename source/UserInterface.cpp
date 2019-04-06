@@ -2,15 +2,6 @@
 #include "Common.h"
 #include <SDL.h>
 
-static const ImVec2 WINDOW_SIZE_DEFAULT(160.0f, 80.0);
-static const ImVec2 WINDOW_SIZE_CUBE_EDIT(160.0f, 200.0f);
-
-UserInterface::UserInterface()
-    : windowSize(WINDOW_SIZE_DEFAULT)
-{
-
-}
-
 bool ToggleButton(const char * name, bool * toggled)
 {
     bool result;
@@ -42,7 +33,7 @@ void UserInterface::Generate()
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
 
     ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
+    ImGui::SetNextWindowSize({0.0f, 0.0f}, ImGuiCond_Always);
 
     ImGui::Begin("test", nullptr, windowFlags);
 
@@ -52,13 +43,12 @@ void UserInterface::Generate()
     SDL_GetMouseState(&mouseX, &mouseY);
     ImGui::Text("Screen: %03d:%03d", mouseX, mouseY);
 
+    ImGui::Checkbox("Wireframe", &wireframe);
+    ImGui::Checkbox("Bullet debug", &bulletDebug);
+
     if (ToggleButton("Cube", &cubeEdit))
     {
         cubeEditClicked();
-        if (cubeEdit)
-            windowSize = WINDOW_SIZE_CUBE_EDIT;
-        else
-            windowSize = WINDOW_SIZE_DEFAULT;
     }
 
     if (cubeEdit)

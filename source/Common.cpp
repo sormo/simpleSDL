@@ -5,8 +5,11 @@
 #include <chrono>
 #include <inttypes.h>
 #include <cmath>
-#include "glm/gtc/matrix_transform.hpp"
 #include "Camera.h"
+#include "LinearMath/btQuaternion.h"
+#include "LinearMath/btMatrix3x3.h"
+
+#include "glm/gtc/matrix_transform.hpp"
 
 extern SDL_Window* g_window;
 
@@ -168,9 +171,24 @@ namespace Common
         void Plane::Rotate(const glm::vec3 & radians)
         {
             glm::mat4 model(1.0f);
-            model = glm::rotate(model, radians.x, glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::rotate(model, radians.y, glm::vec3(0.0f, 1.0f, 0.0f));
-            model = glm::rotate(model, radians.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+            btQuaternion rotationQuaternion;
+            rotationQuaternion.setEulerZYX(radians.x, radians.y, radians.z);
+
+            btMatrix3x3 matrix;
+            matrix.setRotation(rotationQuaternion);
+
+            // TODO optimize
+
+            model[0][0] = matrix[0][0];
+            model[0][1] = matrix[0][1];
+            model[0][2] = matrix[0][2];
+            model[1][0] = matrix[1][0];
+            model[1][1] = matrix[1][1];
+            model[1][2] = matrix[1][2];
+            model[2][0] = matrix[2][0];
+            model[2][1] = matrix[2][1];
+            model[2][2] = matrix[2][2];
 
             normal = glm::vec3(model * glm::vec4(normal, 0.0f));
         }
@@ -188,6 +206,18 @@ namespace Common
             glm::vec3 result;
 
             result = a + v * t;
+
+            return result;
+        }
+
+        glm::vec3 GetRotation(float radians, const glm::vec3 & axis)
+        {
+            btQuaternion rotationQuaternion;
+
+            rotationQuaternion.setRotation({ axis.x, axis.y, axis.z }, radians);
+
+            glm::vec3 result;
+            rotationQuaternion.getEulerZYX(result.x, result.y, result.z);
 
             return result;
         }

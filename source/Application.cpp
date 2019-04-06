@@ -57,26 +57,10 @@ namespace Application
         material.shininess = 15.0f;
         material.shininessStrength = 1.0f;
 
-        glm::mat4 model(1.0f);
-        model = glm::scale(model, glm::vec3(20.0f, 0.5f, 20.0f));
-        model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f));
-        g_scene->AddCube(model, material);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
-        model = glm::scale(model, glm::vec3(0.5f));
-        g_scene->AddCube(model, material);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
-        model = glm::scale(model, glm::vec3(0.5f));
-        g_scene->AddCube(model, material);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
-        model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-        model = glm::scale(model, glm::vec3(0.25));
-        g_scene->AddCube(model, material);
+        g_scene->AddCube(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(20.0f, 0.5f, 20.0f), material, true);
+        g_scene->AddCube(glm::vec3(0.0f, 1.5f, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f), material, true);
+        g_scene->AddCube(glm::vec3(2.0f, 0.0f, 1.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f), material, true);
+        g_scene->AddCube(glm::vec3(-1.0f, 0.0f, 2.0), Common::Math::GetRotation(glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))), glm::vec3(0.25), material, true);
     }
 
     void DrawScene()
@@ -111,7 +95,12 @@ namespace Application
         pointLight.quadratic = 0.032f;
         light.lightPoint.push_back(pointLight);
 
+        g_scene->Step();
+
         g_scene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), light);
+
+        if (g_userInterface.bulletDebug)
+            g_scene->DrawDebug(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
     }
 
     void BindModel()
@@ -165,6 +154,13 @@ namespace Application
         glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifndef EMSCRIPTEN
+        if (g_userInterface.wireframe)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
+
         // enable blending
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
@@ -192,6 +188,10 @@ namespace Application
         //glDisable(GL_BLEND);
 
         //g_postprocess->EndRender();
+
+#ifndef EMSCRIPTEN
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
     }
 
     void RecomputeMVPMatrix()

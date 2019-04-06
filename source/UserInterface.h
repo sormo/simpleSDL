@@ -5,7 +5,8 @@
 
 struct UserInterface
 {
-    ImVec2 windowSize;
+    bool wireframe = false;
+    bool bulletDebug = false;
 
     bool cubeEdit = false;
     std::function<void()> cubeEditClicked;
@@ -17,5 +18,4 @@ struct UserInterface
     enum class CubeEditAxis { XY, XZ, YZ } cubeEditAxis;
 
     void Generate();
-    UserInterface();
 };
