@@ -46,20 +46,29 @@ void UserInterface::Generate()
     ImGui::Checkbox("Wireframe", &wireframe);
     ImGui::Checkbox("Bullet debug", &bulletDebug);
 
+    static bool cubeEdit = false, circleEdit = false;
     if (ToggleButton("Cube", &cubeEdit))
     {
-        cubeEditClicked();
+        circleEdit = false;
+        shapeEditType = cubeEdit ? ShapeEditType::Cube : ShapeEditType::None;
+        shapeEditClicked();
+    }
+    ImGui::SameLine();
+    if (ToggleButton("Circle", &circleEdit))
+    {
+        cubeEdit = false;
+        shapeEditType = circleEdit ? ShapeEditType::Circle : ShapeEditType::None;
+        shapeEditClicked();
     }
 
-    if (cubeEdit)
+    if (cubeEdit || circleEdit)
     {
-        ImGui::SameLine();
         if (ImGui::Button("Accept"))
         {
-            cubeAcceptClicked();
+            shapeAcceptClicked();
         }
 
-        ImGui::Text("%06.2f %06.2f %06.2f", cubePosition.x, cubePosition.y, cubePosition.z);
+        ImGui::Text("%06.2f %06.2f %06.2f", shapePosition.x, shapePosition.y, shapePosition.z);
         {
             static int32_t e = 0;
             ImGui::RadioButton("translate", &e, 0);
@@ -68,14 +77,14 @@ void UserInterface::Generate()
             ImGui::RadioButton("camera", &e, 3);
             switch (e)
             {
-            case 0: cubeEditMode = CubeEditMode::Translate; break;
-            case 1: cubeEditMode = CubeEditMode::Rotate; break;
-            case 2: cubeEditMode = CubeEditMode::Scale; break;
-            case 3: cubeEditMode = CubeEditMode::Camera; break;
+            case 0: shapeEditMode = ShapeEditMode::Translate; break;
+            case 1: shapeEditMode = ShapeEditMode::Rotate; break;
+            case 2: shapeEditMode = ShapeEditMode::Scale; break;
+            case 3: shapeEditMode = ShapeEditMode::Camera; break;
             }
         }
 
-        if (cubeEditMode == CubeEditMode::Translate || cubeEditMode == CubeEditMode::Scale)
+        if (shapeEditMode == ShapeEditMode::Translate || shapeEditMode == ShapeEditMode::Scale)
         {
             static int a = 0;
             ImGui::RadioButton("XY", &a, 0); ImGui::SameLine();
@@ -83,9 +92,9 @@ void UserInterface::Generate()
             ImGui::RadioButton("YZ", &a, 2);
             switch (a)
             {
-            case 0: cubeEditAxis = CubeEditAxis::XY; break;
-            case 1: cubeEditAxis = CubeEditAxis::XZ; break;
-            case 2: cubeEditAxis = CubeEditAxis::YZ; break;
+            case 0: shapeEditAxis = ShapeEditAxis::XY; break;
+            case 1: shapeEditAxis = ShapeEditAxis::XZ; break;
+            case 2: shapeEditAxis = ShapeEditAxis::YZ; break;
             }
         }
     }

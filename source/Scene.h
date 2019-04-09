@@ -1,32 +1,25 @@
 #pragma once
-#include "ModelShader.h"
 #include <memory>
-#include <vector>
+#include <map>
 #include "Bullet.h"
+#include "Shapes.h"
+#include "ModelShader.h"
 
-namespace Shape
-{
-    struct Cube
-    {
-        GLuint vao;
-        GLuint vbo;
-        ModelShader & shader;
-
-        Cube(ModelShader & ashader);
-        ~Cube();
-
-        void Bind();
-        void Draw();
-    };
-}
+struct SceneShapeHandle;
 
 class Scene
 {
+    friend struct SceneShapeHandle;
 public:
     Scene(const Light::Config & light);
+    // desctructor must be implemented  where SceneShapeHandle is defined
+    ~Scene();
 
-    void AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic);
-    void PopCube();
+    using Shape = SceneShapeHandle * ;
+
+    Shape AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic);
+    Shape AddSphere(const glm::vec3 & position, float radius, const Material::Data & material, bool isStatic);
+    void RemoveShape(Shape shape);
 
     void Step();
 
@@ -36,20 +29,25 @@ public:
 private:
     std::unique_ptr<ModelShader> m_shader;
 
-    struct CubeData
+    struct ShapeData
     {
         glm::mat4 model;
         glm::vec3 scale;
         Material::Data material;
         btRigidBody * body;
+        std::unique_ptr<SceneShapeHandle> handle;
     };
 
-    std::vector<CubeData> m_cubes;
+    std::multimap<Shapes::Shape *, ShapeData> m_shapes;
 
-    void RefreshCubeModels();
-    void RefreshCubeModel(CubeData & cube);
+    enum class DrawType{ Shadow, Material };
+    void DrawShapes(DrawType drawType, const glm::mat4 & view, const glm::mat4 & projection);
 
-    std::unique_ptr<Shape::Cube> m_cube;
+    void RefreshShapeModels();
+    void RefreshShapeModel(ShapeData & cube);
+
+    std::unique_ptr<Shapes::Cube> m_cube;
+    std::unique_ptr<Shapes::Sphere> m_sphere;
 
     Bullet m_world;
 };

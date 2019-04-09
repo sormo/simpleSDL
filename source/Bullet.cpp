@@ -90,6 +90,35 @@ btRigidBody * Bullet::AddBox(const glm::vec3 & position, const glm::vec3 & rotat
     return body;
 }
 
+btRigidBody * Bullet::AddSphere(const glm::vec3 & position, float radius, bool isStatic)
+{
+    btSphereShape* shape = new btSphereShape(radius);
+    m_collisionShapes.push_back(shape);
+
+    btTransform groundTransform;
+    groundTransform.setIdentity();
+    groundTransform.setOrigin(Convert(position));
+
+    btScalar mass = isStatic ? 0.0f : 1.0f;
+
+    //rigidbody is dynamic if and only if mass is non zero, otherwise static
+    bool isDynamic = (mass != 0.f);
+
+    btVector3 localInertia(0, 0, 0);
+    if (isDynamic)
+        shape->calculateLocalInertia(mass, localInertia);
+
+    //using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
+    btDefaultMotionState * myMotionState = new btDefaultMotionState(groundTransform);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, localInertia);
+    btRigidBody* body = new btRigidBody(rbInfo);
+
+    //add the body to the dynamics world
+    m_world->addRigidBody(body);
+
+    return body;
+}
+
 void Bullet::RemoveBody(btRigidBody * body)
 {
     m_world->removeRigidBody(body);

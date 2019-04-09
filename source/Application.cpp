@@ -227,7 +227,7 @@ namespace Application
 
         g_camera.Init();
 
-        g_lightPositionWorldSpace = glm::vec3(3.0f, 2.5f, 0.0f);
+        g_lightPositionWorldSpace = glm::vec3(30.0f, 25.0f, 0.0f);
 
         //if (!Text2DInitFont())
         //{

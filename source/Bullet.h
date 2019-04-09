@@ -14,6 +14,7 @@ public:
     // rotation is rotation around x, y, z axes
     // TODO maybe hide bullet completly ???
     btRigidBody * AddBox(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & halfExtents, bool isStatic);
+    btRigidBody * AddSphere(const glm::vec3 & position, float radius, bool isStatic);
     void RemoveBody(btRigidBody * body);
 
     void Step();

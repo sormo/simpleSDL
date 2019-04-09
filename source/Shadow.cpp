@@ -42,7 +42,7 @@ ShadowDirectionalLight::ShadowDirectionalLight()
     : m_shaderDepth(DIRECTIONAL_VERTEX_SHADER, DIRECTIONAL_FRAGMENT_SHADER),
       m_framebufferDepth(SHADOW_WIDTH, SHADOW_HEIGHT),
       m_debug(nullptr, DIRECTIONAL_DEBUG_FRAGMENT_SHADER),
-      m_planes(0.1f, 15.0f),
+      m_planes(1.0f, 50.0f),
       m_lightProjection(glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, m_planes.x, m_planes.y))
 {
 

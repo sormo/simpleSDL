@@ -8,14 +8,16 @@ struct UserInterface
     bool wireframe = false;
     bool bulletDebug = false;
 
-    bool cubeEdit = false;
-    std::function<void()> cubeEditClicked;
-    std::function<void()> cubeAcceptClicked;
-    glm::vec3 cubePosition;
-    glm::vec3 cubeRotation;
-    glm::vec3 cubeScale;
-    enum class CubeEditMode { Translate, Rotate, Scale, Camera } cubeEditMode;
-    enum class CubeEditAxis { XY, XZ, YZ } cubeEditAxis;
+    enum class ShapeEditType { None, Cube, Circle} shapeEditType;
+    enum class ShapeEditMode { Translate, Rotate, Scale, Camera } shapeEditMode;
+    enum class ShapeEditAxis { XY, XZ, YZ } shapeEditAxis;
+
+    std::function<void()> shapeEditClicked;
+    std::function<void()> shapeAcceptClicked;
+
+    glm::vec3 shapePosition;
+    glm::vec3 shapeRotation;
+    glm::vec3 shapeScale;
 
     void Generate();
 };

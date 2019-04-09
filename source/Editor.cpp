@@ -7,25 +7,28 @@ static const glm::vec3 ADD_COLOR(1.0f, 1.0f, 1.0f);
 Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
     : m_scene(scene), m_gui(userInterface), m_camera(camera)
 {
-    m_gui.cubeEditClicked = [this]()
+    m_gui.shapeEditClicked = [this]()
     {
-        m_gui.cubePosition = Common::GetPointWorldSpace(glm::vec2(Common::GetWindowWidth() / 2.0f, Common::GetWindowHeight() / 2.0f), 10.0f, m_camera);
-        m_gui.cubeScale = glm::vec3(1.0f, 1.0f, 1.0f);
-        m_gui.cubeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_gui.shapePosition = Common::GetPointWorldSpace(glm::vec2(Common::GetWindowWidth() / 2.0f, Common::GetWindowHeight() / 2.0f), 10.0f, m_camera);
+        m_gui.shapeScale = glm::vec3(1.0f, 1.0f, 1.0f);
+        m_gui.shapeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 
-        if (m_gui.cubeEdit)
-            AddEditCube(EDIT_COLOR);
-        else
-            m_scene.PopCube();
+        if (m_editShape)
+            m_scene.RemoveShape(m_editShape);
+        m_editShape = nullptr;
+
+        if (m_gui.shapeEditType != UserInterface::ShapeEditType::None)
+            AddEditShape(EDIT_COLOR);
     };
 
-    m_gui.cubeAcceptClicked = [this]()
+    m_gui.shapeAcceptClicked = [this]()
     {
-        m_scene.PopCube();
+        m_scene.RemoveShape(m_editShape);
 
-        AddEditCube(ADD_COLOR);
+        AddEditShape(ADD_COLOR);
+        m_editShape = nullptr;
 
-        m_gui.cubeEditClicked();
+        m_gui.shapeEditClicked();
     };
 }
 
@@ -34,13 +37,13 @@ bool Editor::Press(const glm::vec2 & position, int64_t id)
     m_isPressed = true;
     m_cursorPosition = position;
 
-    if (!m_gui.cubeEdit || m_gui.cubeEditMode == UserInterface::CubeEditMode::Camera)
+    if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || m_gui.shapeEditMode == UserInterface::ShapeEditMode::Camera)
         return false;
 
-    if (m_gui.cubeEditMode == UserInterface::CubeEditMode::Translate)
+    if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Translate)
     {
-        TranslateCube(position);
-        ResetEditCube();
+        TranslateShape(position);
+        ResetEditShape();
     }
 
     return true;
@@ -55,17 +58,17 @@ bool Editor::Release(const glm::vec2 &  position, int64_t id)
 
 bool Editor::Move(const glm::vec2 & position, int64_t id)
 {
-    if (!m_gui.cubeEdit || !m_isPressed || m_gui.cubeEditMode == UserInterface::CubeEditMode::Camera)
+    if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || !m_isPressed || m_gui.shapeEditMode == UserInterface::ShapeEditMode::Camera)
         return false;
 
-    if (m_gui.cubeEditMode == UserInterface::CubeEditMode::Translate)
-        TranslateCube(position);
-    else if (m_gui.cubeEditMode == UserInterface::CubeEditMode::Rotate)
-        RotateCube(position);
-    else if (m_gui.cubeEditMode == UserInterface::CubeEditMode::Scale)
-        ScaleCube(position);
+    if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Translate)
+        TranslateShape(position);
+    else if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Rotate)
+        RotateShape(position);
+    else if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Scale)
+        ScaleShape(position);
 
-    ResetEditCube();
+    ResetEditShape();
 
     return true;
 }
@@ -74,17 +77,17 @@ Common::Math::Plane Editor::GetEditPlane()
 {
     glm::vec3 a, b;
 
-    switch (m_gui.cubeEditAxis)
+    switch (m_gui.shapeEditAxis)
     {
-    case UserInterface::CubeEditAxis::XY:
+    case UserInterface::ShapeEditAxis::XY:
         a = glm::vec3(1.0f, 0.0f, 0.0f);
         b = glm::vec3(0.0f, 1.0f, 0.0f);
         break;
-    case UserInterface::CubeEditAxis::XZ:
+    case UserInterface::ShapeEditAxis::XZ:
         a = glm::vec3(1.0f, 0.0f, 0.0f);
         b = glm::vec3(0.0f, 0.0f, 1.0f);
         break;
-    case UserInterface::CubeEditAxis::YZ:
+    case UserInterface::ShapeEditAxis::YZ:
         a = glm::vec3(0.0f, 1.0f, 0.0f);
         b = glm::vec3(0.0f, 0.0f, 1.0f);
         break;
@@ -93,12 +96,12 @@ Common::Math::Plane Editor::GetEditPlane()
     return Common::Math::Plane::CreateFromPoints({0.0f, 0.0f, 0.0f}, a, b);
 }
 
-void Editor::ScaleCube(const glm::vec2 & position)
+void Editor::ScaleShape(const glm::vec2 & position)
 {
     Common::Math::Plane plane = GetEditPlane();
 
-    plane.Translate(m_gui.cubePosition);
-    plane.Rotate(m_gui.cubeRotation);
+    plane.Translate(m_gui.shapePosition);
+    plane.Rotate(m_gui.shapeRotation);
 
     glm::vec3 p1;
     {
@@ -113,26 +116,26 @@ void Editor::ScaleCube(const glm::vec2 & position)
 
     glm::vec3 scaleVector(p1 - p2);
 
-    m_gui.cubeScale += scaleVector;
+    m_gui.shapeScale += scaleVector;
     
     static const float MINIMUM_SCALE = 0.1f;
-    m_gui.cubeScale.x = m_gui.cubeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.cubeScale.x;
-    m_gui.cubeScale.y = m_gui.cubeScale.y < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.cubeScale.y;
-    m_gui.cubeScale.z = m_gui.cubeScale.z < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.cubeScale.z;
+    m_gui.shapeScale.x = m_gui.shapeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.x;
+    m_gui.shapeScale.y = m_gui.shapeScale.y < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.y;
+    m_gui.shapeScale.z = m_gui.shapeScale.z < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.z;
 
     m_cursorPosition = position;
 }
 
-void Editor::RotateCube(const glm::vec2 & position)
+void Editor::RotateShape(const glm::vec2 & position)
 {
     glm::vec2 delta = position - m_cursorPosition;
     m_cursorPosition = position;
 
-    m_gui.cubeRotation.y += glm::radians(delta.x);
-    m_gui.cubeRotation.x += glm::radians(delta.y);
+    m_gui.shapeRotation.y += glm::radians(delta.x);
+    m_gui.shapeRotation.x += glm::radians(delta.y);
 }
 
-void Editor::TranslateCube(const glm::vec2 & position)
+void Editor::TranslateShape(const glm::vec2 & position)
 {
     // ***********************************************************************
     // // get point on line A and vector of line v
@@ -149,23 +152,29 @@ void Editor::TranslateCube(const glm::vec2 & position)
     Common::Math::Line ray = Common::GetRay(position, m_camera);
     Common::Math::Plane plane = GetEditPlane();
 
-    plane.Translate(m_gui.cubePosition);
+    plane.Translate(m_gui.shapePosition);
 
-    m_gui.cubePosition = Common::Math::GetIntersection(plane, ray);
+    m_gui.shapePosition = Common::Math::GetIntersection(plane, ray);
 }
 
-void Editor::AddEditCube(const glm::vec3 & color)
+void Editor::AddEditShape(const glm::vec3 & color)
 {
     Material::Data material;
     material.ambient = material.diffuse = material.specular = color;
     material.shininess = 10.0f;
 
-    m_scene.AddCube(m_gui.cubePosition, m_gui.cubeRotation, m_gui.cubeScale, material, color == EDIT_COLOR);
+    bool isEdit = color == EDIT_COLOR;
+    bool isStatic = isEdit;
+
+    if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
+        m_editShape = m_scene.AddCube(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale, material, isStatic);
+    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Circle)
+        m_editShape = m_scene.AddSphere(m_gui.shapePosition, m_gui.shapeScale.x, material, isStatic);
 }
 
-void Editor::ResetEditCube()
+void Editor::ResetEditShape()
 {
-    m_scene.PopCube();
+    m_scene.RemoveShape(m_editShape);
 
-    AddEditCube(EDIT_COLOR);
+    AddEditShape(EDIT_COLOR);
 }
