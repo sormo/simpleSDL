@@ -30,4 +30,14 @@ namespace Shapes
     {
         Sphere(ModelShader & shader);
     };
+
+    struct Cylinder : public Shape
+    {
+        Cylinder(ModelShader & shader);
+    };
+
+    struct Cone : public Shape
+    {
+        Cone(ModelShader & shader);
+    };
 }

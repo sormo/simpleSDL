@@ -59,8 +59,31 @@ Bullet::~Bullet()
 
 btRigidBody * Bullet::AddBox(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & halfExtents, bool isStatic)
 {
-    btCollisionShape* groundShape = new btBoxShape(Convert(halfExtents));
-    m_collisionShapes.push_back(groundShape);
+    btCollisionShape* shape = new btBoxShape(Convert(halfExtents));
+    return AddCommon(position, rotation, isStatic, shape);
+}
+
+btRigidBody * Bullet::AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, bool isStatic)
+{
+    btSphereShape* shape = new btSphereShape(radius);
+    return AddCommon(position, rotation, isStatic, shape);
+}
+
+btRigidBody * Bullet::AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, bool isStatic)
+{
+    btCylinderShape * shape = new btCylinderShape({ radius, height / 2.0f, radius });
+    return AddCommon(position, rotation, isStatic, shape);
+}
+
+btRigidBody * Bullet::AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, bool isStatic)
+{
+    btConeShape * shape = new btConeShape(radius, height);
+    return AddCommon(position, rotation, isStatic, shape);
+}
+
+btRigidBody * Bullet::AddCommon(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic, btCollisionShape * shape)
+{
+    m_collisionShapes.push_back(shape);
 
     btTransform groundTransform;
     groundTransform.setIdentity();
@@ -69,35 +92,6 @@ btRigidBody * Bullet::AddBox(const glm::vec3 & position, const glm::vec3 & rotat
     btQuaternion rotationQuaternion;
     rotationQuaternion.setEulerZYX(rotation.x, rotation.y, rotation.z);
     groundTransform.setRotation(rotationQuaternion);
-
-    btScalar mass = isStatic ? 0.0f : 1.0f;
-
-    //rigidbody is dynamic if and only if mass is non zero, otherwise static
-    bool isDynamic = (mass != 0.f);
-
-    btVector3 localInertia(0, 0, 0);
-    if (isDynamic)
-        groundShape->calculateLocalInertia(mass, localInertia);
-
-    //using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
-    btDefaultMotionState * myMotionState = new btDefaultMotionState(groundTransform);
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
-    btRigidBody* body = new btRigidBody(rbInfo);
-
-    //add the body to the dynamics world
-    m_world->addRigidBody(body);
-
-    return body;
-}
-
-btRigidBody * Bullet::AddSphere(const glm::vec3 & position, float radius, bool isStatic)
-{
-    btSphereShape* shape = new btSphereShape(radius);
-    m_collisionShapes.push_back(shape);
-
-    btTransform groundTransform;
-    groundTransform.setIdentity();
-    groundTransform.setOrigin(Convert(position));
 
     btScalar mass = isStatic ? 0.0f : 1.0f;
 

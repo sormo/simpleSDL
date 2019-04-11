@@ -95,4 +95,14 @@ namespace Common
 
     // get ray from camera going through position in screen coordinates
     Math::Line GetRay(const glm::vec2 & position, const Camera & camera);
+
+    template<class T>
+    std::vector<T> MergeVectors(const std::vector<T> & v1, const std::vector<T> & v2)
+    {
+        std::vector<T> result;
+        result.reserve(v1.size() + v2.size());
+        result.insert(result.end(), v1.begin(), v1.end());
+        result.insert(result.end(), v2.begin(), v2.end());
+        return result;
+    }
 }

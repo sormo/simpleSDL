@@ -20,6 +20,8 @@ Scene::Scene(const Light::Config & light)
     m_shader = std::make_unique<ModelShader>(config);
     m_cube = std::make_unique<Shapes::Cube>(*m_shader.get());
     m_sphere = std::make_unique<Shapes::Sphere>(*m_shader.get());
+    m_cylinder = std::make_unique<Shapes::Cylinder>(*m_shader.get());
+    m_cone = std::make_unique<Shapes::Cone>(*m_shader.get());
 }
 
 Scene::~Scene()
@@ -29,8 +31,30 @@ Scene::~Scene()
 
 Scene::Shape Scene::AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic)
 {
-    btRigidBody * body = m_world.AddBox(position, rotation, scale, isStatic);
+    btRigidBody * body = m_world.AddBox(position, rotation, scale / 2.0f, isStatic);
+    return AddCommon(scale, body, material, m_cube.get());
+}
 
+Scene::Shape Scene::AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, const Material::Data & material, bool isStatic)
+{
+    btRigidBody * body = m_world.AddSphere(position, rotation, radius, isStatic);
+    return AddCommon(glm::vec3(radius), body, material, m_sphere.get());
+}
+
+Scene::Shape Scene::AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic)
+{
+    btRigidBody * body = m_world.AddCylinder(position, rotation, radius, height, isStatic);
+    return AddCommon(glm::vec3(radius, height, radius), body, material, m_cylinder.get());
+}
+
+Scene::Shape Scene::AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic)
+{
+    btRigidBody * body = m_world.AddCone(position, rotation, radius, height, isStatic);
+    return AddCommon(glm::vec3(radius, height, radius), body, material, m_cone.get());
+}
+
+Scene::Shape Scene::AddCommon(const glm::vec3 & scale, btRigidBody * body, const Material::Data & material, Shapes::Shape * shape)
+{
     ShapeData data;
     data.body = body;
     data.handle.reset(new SceneShapeHandle);
@@ -38,26 +62,7 @@ Scene::Shape Scene::AddCube(const glm::vec3 & position, const glm::vec3 & rotati
     data.model = glm::mat4(1.0f);
     data.scale = scale;
 
-    auto it = m_shapes.insert({ m_cube.get(), std::move(data) });
-    it->second.handle->it = it;
-
-    RefreshShapeModel(it->second);
-
-    return it->second.handle.get();
-}
-
-Scene::Shape Scene::AddSphere(const glm::vec3 & position, float radius, const Material::Data & material, bool isStatic)
-{
-    btRigidBody * body = m_world.AddSphere(position, radius, isStatic);
-
-    ShapeData data;
-    data.body = body;
-    data.handle.reset(new SceneShapeHandle);
-    data.material = material;
-    data.model = glm::mat4(1.0f);
-    data.scale = glm::vec3(radius);
-
-    auto it = m_shapes.insert({ m_sphere.get(), std::move(data) });
+    auto it = m_shapes.insert({ shape, std::move(data) });
     it->second.handle->it = it;
 
     RefreshShapeModel(it->second);

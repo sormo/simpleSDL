@@ -8,7 +8,7 @@ struct UserInterface
     bool wireframe = false;
     bool bulletDebug = false;
 
-    enum class ShapeEditType { None, Cube, Circle} shapeEditType;
+    enum class ShapeEditType { None, Cube, Circle, Cylinder, Cone } shapeEditType;
     enum class ShapeEditMode { Translate, Rotate, Scale, Camera } shapeEditMode;
     enum class ShapeEditAxis { XY, XZ, YZ } shapeEditAxis;
 

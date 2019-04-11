@@ -18,7 +18,9 @@ public:
     using Shape = SceneShapeHandle * ;
 
     Shape AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic);
-    Shape AddSphere(const glm::vec3 & position, float radius, const Material::Data & material, bool isStatic);
+    Shape AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, const Material::Data & material, bool isStatic);
+    Shape AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic);
+    Shape AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic);
     void RemoveShape(Shape shape);
 
     void Step();
@@ -46,8 +48,12 @@ private:
     void RefreshShapeModels();
     void RefreshShapeModel(ShapeData & cube);
 
+    Scene::Shape AddCommon(const glm::vec3 & scale, btRigidBody * body, const Material::Data & material, Shapes::Shape * shape);
+
     std::unique_ptr<Shapes::Cube> m_cube;
     std::unique_ptr<Shapes::Sphere> m_sphere;
+    std::unique_ptr<Shapes::Cylinder> m_cylinder;
+    std::unique_ptr<Shapes::Cone> m_cone;
 
     Bullet m_world;
 };

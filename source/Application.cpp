@@ -58,9 +58,9 @@ namespace Application
         material.shininessStrength = 1.0f;
 
         g_scene->AddCube(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(20.0f, 0.5f, 20.0f), material, true);
-        g_scene->AddCube(glm::vec3(0.0f, 1.5f, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f), material, true);
-        g_scene->AddCube(glm::vec3(2.0f, 0.0f, 1.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f), material, true);
-        g_scene->AddCube(glm::vec3(-1.0f, 0.0f, 2.0), Common::Math::GetRotation(glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))), glm::vec3(0.25), material, true);
+        //g_scene->AddCube(glm::vec3(0.0f, 1.5f, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f), material, true);
+        //g_scene->AddCube(glm::vec3(2.0f, 0.0f, 1.0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f), material, true);
+        //g_scene->AddCube(glm::vec3(-1.0f, 0.0f, 2.0), Common::Math::GetRotation(glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))), glm::vec3(0.25), material, true);
     }
 
     void DrawScene()

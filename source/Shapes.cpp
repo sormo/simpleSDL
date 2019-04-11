@@ -1,4 +1,5 @@
 #include "Shapes.h"
+#include "Common.h"
 
 namespace Shapes
 {
@@ -93,47 +94,47 @@ namespace Shapes
     static const float VERTICES_CUBE[] =
     {
         // back face
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
         // front face
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
         // left face
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
         // right face
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-         1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
         // bottom face
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
         // top face
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right
-         1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+         0.5f,  0.5f , 0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
     };
 
     // TODO
@@ -154,6 +155,8 @@ namespace Shapes
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static const float PI = 3.1415926f;
+
     struct Buffers
     {
         std::vector<glm::vec3> vertices;
@@ -161,6 +164,22 @@ namespace Shapes
         std::vector<glm::vec2> texCoords;
         std::vector<uint16_t> indices;
     };
+
+    Buffers Merge(const Buffers & buffer1, const Buffers & buffer2)
+    {
+        Buffers result;
+
+        result.vertices = Common::MergeVectors(buffer1.vertices, buffer2.vertices);
+        result.normals = Common::MergeVectors(buffer1.normals, buffer2.normals);
+        result.texCoords = Common::MergeVectors(buffer1.texCoords, buffer2.texCoords);
+
+        uint16_t indexOffset = (uint16_t)buffer1.vertices.size();
+        result.indices = buffer1.indices;
+        for (auto i : buffer2.indices)
+            result.indices.push_back(i + indexOffset);
+
+        return result;
+    }
 
     std::vector<float> GetShapeBuffer(const std::vector<glm::vec3> & vertices, const std::vector<glm::vec3> & normals, const std::vector<glm::vec2> & texCoords)
     {
@@ -193,9 +212,9 @@ namespace Shapes
 
     // modified: http://www.songho.ca/opengl/gl_sphere.html
     // sectors goes horizontaly and stacks verticaly
-    Buffers GenerateCircle(uint32_t sectorCount, uint32_t stackCount)
+    Buffers GenerateSphere(uint32_t sectorCount, uint32_t stackCount)
     {
-        static const float PI = 3.1415926f;
+        // TODO is this really radius
         static const float RADIUS = 1.0f;
 
         Buffers ret;
@@ -208,7 +227,7 @@ namespace Shapes
         float stackStep = PI / stackCount;
         float sectorAngle, stackAngle;
 
-        for (int i = 0; i <= stackCount; ++i)
+        for (uint32_t i = 0; i <= stackCount; ++i)
         {
             stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
             xy = RADIUS * cosf(stackAngle);             // r * cos(u)
@@ -216,7 +235,7 @@ namespace Shapes
 
             // add (sectorCount+1) vertices per stack
             // the first and last vertices have same position and normal, but different tex coords
-            for (int j = 0; j <= sectorCount; ++j)
+            for (uint32_t j = 0; j <= sectorCount; ++j)
             {
                 sectorAngle = j * sectorStep;           // starting from 0 to 2pi
 
@@ -243,13 +262,13 @@ namespace Shapes
         //  |  / |
         //  | /  |
         //  k2--k2+1
-        unsigned int k1, k2;
-        for (int i = 0; i < stackCount; ++i)
+        uint32_t k1, k2;
+        for (uint32_t i = 0; i < stackCount; ++i)
         {
             k1 = i * (sectorCount + 1);     // beginning of current stack
             k2 = k1 + sectorCount + 1;      // beginning of next stack
 
-            for (int j = 0; j < sectorCount; ++j, ++k1, ++k2)
+            for (uint32_t j = 0; j < sectorCount; ++j, ++k1, ++k2)
             {
                 // 2 triangles per sector excluding 1st and last stacks
                 if (i != 0)
@@ -276,9 +295,155 @@ namespace Shapes
     Sphere::Sphere(ModelShader & shader)
         : Shape(shader)
     {
-        auto circle = GenerateCircle(10, 10);
-        auto circleData = GetShapeBuffer(circle.vertices, circle.normals, circle.texCoords);
+        auto sphere = GenerateSphere(10, 10);
+        auto sphereData = GetShapeBuffer(sphere.vertices, sphere.normals, sphere.texCoords);
 
-        Init(circleData.data(), circleData.size()*sizeof(float), circle.indices.data(), circle.indices.size() * sizeof(uint16_t), circle.indices.size());
+        Init(sphereData.data(), sphereData.size()*sizeof(float), sphere.indices.data(), sphere.indices.size() * sizeof(uint16_t), sphere.indices.size());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    // create circles with offset from xz plane
+    Buffers CreateCircle(size_t count, float offset, const glm::vec3 & normal, bool reverse)
+    {
+        Buffers buffers;
+
+        float angleIncrement = 2.0f * PI / (float)count;
+        for (size_t i = 0; i < count; ++i)
+        {
+            float angle = (float)i * angleIncrement;
+            buffers.vertices.push_back({ std::cos(angle), offset, std::sin(angle) });
+            buffers.normals.push_back(normal);
+            buffers.texCoords.push_back({ 0.0f, 0.0f });
+        }
+
+        for (size_t i = 1; i < buffers.vertices.size() - 1; ++i)
+        {
+            buffers.indices.push_back(0);
+            if (reverse)
+            {
+                buffers.indices.push_back((uint16_t)i);
+                buffers.indices.push_back((uint16_t)i + 1);
+            }
+            else
+            {
+                buffers.indices.push_back((uint16_t)i + 1);
+                buffers.indices.push_back((uint16_t)i);
+            }
+        }
+
+        return buffers;
+    }
+
+    Buffers CreateCylinderWalls(size_t count, float bottom, float upper)
+    {
+        Buffers buffers;
+
+        auto GenerateCircle = [](size_t count, float offset, Buffers & buffers)
+        {
+            float angleIncrement = 2.0f * PI / (float)count;
+            for (size_t i = 0; i < count; ++i)
+            {
+                float angle = (float)i * angleIncrement;
+                float normalAngle = angle + angleIncrement / 2.0f;
+                buffers.vertices.push_back({ std::cos(angle), offset, std::sin(angle) });
+                buffers.normals.push_back({ std::cos(normalAngle), 0.0f, std::sin(normalAngle) });
+                buffers.texCoords.push_back({ 0.0f, 0.0f });
+            }
+        };
+
+        GenerateCircle(count, bottom, buffers);
+        GenerateCircle(count, upper, buffers);
+
+        for (uint16_t i = 0; i < count; ++i)
+        {
+            // wrap around
+            uint16_t next = i + 1 == count ? 0 : i + 1;
+            //   /
+            //  / |
+            // /  |
+            // ----
+            buffers.indices.push_back(i);
+            buffers.indices.push_back(next + (uint16_t)count);
+            buffers.indices.push_back(next);
+            // ----
+            // |  /
+            // | /
+            // |/ 
+            buffers.indices.push_back(i);
+            buffers.indices.push_back(i + (uint16_t)count);
+            buffers.indices.push_back(next + (uint16_t)count);
+        }
+
+        return buffers;
+    }
+
+    Cylinder::Cylinder(ModelShader & shader)
+        : Shape(shader)
+    {
+        static const size_t COUNT = 10;
+
+        auto circleBottom = CreateCircle(COUNT, -0.5f, { 0.0f, -1.0f, 0.0f }, true);
+        auto circleUp = CreateCircle(COUNT, 0.5f, { 0.0f, 1.0f, 0.0f }, false);
+        auto walls = CreateCylinderWalls(COUNT, -0.5f, 0.5f);
+        
+        auto merged = Merge(circleBottom, circleUp);
+        merged = Merge(merged, walls);
+
+        auto cylinderData = GetShapeBuffer(merged.vertices, merged.normals, merged.texCoords);
+
+        Init(cylinderData.data(), cylinderData.size() * sizeof(float), merged.indices.data(), merged.indices.size() * sizeof(uint16_t), merged.indices.size());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    Buffers CreateConeWalls(size_t count, float bottom, float upper)
+    {
+        Buffers buffers;
+
+        float angleIncrement = 2.0f * PI / (float)count;
+        // create bottom circle
+        for (size_t i = 0; i < count; ++i)
+        {
+            float angle = (float)i * angleIncrement;
+            float normalAngle = angle + angleIncrement / 2.0f;
+            buffers.vertices.push_back({ std::cos(angle), bottom, std::sin(angle) });
+            buffers.normals.push_back({ std::cos(normalAngle), 0.0f, std::sin(normalAngle) });
+            buffers.texCoords.push_back({ 0.0f, 0.0f });
+        }
+        // create the point
+        for (size_t i = 0; i < count; ++i)
+        {
+            float angle = (float)i * angleIncrement;
+            float normalAngle = angle + angleIncrement / 2.0f;
+            buffers.vertices.push_back({ 0.0f, upper, 0.0f });
+            buffers.normals.push_back({ std::cos(normalAngle), 0.0f, std::sin(normalAngle) });
+            buffers.texCoords.push_back({ 0.0f, 0.0f });
+        }
+
+        for (uint16_t i = 0; i < count; ++i)
+        {
+            // wrap around
+            uint16_t next = i + 1 == count ? 0 : i + 1;
+
+            buffers.indices.push_back(i);
+            buffers.indices.push_back(i + count);
+            buffers.indices.push_back(next);
+        }
+
+        return buffers;
+    }
+
+    Cone::Cone(ModelShader & shader)
+        : Shape(shader)
+    {
+        static const size_t COUNT = 10;
+
+        auto circleBottom = CreateCircle(COUNT, -0.5f, { 0.0f, -1.0f, 0.0f }, true);
+        auto walls = CreateConeWalls(COUNT, -0.5f, 0.5f);
+        auto merged = Merge(circleBottom, walls);
+        auto coneData = GetShapeBuffer(merged.vertices, merged.normals, merged.texCoords);
+
+        Init(coneData.data(), coneData.size() * sizeof(float), merged.indices.data(), merged.indices.size() * sizeof(uint16_t), merged.indices.size());
     }
 }

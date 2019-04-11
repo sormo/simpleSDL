@@ -169,7 +169,11 @@ void Editor::AddEditShape(const glm::vec3 & color)
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
         m_editShape = m_scene.AddCube(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale, material, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Circle)
-        m_editShape = m_scene.AddSphere(m_gui.shapePosition, m_gui.shapeScale.x, material, isStatic);
+        m_editShape = m_scene.AddSphere(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, material, isStatic);
+    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cylinder)
+        m_editShape = m_scene.AddCylinder(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y, material, isStatic);
+    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cone)
+        m_editShape = m_scene.AddCone(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y, material, isStatic);
 }
 
 void Editor::ResetEditShape()

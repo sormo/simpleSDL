@@ -46,22 +46,43 @@ void UserInterface::Generate()
     ImGui::Checkbox("Wireframe", &wireframe);
     ImGui::Checkbox("Bullet debug", &bulletDebug);
 
-    static bool cubeEdit = false, circleEdit = false;
+    bool cubeEdit = false, circleEdit = false, cylinderEdit = false, coneEdit = false;
+    switch (shapeEditType)
+    {
+    case ShapeEditType::Cube:
+        cubeEdit = true; break;
+    case ShapeEditType::Circle:
+        circleEdit = true; break;
+    case ShapeEditType::Cylinder:
+        cylinderEdit = true; break;
+    case ShapeEditType::Cone:
+        coneEdit = true; break;
+    }
+
     if (ToggleButton("Cube", &cubeEdit))
     {
-        circleEdit = false;
         shapeEditType = cubeEdit ? ShapeEditType::Cube : ShapeEditType::None;
         shapeEditClicked();
     }
     ImGui::SameLine();
     if (ToggleButton("Circle", &circleEdit))
     {
-        cubeEdit = false;
         shapeEditType = circleEdit ? ShapeEditType::Circle : ShapeEditType::None;
         shapeEditClicked();
     }
+    if (ToggleButton("Cylinder", &cylinderEdit))
+    {
+        shapeEditType = cylinderEdit ? ShapeEditType::Cylinder : ShapeEditType::None;
+        shapeEditClicked();
+    }
+    ImGui::SameLine();
+    if (ToggleButton("Cone", &coneEdit))
+    {
+        shapeEditType = coneEdit ? ShapeEditType::Cone : ShapeEditType::None;
+        shapeEditClicked();
+    }
 
-    if (cubeEdit || circleEdit)
+    if (cubeEdit || circleEdit || cylinderEdit || coneEdit)
     {
         if (ImGui::Button("Accept"))
         {
