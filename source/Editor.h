@@ -18,10 +18,13 @@ public:
 private:
     void ResetEditShape();
     void AddEditShape(const glm::vec3 & color);
+    void SetEditShape(Scene::Shape shape);
 
     void TranslateShape(const glm::vec2 & position);
     void RotateShape(const glm::vec2 & position);
     void ScaleShape(const glm::vec2 & position);
+
+    void Clicked(const glm::vec2 & position);
 
     Common::Math::Plane GetEditPlane();
 
@@ -33,4 +36,5 @@ private:
 
     bool m_isPressed = false;
     glm::vec2 m_cursorPosition;
+    glm::vec2 m_pressPosition;
 };

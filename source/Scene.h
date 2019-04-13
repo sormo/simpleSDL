@@ -5,17 +5,27 @@
 #include "Shapes.h"
 #include "ModelShader.h"
 
-struct SceneShapeHandle;
-
 class Scene
 {
-    friend struct SceneShapeHandle;
+    struct ShapeData;
 public:
     Scene(const Light::Config & light);
     // desctructor must be implemented  where SceneShapeHandle is defined
     ~Scene();
 
-    using Shape = SceneShapeHandle * ;
+    struct ShapeObject
+    {
+        friend class Scene;
+
+        glm::vec3 GetPosition();
+        glm::vec3 GetRotation();
+        glm::vec3 GetScale();
+        Shapes::Type GetType();
+        bool IsStatic();
+    private:
+        std::map<Shapes::Shape *, ShapeData>::iterator it;
+    };
+    using Shape = ShapeObject * ;
 
     Shape AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic);
     Shape AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, const Material::Data & material, bool isStatic);
@@ -28,6 +38,8 @@ public:
     void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light::Data & data);
     void DrawDebug(const glm::mat4 & view, const glm::mat4 & projection);
 
+    std::vector<Shape> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
+
 private:
     std::unique_ptr<ModelShader> m_shader;
 
@@ -37,7 +49,7 @@ private:
         glm::vec3 scale;
         Material::Data material;
         btRigidBody * body;
-        std::unique_ptr<SceneShapeHandle> handle;
+        std::unique_ptr<ShapeObject> handle;
     };
 
     std::multimap<Shapes::Shape *, ShapeData> m_shapes;

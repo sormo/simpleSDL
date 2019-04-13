@@ -22,6 +22,8 @@ public:
     void Step();
     void DebugDraw(const glm::mat4 & view, const glm::mat4 & projection);
 
+    std::vector<const btCollisionObject*> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
+
 private:
     btRigidBody * AddCommon(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic, btCollisionShape * shape);
 

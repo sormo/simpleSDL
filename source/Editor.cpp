@@ -12,6 +12,7 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
         m_gui.shapePosition = Common::GetPointWorldSpace(glm::vec2(Common::GetWindowWidth() / 2.0f, Common::GetWindowHeight() / 2.0f), 10.0f, m_camera);
         m_gui.shapeScale = glm::vec3(1.0f, 1.0f, 1.0f);
         m_gui.shapeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_gui.isStatic = true;
 
         if (m_editShape)
             m_scene.RemoveShape(m_editShape);
@@ -36,6 +37,7 @@ bool Editor::Press(const glm::vec2 & position, int64_t id)
 {
     m_isPressed = true;
     m_cursorPosition = position;
+    m_pressPosition = position;
 
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || m_gui.shapeEditMode == UserInterface::ShapeEditMode::Camera)
         return false;
@@ -49,9 +51,17 @@ bool Editor::Press(const glm::vec2 & position, int64_t id)
     return true;
 }
 
-bool Editor::Release(const glm::vec2 &  position, int64_t id)
+bool Editor::Release(const glm::vec2 & position, int64_t id)
 {
+    static const float MINIMUM_MOVE_FOR_CLICK = 2.0f;
+
     m_isPressed = false;
+
+    // if there is no move, cast a ray to select new editor object
+    if (glm::length(position - m_pressPosition) < MINIMUM_MOVE_FOR_CLICK)
+    {
+        Clicked(position);
+    }
 
     return false;
 }
@@ -71,6 +81,33 @@ bool Editor::Move(const glm::vec2 & position, int64_t id)
     ResetEditShape();
 
     return true;
+}
+
+void Editor::Clicked(const glm::vec2 & position)
+{
+    Common::Math::Line ray = Common::GetRay(position, m_camera);
+
+    auto rayCastResult = m_scene.RayCast(m_camera.GetPosition(), ray.vector);
+
+    if (!rayCastResult.empty())
+    {
+        // pick the closest
+
+        float minDistance = FLT_MAX;
+        Scene::Shape shape = nullptr;
+
+        for (auto obj : rayCastResult)
+        {
+            float objDistance = glm::distance(m_camera.GetPosition(), obj->GetPosition());
+            if (objDistance < minDistance)
+            {
+                minDistance = objDistance;
+                shape = obj;
+            }
+        }
+
+        SetEditShape(shape);
+    }
 }
 
 Common::Math::Plane Editor::GetEditPlane()
@@ -164,16 +201,48 @@ void Editor::AddEditShape(const glm::vec3 & color)
     material.shininess = 10.0f;
 
     bool isEdit = color == EDIT_COLOR;
-    bool isStatic = isEdit;
+    bool isStatic = isEdit ? true : m_gui.isStatic;
 
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
         m_editShape = m_scene.AddCube(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale, material, isStatic);
-    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Circle)
+    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Sphere)
         m_editShape = m_scene.AddSphere(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, material, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cylinder)
         m_editShape = m_scene.AddCylinder(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y, material, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cone)
         m_editShape = m_scene.AddCone(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y, material, isStatic);
+}
+
+void Editor::SetEditShape(Scene::Shape shape)
+{
+    if (m_editShape && m_editShape != shape)
+    {
+        m_scene.RemoveShape(m_editShape);
+        AddEditShape(ADD_COLOR);
+    }
+
+    m_editShape = shape;
+
+    m_gui.shapePosition = shape->GetPosition();
+    m_gui.shapeRotation = shape->GetRotation();
+    m_gui.shapeScale = shape->GetScale();
+    // TODO check this scaling
+    if (shape->GetType() != Shapes::Type::Cube)
+    {
+        m_gui.shapeScale.x *= 2.0f;
+        m_gui.shapeScale.y *= 2.0f;
+    }
+    m_gui.isStatic = shape->IsStatic();
+
+    switch (shape->GetType())
+    {
+    case Shapes::Type::Cone: m_gui.shapeEditType = UserInterface::ShapeEditType::Cone; break;
+    case Shapes::Type::Cube: m_gui.shapeEditType = UserInterface::ShapeEditType::Cube; break;
+    case Shapes::Type::Cylinder: m_gui.shapeEditType = UserInterface::ShapeEditType::Cylinder; break;
+    case Shapes::Type::Sphere: m_gui.shapeEditType = UserInterface::ShapeEditType::Sphere; break;
+    }
+
+    ResetEditShape();
 }
 
 void Editor::ResetEditShape()

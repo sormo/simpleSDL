@@ -51,7 +51,7 @@ void UserInterface::Generate()
     {
     case ShapeEditType::Cube:
         cubeEdit = true; break;
-    case ShapeEditType::Circle:
+    case ShapeEditType::Sphere:
         circleEdit = true; break;
     case ShapeEditType::Cylinder:
         cylinderEdit = true; break;
@@ -67,7 +67,7 @@ void UserInterface::Generate()
     ImGui::SameLine();
     if (ToggleButton("Circle", &circleEdit))
     {
-        shapeEditType = circleEdit ? ShapeEditType::Circle : ShapeEditType::None;
+        shapeEditType = circleEdit ? ShapeEditType::Sphere : ShapeEditType::None;
         shapeEditClicked();
     }
     if (ToggleButton("Cylinder", &cylinderEdit))
@@ -88,6 +88,8 @@ void UserInterface::Generate()
         {
             shapeAcceptClicked();
         }
+
+        ImGui::Checkbox("Static", &isStatic);
 
         ImGui::Text("%06.2f %06.2f %06.2f", shapePosition.x, shapePosition.y, shapePosition.z);
         {

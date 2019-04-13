@@ -8,7 +8,7 @@ struct UserInterface
     bool wireframe = false;
     bool bulletDebug = false;
 
-    enum class ShapeEditType { None, Cube, Circle, Cylinder, Cone } shapeEditType;
+    enum class ShapeEditType { None, Cube, Sphere, Cylinder, Cone } shapeEditType;
     enum class ShapeEditMode { Translate, Rotate, Scale, Camera } shapeEditMode;
     enum class ShapeEditAxis { XY, XZ, YZ } shapeEditAxis;
 
@@ -18,6 +18,8 @@ struct UserInterface
     glm::vec3 shapePosition;
     glm::vec3 shapeRotation;
     glm::vec3 shapeScale;
+
+    bool isStatic = true;
 
     void Generate();
 };

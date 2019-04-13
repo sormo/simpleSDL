@@ -131,3 +131,26 @@ void Bullet::DebugDraw(const glm::mat4 & view, const glm::mat4 & projection)
     m_world->debugDrawWorld();
     m_debug.Draw(view, projection);
 }
+
+struct RayCastResult : public btCollisionWorld::RayResultCallback
+{
+    std::vector<const btCollisionObject*> bodies;
+
+    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
+    {
+        bodies.push_back(rayResult.m_collisionObject);
+
+        return 0.0f;
+    }
+};
+
+std::vector<const btCollisionObject*> Bullet::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
+{
+    static const float TEST_DISTANCE = 200.0f;
+    glm::vec3 destination = position + glm::normalize(direction) * TEST_DISTANCE;
+    RayCastResult result;
+
+    m_world->getCollisionWorld()->rayTest(Convert(position), Convert(destination), result);
+
+    return result.bodies;
+}

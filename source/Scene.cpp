@@ -3,10 +3,36 @@
 
 static const glm::vec3 WORLD_GRAVITY(0.0f, -10.0f, 0.0f);
 
-struct SceneShapeHandle
+glm::vec3 Scene::ShapeObject::GetPosition()
 {
-    std::map<Shapes::Shape *, Scene::ShapeData>::iterator it;
-};
+    auto p = it->second.body->getWorldTransform().getOrigin();
+    return { p.x(), p.y(), p.z() };
+}
+
+glm::vec3 Scene::ShapeObject::GetRotation()
+{
+    btQuaternion q = it->second.body->getWorldTransform().getRotation();
+    glm::vec3 r;
+    
+    q.getEulerZYX(r.x, r.y, r.z);
+
+    return r;
+}
+
+glm::vec3 Scene::ShapeObject::GetScale()
+{
+    return it->second.scale;
+}
+
+Shapes::Type Scene::ShapeObject::GetType()
+{
+    return it->first->type;
+}
+
+bool Scene::ShapeObject::IsStatic()
+{
+    return it->second.body->isStaticObject();
+}
 
 Scene::Scene(const Light::Config & light)
     : m_world(WORLD_GRAVITY)
@@ -57,7 +83,7 @@ Scene::Shape Scene::AddCommon(const glm::vec3 & scale, btRigidBody * body, const
 {
     ShapeData data;
     data.body = body;
-    data.handle.reset(new SceneShapeHandle);
+    data.handle.reset(new ShapeObject);
     data.material = material;
     data.model = glm::mat4(1.0f);
     data.scale = scale;
@@ -66,6 +92,8 @@ Scene::Shape Scene::AddCommon(const glm::vec3 & scale, btRigidBody * body, const
     it->second.handle->it = it;
 
     RefreshShapeModel(it->second);
+
+    body->setUserPointer(it->second.handle.get());
 
     return it->second.handle.get();
 }
@@ -157,4 +185,18 @@ void Scene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm
 void Scene::DrawDebug(const glm::mat4 & view, const glm::mat4 & projection)
 {
     m_world.DebugDraw(view, projection);
+}
+
+std::vector<Scene::Shape> Scene::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
+{
+    std::vector<const btCollisionObject*> castResult = m_world.RayCast(position, direction);
+
+    std::vector<Shape> result;
+    for (const btCollisionObject* cobj : castResult)
+    {
+        btCollisionObject * obj = const_cast<btCollisionObject*>(cobj);
+        result.push_back((Shape)obj->getUserPointer());
+    }
+
+    return result;
 }

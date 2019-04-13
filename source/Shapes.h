@@ -4,9 +4,11 @@
 
 namespace Shapes
 {
+    enum class Type { Cube, Sphere, Cylinder, Cone };
+
     struct Shape
     {
-        Shape(ModelShader & ashader);
+        Shape(ModelShader & ashader, Type atype);
         ~Shape();
 
         void Init(const float * data, size_t dataSize, const uint16_t * indices, size_t indicesSize, size_t count);
@@ -19,6 +21,7 @@ namespace Shapes
         GLuint vboIndices;
         ModelShader & shader;
         size_t count;
+        Type type;
     };
 
     struct Cube : public Shape

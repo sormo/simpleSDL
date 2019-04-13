@@ -3,8 +3,8 @@
 
 namespace Shapes
 {
-    Shape::Shape(ModelShader & ashader)
-        : shader(ashader)
+    Shape::Shape(ModelShader & ashader, Type atype)
+        : shader(ashader), type(atype)
     {
 
     }
@@ -148,7 +148,7 @@ namespace Shapes
     };
 
     Cube::Cube(ModelShader & shader)
-        : Shape(shader)
+        : Shape(shader, Type::Cube)
     {
         Init(VERTICES_CUBE, sizeof(VERTICES_CUBE), INDICES_CUBE, sizeof(INDICES_CUBE), 36);
     }
@@ -293,7 +293,7 @@ namespace Shapes
     }
 
     Sphere::Sphere(ModelShader & shader)
-        : Shape(shader)
+        : Shape(shader, Type::Sphere)
     {
         auto sphere = GenerateSphere(10, 10);
         auto sphereData = GetShapeBuffer(sphere.vertices, sphere.normals, sphere.texCoords);
@@ -379,7 +379,7 @@ namespace Shapes
     }
 
     Cylinder::Cylinder(ModelShader & shader)
-        : Shape(shader)
+        : Shape(shader, Type::Cylinder)
     {
         static const size_t COUNT = 10;
 
@@ -435,7 +435,7 @@ namespace Shapes
     }
 
     Cone::Cone(ModelShader & shader)
-        : Shape(shader)
+        : Shape(shader, Type::Cone)
     {
         static const size_t COUNT = 10;
 
