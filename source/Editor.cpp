@@ -277,5 +277,5 @@ void Editor::CreateCoordinateSystem()
     arrows.push_back({ { { 0.0f, 0.0f, 1.1f }, Common::Math::GetRotation(glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }), 0.2f, 0.2f }, green });
     arrows.push_back({ { { 1.1f, 0.0f, 0.0f }, Common::Math::GetRotation(-glm::radians(90.0f), { 0.0f, 0.0f, 1.0f }), 0.2f, 0.2f }, blue });
 
-    m_coordinateSystem = m_scene.AddCompound({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, true, {}, {}, axes, arrows);
+    m_coordinateSystem = m_scene.AddCompound({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, false, {}, {}, axes, arrows);
 }

@@ -121,6 +121,15 @@ btCollisionShape * Bullet::AddShape(btRigidBody * body, const T & definition)
 
     parent->addChildShape(transform, result);
 
+    if (!body->isStaticObject())
+    {
+        btVector3 inertia;
+        btScalar mass = body->getInvMass();
+
+        parent->calculateLocalInertia(mass, inertia);
+        body->setMassProps(mass, inertia);
+    }
+
     return result;
 }
 
