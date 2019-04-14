@@ -4,6 +4,8 @@
 #include "glm/glm.hpp"
 #include <memory>
 #include "BulletDebug.h"
+// include shapes because of defintions
+#include "Shapes.h"
 
 class Bullet
 {
@@ -11,20 +13,30 @@ public:
     Bullet(const glm::vec3 & gravity);
     ~Bullet();
 
-    // rotation is rotation around x, y, z axes
-    // TODO maybe hide bullet completly ???
-    btRigidBody * AddBox(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & halfExtents, bool isStatic);
-    btRigidBody * AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, bool isStatic);
-    btRigidBody * AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, bool isStatic);
-    btRigidBody * AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, bool isStatic);
+    // TODO in a case single shape body is created Shapes::Definition position and rotation is actaully body position and rotation
+    btRigidBody * AddBox(const Shapes::Defintion::Box & definition, bool isStatic);
+    btRigidBody * AddSphere(const Shapes::Defintion::Sphere & definition, bool isStatic);
+    btRigidBody * AddCylinder(const Shapes::Defintion::Cylinder & definition, bool isStatic);
+    btRigidBody * AddCone(const Shapes::Defintion::Cone & definition, bool isStatic);
+
+    btRigidBody * AddCompound(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic);
+    template<class T>
+    btCollisionShape * AddShape(btRigidBody * body, const T & definition);
+    void RemoveShape(btRigidBody * body, btCollisionShape * shape);
+
     void RemoveBody(btRigidBody * body);
 
     void Step();
     void DebugDraw(const glm::mat4 & view, const glm::mat4 & projection);
 
-    std::vector<const btCollisionObject*> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
+    std::vector<std::tuple<const btCollisionObject*, const btCollisionShape*>> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
 
 private:
+    btBoxShape * CreateShape(const Shapes::Defintion::Box & definition);
+    btSphereShape * CreateShape(const Shapes::Defintion::Sphere & definition);
+    btCylinderShape * CreateShape(const Shapes::Defintion::Cylinder & definition);
+    btConeShape * CreateShape(const Shapes::Defintion::Cone & definition);
+
     btRigidBody * AddCommon(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic, btCollisionShape * shape);
 
     BulletDebug m_debug;

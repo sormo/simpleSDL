@@ -3,35 +3,57 @@
 
 static const glm::vec3 WORLD_GRAVITY(0.0f, -10.0f, 0.0f);
 
-glm::vec3 Scene::ShapeObject::GetPosition()
+glm::vec3 Scene::BodyHandle::GetPosition()
 {
-    auto p = it->second.body->getWorldTransform().getOrigin();
+    auto p = it->body->getWorldTransform().getOrigin();
     return { p.x(), p.y(), p.z() };
 }
 
-glm::vec3 Scene::ShapeObject::GetRotation()
+glm::vec3 Scene::BodyHandle::GetRotation()
 {
-    btQuaternion q = it->second.body->getWorldTransform().getRotation();
+    btQuaternion q = it->body->getWorldTransform().getRotation();
     glm::vec3 r;
-    
+
     q.getEulerZYX(r.x, r.y, r.z);
 
     return r;
 }
 
-glm::vec3 Scene::ShapeObject::GetScale()
+bool Scene::BodyHandle::IsStatic()
+{
+    return it->body->isStaticObject();
+}
+
+const std::vector<Scene::Shape> & Scene::BodyHandle::GetShapes()
+{
+    return it->shapes;
+}
+
+glm::vec3 Scene::ShapeHandle::GetPosition()
+{
+    // TODO transform from compound shape
+    return glm::vec3(0.0f);
+}
+
+glm::vec3 Scene::ShapeHandle::GetRotation()
+{
+    // TODO transform from compound shape
+    return glm::vec3(0.0f);
+}
+
+glm::vec3 Scene::ShapeHandle::GetScale()
 {
     return it->second.scale;
 }
 
-Shapes::Type Scene::ShapeObject::GetType()
+Shapes::Type Scene::ShapeHandle::GetType()
 {
     return it->first->type;
 }
 
-bool Scene::ShapeObject::IsStatic()
+Scene::BodyHandle * Scene::ShapeHandle::GetBody()
 {
-    return it->second.body->isStaticObject();
+    return it->second.body;
 }
 
 Scene::Scene(const Light::Config & light)
@@ -55,53 +77,126 @@ Scene::~Scene()
 
 }
 
-Scene::Shape Scene::AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic)
+Scene::Body Scene::AddCube(const Shapes::Defintion::Box & definition, const Material::Data & material, bool isStatic)
 {
-    btRigidBody * body = m_world.AddBox(position, rotation, scale / 2.0f, isStatic);
-    return AddCommon(scale, body, material, m_cube.get());
+    Body body = AddBody(m_world.AddBox(definition, isStatic));
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), definition.extents, body, material, m_cube.get());
+
+    return body;
 }
 
-Scene::Shape Scene::AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, const Material::Data & material, bool isStatic)
+Scene::Body Scene::AddSphere(const Shapes::Defintion::Sphere & definition, const Material::Data & material, bool isStatic)
 {
-    btRigidBody * body = m_world.AddSphere(position, rotation, radius, isStatic);
-    return AddCommon(glm::vec3(radius), body, material, m_sphere.get());
+    Body body = AddBody(m_world.AddSphere(definition, isStatic));
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius), body, material, m_sphere.get());
+
+    return body;
 }
 
-Scene::Shape Scene::AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic)
+Scene::Body Scene::AddCylinder(const Shapes::Defintion::Cylinder & definition, const Material::Data & material, bool isStatic)
 {
-    btRigidBody * body = m_world.AddCylinder(position, rotation, radius, height, isStatic);
-    return AddCommon(glm::vec3(radius, height, radius), body, material, m_cylinder.get());
+    Body body = AddBody(m_world.AddCylinder(definition, isStatic));
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cylinder.get());
+
+    return body;
 }
 
-Scene::Shape Scene::AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic)
+Scene::Body Scene::AddCone(const Shapes::Defintion::Cone & definition, const Material::Data & material, bool isStatic)
 {
-    btRigidBody * body = m_world.AddCone(position, rotation, radius, height, isStatic);
-    return AddCommon(glm::vec3(radius, height, radius), body, material, m_cone.get());
+    Body body = AddBody(m_world.AddCone(definition, isStatic));
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cone.get());
+
+    return body;
 }
 
-Scene::Shape Scene::AddCommon(const glm::vec3 & scale, btRigidBody * body, const Material::Data & material, Shapes::Shape * shape)
+template<class T>
+glm::mat4 GetTransform(const T & transform)
 {
+    btQuaternion quatRotation;
+    quatRotation.setEulerZYX(transform.rotation.x, transform.rotation.y, transform.rotation.z);
+    btTransform tmp(quatRotation, { transform.position.x, transform.position.y, transform.position.z });
+
+    glm::mat4 result;
+    tmp.getOpenGLMatrix(&result[0][0]);
+
+    return result;
+}
+
+Scene::Body Scene::AddCompound(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic,
+    const std::vector<std::tuple<Shapes::Defintion::Box, Material::Data>> & box,
+    const std::vector<std::tuple<Shapes::Defintion::Sphere, Material::Data>> & sphere,
+    const std::vector<std::tuple<Shapes::Defintion::Cylinder, Material::Data>> & cylinder,
+    const std::vector<std::tuple<Shapes::Defintion::Cone, Material::Data>> & cone)
+{
+    btRigidBody * worldBody = m_world.AddCompound(position, rotation, isStatic);
+    Body body = AddBody(worldBody);
+
+    for (const auto&[definition, material] : box)
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), definition.extents, body, material, m_cube.get());
+
+    for (const auto&[definition, material] : sphere)
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius), body, material, m_sphere.get());
+
+    for (const auto&[definition, material] : cylinder)
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cylinder.get());
+
+    for (const auto&[definition, material] : cone)
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cone.get());
+
+    return body;
+}
+
+Scene::Body Scene::AddBody(btRigidBody * body)
+{
+    BodyHandle * newBody = new BodyHandle;
+
+    BodyData data;
+    data.body = body;
+    data.handle.reset(newBody);
+
+    auto it = m_bodies.insert(std::move(data));
+    it.first->handle->it = it.first;
+
+    body->setUserPointer(newBody);
+
+    return newBody;
+}
+
+Scene::Shape Scene::AddShape(btCollisionShape * shape, const glm::mat4 & localTransform, const glm::vec3 & scale, BodyHandle * body, const Material::Data & material, Shapes::Shape * drawShape)
+{
+    ShapeHandle * newShape = new ShapeHandle;
+
     ShapeData data;
     data.body = body;
-    data.handle.reset(new ShapeObject);
+    data.handle.reset(newShape);
     data.material = material;
     data.model = glm::mat4(1.0f);
     data.scale = scale;
+    data.shape = shape;
+    data.localTransform = localTransform;
 
-    auto it = m_shapes.insert({ shape, std::move(data) });
-    it->second.handle->it = it;
+    std::multimap<Shapes::Shape*, ShapeData>::iterator it = m_shapes.insert({ drawShape, std::move(data) });
+    newShape->it = it;
+
+    shape->setUserPointer(newShape);
 
     RefreshShapeModel(it->second);
 
-    body->setUserPointer(it->second.handle.get());
+    // TODO why need to const cast here ?
+    std::vector<ShapeHandle*> & shapes = const_cast<std::vector<ShapeHandle*>&>(body->it->shapes);
+    shapes.push_back(newShape);
 
-    return it->second.handle.get();
+    return newShape;
 }
 
-void Scene::RemoveShape(Shape shape)
+void Scene::RemoveBody(Body body)
 {
-    m_world.RemoveBody(shape->it->second.body);
-    m_shapes.erase(shape->it);
+    // remove all shapes
+    for (ShapeHandle * shape : body->it->shapes)
+        m_shapes.erase(shape->it);
+    // remove body
+    m_world.RemoveBody(body->it->body);
+    m_bodies.erase(body->it);
 }
 
 void Scene::RefreshShapeModels()
@@ -115,7 +210,10 @@ void Scene::RefreshShapeModels()
 
 void Scene::RefreshShapeModel(ShapeData & cube)
 {
-    cube.body->getWorldTransform().getOpenGLMatrix(&cube.model[0][0]);
+    cube.body->it->body->getWorldTransform().getOpenGLMatrix(&cube.model[0][0]);
+
+    cube.model = cube.model * cube.localTransform;
+
     cube.model = glm::scale(cube.model, cube.scale);
 }
 
@@ -189,14 +287,18 @@ void Scene::DrawDebug(const glm::mat4 & view, const glm::mat4 & projection)
 
 std::vector<Scene::Shape> Scene::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
 {
-    std::vector<const btCollisionObject*> castResult = m_world.RayCast(position, direction);
+    auto castResult = m_world.RayCast(position, direction);
 
     std::vector<Shape> result;
-    for (const btCollisionObject* cobj : castResult)
+    for (auto[_, shape] : castResult)
     {
-        btCollisionObject * obj = const_cast<btCollisionObject*>(cobj);
-        result.push_back((Shape)obj->getUserPointer());
+        result.push_back((Shape)shape->getUserPointer());
     }
 
     return result;
+}
+
+bool Scene::BodyData::operator<(const BodyData & o) const
+{
+    return body < o.body;
 }

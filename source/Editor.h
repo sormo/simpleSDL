@@ -37,4 +37,7 @@ private:
     bool m_isPressed = false;
     glm::vec2 m_cursorPosition;
     glm::vec2 m_pressPosition;
+
+	Scene::Body m_coordinateSystem;
+	void CreateCoordinateSystem();
 };

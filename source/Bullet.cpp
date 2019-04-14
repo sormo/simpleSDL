@@ -57,28 +57,86 @@ Bullet::~Bullet()
     }
 }
 
-btRigidBody * Bullet::AddBox(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & halfExtents, bool isStatic)
+btBoxShape * Bullet::CreateShape(const Shapes::Defintion::Box & definition)
 {
-    btCollisionShape* shape = new btBoxShape(Convert(halfExtents));
+    return new btBoxShape(Convert(definition.extents / 2.0f));
+}
+
+btSphereShape * Bullet::CreateShape(const Shapes::Defintion::Sphere & definition)
+{
+    return new btSphereShape(definition.radius);
+}
+
+btCylinderShape * Bullet::CreateShape(const Shapes::Defintion::Cylinder & definition)
+{
+    // TODO why /2 ???
+    return new btCylinderShape({ definition.radius, definition.height / 2.0f, definition.radius });
+}
+
+btConeShape * Bullet::CreateShape(const Shapes::Defintion::Cone & definition)
+{
+    return new btConeShape(definition.radius, definition.height);
+}
+
+btRigidBody * Bullet::AddBox(const Shapes::Defintion::Box & definition, bool isStatic)
+{
+    return AddCommon(definition.position, definition.rotation, isStatic, CreateShape(definition));
+}
+
+btRigidBody * Bullet::AddSphere(const Shapes::Defintion::Sphere & definition, bool isStatic)
+{
+    return AddCommon(definition.position, definition.rotation, isStatic, CreateShape(definition));
+}
+
+btRigidBody * Bullet::AddCylinder(const Shapes::Defintion::Cylinder & definition, bool isStatic)
+{
+    return AddCommon(definition.position, definition.rotation, isStatic, CreateShape(definition));
+}
+
+btRigidBody * Bullet::AddCone(const Shapes::Defintion::Cone & definition, bool isStatic)
+{
+    return AddCommon(definition.position, definition.rotation, isStatic, CreateShape(definition));
+}
+
+btRigidBody * Bullet::AddCompound(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic)
+{
+    btCompoundShape * shape = new btCompoundShape();
+
     return AddCommon(position, rotation, isStatic, shape);
 }
 
-btRigidBody * Bullet::AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, bool isStatic)
+template<class T>
+btCollisionShape * Bullet::AddShape(btRigidBody * body, const T & definition)
 {
-    btSphereShape* shape = new btSphereShape(radius);
-    return AddCommon(position, rotation, isStatic, shape);
+    assert(body->getCollisionShape()->isCompound());
+
+    btCollisionShape * result = CreateShape(definition);
+
+    btQuaternion quatRotation;
+    quatRotation.setEulerZYX(definition.rotation.x, definition.rotation.y, definition.rotation.z);
+    btTransform transform(quatRotation, Convert(definition.position));
+
+    //btCompoundShape * parent = dynamic_cast<btCompoundShape*>(body->getCollisionShape());
+    btCompoundShape* parent = static_cast<btCompoundShape*>(body->getCollisionShape());
+
+    parent->addChildShape(transform, result);
+
+    return result;
 }
 
-btRigidBody * Bullet::AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, bool isStatic)
-{
-    btCylinderShape * shape = new btCylinderShape({ radius, height / 2.0f, radius });
-    return AddCommon(position, rotation, isStatic, shape);
-}
+template class btCollisionShape * Bullet::AddShape(btRigidBody * body, const Shapes::Defintion::Box & definition);
+template class btCollisionShape * Bullet::AddShape(btRigidBody * body, const Shapes::Defintion::Sphere & definition);
+template class btCollisionShape * Bullet::AddShape(btRigidBody * body, const Shapes::Defintion::Cylinder & definition);
+template class btCollisionShape * Bullet::AddShape(btRigidBody * body, const Shapes::Defintion::Cone & definition);
 
-btRigidBody * Bullet::AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, bool isStatic)
+void Bullet::RemoveShape(btRigidBody * body, btCollisionShape * shape)
 {
-    btConeShape * shape = new btConeShape(radius, height);
-    return AddCommon(position, rotation, isStatic, shape);
+    assert(body->getCollisionShape()->isCompound());
+
+    //btCompoundShape * parent = dynamic_cast<btCompoundShape*>(body->getCollisionShape());
+    btCompoundShape* parent = static_cast<btCompoundShape*>(body->getCollisionShape());
+
+    parent->removeChildShape(shape);
 }
 
 btRigidBody * Bullet::AddCommon(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic, btCollisionShape * shape)
@@ -134,17 +192,23 @@ void Bullet::DebugDraw(const glm::mat4 & view, const glm::mat4 & projection)
 
 struct RayCastResult : public btCollisionWorld::RayResultCallback
 {
-    std::vector<const btCollisionObject*> bodies;
+    std::vector<std::tuple<const btCollisionObject*, const btCollisionShape*>> bodies;
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
     {
-        bodies.push_back(rayResult.m_collisionObject);
+        const btCollisionShape* shape = rayResult.m_collisionObject->getCollisionShape();
+        if (shape->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
+        {
+            shape = static_cast<const btCompoundShape*>(shape)->getChildShape(rayResult.m_localShapeInfo->m_triangleIndex);
+        }
+
+        bodies.push_back({ rayResult.m_collisionObject, shape });
 
         return 0.0f;
     }
 };
 
-std::vector<const btCollisionObject*> Bullet::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
+std::vector<std::tuple<const btCollisionObject*, const btCollisionShape*>> Bullet::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
 {
     static const float TEST_DISTANCE = 200.0f;
     glm::vec3 destination = position + glm::normalize(direction) * TEST_DISTANCE;

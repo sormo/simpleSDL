@@ -14,8 +14,9 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
         m_gui.shapeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
         m_gui.isStatic = true;
 
+        // remove whole body
         if (m_editShape)
-            m_scene.RemoveShape(m_editShape);
+            m_scene.RemoveBody(m_editShape->GetBody());
         m_editShape = nullptr;
 
         if (m_gui.shapeEditType != UserInterface::ShapeEditType::None)
@@ -24,13 +25,15 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
 
     m_gui.shapeAcceptClicked = [this]()
     {
-        m_scene.RemoveShape(m_editShape);
+        m_scene.RemoveBody(m_editShape->GetBody());
 
         AddEditShape(ADD_COLOR);
         m_editShape = nullptr;
 
         m_gui.shapeEditClicked();
     };
+
+    CreateCoordinateSystem();
 }
 
 bool Editor::Press(const glm::vec2 & position, int64_t id)
@@ -203,36 +206,41 @@ void Editor::AddEditShape(const glm::vec3 & color)
     bool isEdit = color == EDIT_COLOR;
     bool isStatic = isEdit ? true : m_gui.isStatic;
 
+    Scene::Body newBody;
+
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
-        m_editShape = m_scene.AddCube(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale, material, isStatic);
+        newBody = m_scene.AddCube({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale }, material, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Sphere)
-        m_editShape = m_scene.AddSphere(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, material, isStatic);
+        newBody = m_scene.AddSphere({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f }, material, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cylinder)
-        m_editShape = m_scene.AddCylinder(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y, material, isStatic);
+        newBody = m_scene.AddCylinder({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, material, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cone)
-        m_editShape = m_scene.AddCone(m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y, material, isStatic);
+        newBody = m_scene.AddCone({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, material, isStatic);
+
+    // just pick first shape
+    m_editShape = newBody->GetShapes()[0];
 }
 
 void Editor::SetEditShape(Scene::Shape shape)
 {
     if (m_editShape && m_editShape != shape)
     {
-        m_scene.RemoveShape(m_editShape);
+        m_scene.RemoveBody(m_editShape->GetBody());
         AddEditShape(ADD_COLOR);
     }
 
     m_editShape = shape;
 
-    m_gui.shapePosition = shape->GetPosition();
-    m_gui.shapeRotation = shape->GetRotation();
+    m_gui.shapePosition = shape->GetBody()->GetPosition();
+    m_gui.shapeRotation = shape->GetBody()->GetRotation();
     m_gui.shapeScale = shape->GetScale();
     // TODO check this scaling
     if (shape->GetType() != Shapes::Type::Cube)
     {
         m_gui.shapeScale.x *= 2.0f;
-        m_gui.shapeScale.y *= 2.0f;
+        //m_gui.shapeScale.y *= 2.0f;
     }
-    m_gui.isStatic = shape->IsStatic();
+    m_gui.isStatic = shape->GetBody()->IsStatic();
 
     switch (shape->GetType())
     {
@@ -247,7 +255,27 @@ void Editor::SetEditShape(Scene::Shape shape)
 
 void Editor::ResetEditShape()
 {
-    m_scene.RemoveShape(m_editShape);
+    m_scene.RemoveBody(m_editShape->GetBody());
 
     AddEditShape(EDIT_COLOR);
+}
+
+void Editor::CreateCoordinateSystem()
+{
+    Material::Data red{ { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, 0.0f };
+    Material::Data green{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, 0.0f };
+    Material::Data blue{ { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, 0.0f };
+
+    std::vector<std::tuple<Shapes::Defintion::Cylinder, Material::Data>> axes;
+    std::vector<std::tuple<Shapes::Defintion::Cone, Material::Data>> arrows;
+
+    axes.push_back({ { { 0.0f, 0.5f, 0.0f }, glm::vec3(0.0f), 0.1f, 1.0f }, red });
+    axes.push_back({ { { 0.0f, 0.0f, 0.5f }, Common::Math::GetRotation(glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }), 0.1f, 1.0f }, green });
+    axes.push_back({ { { 0.5f, 0.0f, 0.0f }, Common::Math::GetRotation(-glm::radians(90.0f), { 0.0f, 0.0f, 1.0f }), 0.1f, 1.0f }, blue });
+
+    arrows.push_back({ { { 0.0f, 1.1f, 0.0f }, glm::vec3(0.0f), 0.2f, 0.2f }, red });
+    arrows.push_back({ { { 0.0f, 0.0f, 1.1f }, Common::Math::GetRotation(glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }), 0.2f, 0.2f }, green });
+    arrows.push_back({ { { 1.1f, 0.0f, 0.0f }, Common::Math::GetRotation(-glm::radians(90.0f), { 0.0f, 0.0f, 1.0f }), 0.2f, 0.2f }, blue });
+
+    m_coordinateSystem = m_scene.AddCompound({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, true, {}, {}, axes, arrows);
 }

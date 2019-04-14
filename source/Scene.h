@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <map>
+#include <set>
 #include "Bullet.h"
 #include "Shapes.h"
 #include "ModelShader.h"
@@ -8,12 +9,14 @@
 class Scene
 {
     struct ShapeData;
+    struct BodyData;
 public:
     Scene(const Light::Config & light);
     // desctructor must be implemented  where SceneShapeHandle is defined
     ~Scene();
 
-    struct ShapeObject
+    struct BodyHandle;
+    struct ShapeHandle
     {
         friend class Scene;
 
@@ -21,17 +24,35 @@ public:
         glm::vec3 GetRotation();
         glm::vec3 GetScale();
         Shapes::Type GetType();
-        bool IsStatic();
+        BodyHandle * GetBody();
     private:
-        std::map<Shapes::Shape *, ShapeData>::iterator it;
+        std::multimap<Shapes::Shape*, ShapeData>::iterator it;
     };
-    using Shape = ShapeObject * ;
+    using Shape = ShapeHandle*;
 
-    Shape AddCube(const glm::vec3 & position, const glm::vec3 & rotation, const glm::vec3 & scale, const Material::Data & material, bool isStatic);
-    Shape AddSphere(const glm::vec3 & position, const glm::vec3 & rotation, float radius, const Material::Data & material, bool isStatic);
-    Shape AddCylinder(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic);
-    Shape AddCone(const glm::vec3 & position, const glm::vec3 & rotation, float radius, float height, const Material::Data & material, bool isStatic);
-    void RemoveShape(Shape shape);
+    struct BodyHandle
+    {
+        friend class Scene;
+
+        glm::vec3 GetPosition();
+        glm::vec3 GetRotation();
+        bool IsStatic();
+        const std::vector<Shape> & GetShapes();
+    private:
+        std::set<BodyData>::iterator it;
+    };
+    using Body = BodyHandle*;
+
+    Body AddCube(const Shapes::Defintion::Box & definition, const Material::Data & material, bool isStatic);
+    Body AddSphere(const Shapes::Defintion::Sphere & definition, const Material::Data & material, bool isStatic);
+    Body AddCylinder(const Shapes::Defintion::Cylinder & definition, const Material::Data & material, bool isStatic);
+    Body AddCone(const Shapes::Defintion::Cone & definition, const Material::Data & material, bool isStatic);
+    Body AddCompound(const glm::vec3 & position, const glm::vec3 & rotation, bool isStatic,
+        const std::vector<std::tuple<Shapes::Defintion::Box, Material::Data>> & box,
+        const std::vector<std::tuple<Shapes::Defintion::Sphere, Material::Data>> & sphere,
+        const std::vector<std::tuple<Shapes::Defintion::Cylinder, Material::Data>> & cylinder,
+        const std::vector<std::tuple<Shapes::Defintion::Cone, Material::Data>> & cone);
+    void RemoveBody(Body body);
 
     void Step();
 
@@ -46,13 +67,24 @@ private:
     struct ShapeData
     {
         glm::mat4 model;
+        glm::mat4 localTransform;
         glm::vec3 scale;
         Material::Data material;
-        btRigidBody * body;
-        std::unique_ptr<ShapeObject> handle;
+        BodyHandle * body;
+        btCollisionShape * shape;
+        std::unique_ptr<ShapeHandle> handle;
     };
+    std::multimap<Shapes::Shape*, ShapeData> m_shapes;
 
-    std::multimap<Shapes::Shape *, ShapeData> m_shapes;
+    struct BodyData
+    {
+        btRigidBody * body;
+        std::unique_ptr<BodyHandle> handle;
+        std::vector<ShapeHandle*> shapes;
+
+        bool operator<(const BodyData & o) const;
+    };
+    std::set<BodyData> m_bodies;
 
     enum class DrawType{ Shadow, Material };
     void DrawShapes(DrawType drawType, const glm::mat4 & view, const glm::mat4 & projection);
@@ -60,7 +92,8 @@ private:
     void RefreshShapeModels();
     void RefreshShapeModel(ShapeData & cube);
 
-    Scene::Shape AddCommon(const glm::vec3 & scale, btRigidBody * body, const Material::Data & material, Shapes::Shape * shape);
+    Scene::Shape AddShape(btCollisionShape * shape, const glm::mat4 & local, const glm::vec3 & scale, BodyHandle * body, const Material::Data & material, Shapes::Shape * drawShape);
+    Scene::Body AddBody(btRigidBody * body);
 
     std::unique_ptr<Shapes::Cube> m_cube;
     std::unique_ptr<Shapes::Sphere> m_sphere;
