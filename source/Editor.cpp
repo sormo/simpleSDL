@@ -5,7 +5,7 @@ static const glm::vec3 EDIT_COLOR(0.0f, 1.0f, 0.0f);
 static const glm::vec3 ADD_COLOR(1.0f, 1.0f, 1.0f);
 
 Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
-    : m_scene(scene), m_gui(userInterface), m_camera(camera)
+    : m_scene(scene), m_gui(userInterface), m_camera(camera), m_gizmo(scene)
 {
     m_gui.shapeEditClicked = [this]()
     {
@@ -32,8 +32,6 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
 
         m_gui.shapeEditClicked();
     };
-
-    CreateCoordinateSystem();
 }
 
 bool Editor::Press(const glm::vec2 & position, int64_t id)
@@ -258,24 +256,4 @@ void Editor::ResetEditShape()
     m_scene.RemoveBody(m_editShape->GetBody());
 
     AddEditShape(EDIT_COLOR);
-}
-
-void Editor::CreateCoordinateSystem()
-{
-    Material::Data red{ { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, 0.0f };
-    Material::Data green{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, 0.0f };
-    Material::Data blue{ { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, 0.0f };
-
-    std::vector<std::tuple<Shapes::Defintion::Cylinder, Material::Data>> axes;
-    std::vector<std::tuple<Shapes::Defintion::Cone, Material::Data>> arrows;
-
-    axes.push_back({ { { 0.0f, 0.5f, 0.0f }, glm::vec3(0.0f), 0.1f, 1.0f }, red });
-    axes.push_back({ { { 0.0f, 0.0f, 0.5f }, Common::Math::GetRotation(glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }), 0.1f, 1.0f }, green });
-    axes.push_back({ { { 0.5f, 0.0f, 0.0f }, Common::Math::GetRotation(-glm::radians(90.0f), { 0.0f, 0.0f, 1.0f }), 0.1f, 1.0f }, blue });
-
-    arrows.push_back({ { { 0.0f, 1.1f, 0.0f }, glm::vec3(0.0f), 0.2f, 0.2f }, red });
-    arrows.push_back({ { { 0.0f, 0.0f, 1.1f }, Common::Math::GetRotation(glm::radians(90.0f), { 1.0f, 0.0f, 0.0f }), 0.2f, 0.2f }, green });
-    arrows.push_back({ { { 1.1f, 0.0f, 0.0f }, Common::Math::GetRotation(-glm::radians(90.0f), { 0.0f, 0.0f, 1.0f }), 0.2f, 0.2f }, blue });
-
-    m_coordinateSystem = m_scene.AddCompound({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, false, {}, {}, axes, arrows);
 }

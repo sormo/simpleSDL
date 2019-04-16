@@ -5,6 +5,7 @@
 #include "MouseDispatcher.h"
 #include "Camera.h"
 #include "Common.h"
+#include "Gizmo.h"
 
 class Editor : public MouseReceiver
 {
@@ -38,6 +39,5 @@ private:
     glm::vec2 m_cursorPosition;
     glm::vec2 m_pressPosition;
 
-	Scene::Body m_coordinateSystem;
-	void CreateCoordinateSystem();
+    Gizmo m_gizmo;
 };
