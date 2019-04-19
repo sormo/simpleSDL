@@ -29,7 +29,13 @@ public:
     void Step();
     void DebugDraw(const glm::mat4 & view, const glm::mat4 & projection);
 
-    std::vector<std::tuple<const btCollisionObject*, const btCollisionShape*>> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
+    struct RayResult
+    {
+        const btCollisionObject * object;
+        const btCollisionShape * shape;
+        glm::vec3 worldPoint;
+    };
+    std::vector<RayResult> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
 
 private:
     btBoxShape * CreateShape(const Shapes::Defintion::Box & definition);

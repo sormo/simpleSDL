@@ -146,9 +146,9 @@ Gizmo::Mode Gizmo::GetMode()
     return m_mode;
 }
 
-void Gizmo::UpdateSelectedAxis(const std::vector<Scene::Shape>& shapes)
+void Gizmo::UpdateSelectedAxis(const std::vector<Scene::RayCastResult>& shapes)
 {
-    for (auto shape : shapes)
+    for (auto[shape, _] : shapes)
     {
         if (auto it = m_redShapes.find(shape); it != std::end(m_redShapes))
         {
@@ -192,19 +192,20 @@ void Gizmo::ClearBody()
     m_blueShapes.clear();
 }
 
-void Gizmo::FilterGizmoShapes(std::vector<Scene::Shape>& shapes)
+void Gizmo::FilterGizmoShapes(std::vector<Scene::RayCastResult>& shapes)
 {
     auto it = std::begin(shapes);
 
     while (it != std::end(shapes))
     {
-        if (*it == m_centralSphere)
+        Scene::Shape shape = std::get<0>(*it);
+        if (shape == m_centralSphere)
             it = shapes.erase(it);
-        else if (m_redShapes.find(*it) != std::end(m_redShapes))
+        else if (m_redShapes.find(shape) != std::end(m_redShapes))
             it = shapes.erase(it);
-        else if (m_greenShapes.find(*it) != std::end(m_greenShapes))
+        else if (m_greenShapes.find(shape) != std::end(m_greenShapes))
             it = shapes.erase(it);
-        else if (m_blueShapes.find(*it) != std::end(m_blueShapes))
+        else if (m_blueShapes.find(shape) != std::end(m_blueShapes))
             it = shapes.erase(it);
         else
             it++;

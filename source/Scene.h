@@ -66,7 +66,8 @@ public:
     void Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light::Data & data);
     void DrawDebug(const glm::mat4 & view, const glm::mat4 & projection);
 
-    std::vector<Shape> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
+    using RayCastResult = std::tuple<Shape, glm::vec3>;
+    std::vector<RayCastResult> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
 
 private:
     std::unique_ptr<ModelShader> m_shader;

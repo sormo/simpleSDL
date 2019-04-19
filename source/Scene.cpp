@@ -343,14 +343,14 @@ void Scene::DrawDebug(const glm::mat4 & view, const glm::mat4 & projection)
     m_world.DebugDraw(view, projection);
 }
 
-std::vector<Scene::Shape> Scene::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
+std::vector<std::tuple<Scene::Shape, glm::vec3>> Scene::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
 {
     auto castResult = m_world.RayCast(position, direction);
 
-    std::vector<Shape> result;
-    for (auto[_, shape] : castResult)
+    std::vector<std::tuple<Scene::Shape, glm::vec3>> result;
+    for (auto[_, shape, position] : castResult)
     {
-        result.push_back((Shape)shape->getUserPointer());
+        result.push_back({ (Shape)shape->getUserPointer(), position });
     }
 
     return result;

@@ -201,7 +201,11 @@ void Bullet::DebugDraw(const glm::mat4 & view, const glm::mat4 & projection)
 
 struct RayCastResult : public btCollisionWorld::RayResultCallback
 {
-    std::vector<std::tuple<const btCollisionObject*, const btCollisionShape*>> bodies;
+    std::vector<Bullet::RayResult> bodies;
+    const btVector3 fromPoint;
+    const btVector3 toPoint;
+
+    RayCastResult(const btVector3 & from, const btVector3 to) : fromPoint(from), toPoint(to) {}
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
     {
@@ -210,20 +214,33 @@ struct RayCastResult : public btCollisionWorld::RayResultCallback
         {
             shape = static_cast<const btCompoundShape*>(shape)->getChildShape(rayResult.m_localShapeInfo->m_triangleIndex);
         }
+        
+        btVector3 worldPoint;
+        if (normalInWorldSpace)
+        {
+            worldPoint = rayResult.m_hitNormalLocal;
+        }
+        else
+        {
+            worldPoint = rayResult.m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
+        }
 
-        bodies.push_back({ rayResult.m_collisionObject, shape });
+        // should be used closest hitFraction ???
+        worldPoint.setInterpolate3(fromPoint, toPoint, rayResult.m_hitFraction);
+
+        bodies.push_back({ rayResult.m_collisionObject, shape, Convert(worldPoint) });
 
         return 0.0f;
     }
 };
 
-std::vector<std::tuple<const btCollisionObject*, const btCollisionShape*>> Bullet::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
+std::vector<Bullet::RayResult> Bullet::RayCast(const glm::vec3 & position, const glm::vec3 & direction)
 {
     static const float TEST_DISTANCE = 200.0f;
     glm::vec3 destination = position + glm::normalize(direction) * TEST_DISTANCE;
-    RayCastResult result;
+    RayCastResult result(Convert(position), Convert(destination));
 
-    m_world->getCollisionWorld()->rayTest(Convert(position), Convert(destination), result);
+    m_world->getCollisionWorld()->rayTest(result.fromPoint, result.toPoint, result);
 
     return result.bodies;
 }

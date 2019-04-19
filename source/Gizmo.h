@@ -25,10 +25,10 @@ public:
     void SetMode(Mode mode);
     Mode GetMode();
 
-    void UpdateSelectedAxis(const std::vector<Scene::Shape> & shapes);
+    void UpdateSelectedAxis(const std::vector<Scene::RayCastResult> & shapes);
     void UpdateBody(Scene::Body body);
 
-    void FilterGizmoShapes(std::vector<Scene::Shape>& shapes);
+    void FilterGizmoShapes(std::vector<Scene::RayCastResult>& shapes);
 
 private:
 

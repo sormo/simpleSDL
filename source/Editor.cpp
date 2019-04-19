@@ -101,21 +101,20 @@ void Editor::Clicked(const glm::vec2 & position)
     if (!rayCastResult.empty())
     {
         // pick the closest
-        // TODO !!!!!!!!!!! this doesnt work
         float minDistance = FLT_MAX;
-        Scene::Shape shape = nullptr;
+        Scene::Shape closestShape = nullptr;
 
-        for (auto obj : rayCastResult)
+        for (auto[shape, position] : rayCastResult)
         {
-            float objDistance = glm::distance(m_camera.GetPosition(), obj->GetPosition());
-            if (objDistance < minDistance)
+            float shapeDistance = glm::distance(m_camera.GetPosition(), position);
+            if (shapeDistance < minDistance)
             {
-                minDistance = objDistance;
-                shape = obj;
+                minDistance = shapeDistance;
+                closestShape = shape;
             }
         }
 
-        SetEditShape(shape);
+        SetEditShape(closestShape);
     }
 }
 
