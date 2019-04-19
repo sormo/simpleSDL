@@ -427,7 +427,7 @@ namespace Shapes
             uint16_t next = i + 1 == count ? 0 : i + 1;
 
             buffers.indices.push_back(i);
-            buffers.indices.push_back(i + count);
+            buffers.indices.push_back(i + (uint16_t)count);
             buffers.indices.push_back(next);
         }
 

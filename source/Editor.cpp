@@ -7,7 +7,7 @@ static const glm::vec3 ADD_COLOR(1.0f, 1.0f, 1.0f);
 Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
     : m_scene(scene), m_gui(userInterface), m_camera(camera), m_gizmo(scene)
 {
-    m_gui.shapeEditClicked = [this]()
+    m_gui.shapeEditTypeClicked = [this]()
     {
         m_gui.shapePosition = Common::GetPointWorldSpace(glm::vec2(Common::GetWindowWidth() / 2.0f, Common::GetWindowHeight() / 2.0f), 10.0f, m_camera);
         m_gui.shapeScale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -27,27 +27,31 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
     {
         m_scene.RemoveBody(m_editShape->GetBody());
 
-        AddEditShape(ADD_COLOR);
+        AddBodyToScene(ADD_COLOR);
         m_editShape = nullptr;
 
-        m_gui.shapeEditClicked();
+        m_gui.shapeEditTypeClicked();
+    };
+
+    m_gui.shapeEditModeClicked = [this]()
+    {
+        UpdateGizmo();
     };
 }
 
 bool Editor::Press(const glm::vec2 & position, int64_t id)
 {
-    m_isPressed = true;
     m_cursorPosition = position;
     m_pressPosition = position;
 
-    if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || m_gui.shapeEditMode == UserInterface::ShapeEditMode::Camera)
+    Common::Math::Line ray = Common::GetRay(position, m_camera);
+    m_gizmo.UpdateSelectedAxis(m_scene.RayCast(m_camera.GetPosition(), ray.vector));
+
+    if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || m_gizmo.GetSelectedAxis() == Gizmo::Axis::None)
         return false;
 
-    if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Translate)
-    {
-        TranslateShape(position);
-        ResetEditShape();
-    }
+    // gizmo is pressed, store press offset
+    ComputeGizmoOffset(position);
 
     return true;
 }
@@ -56,7 +60,7 @@ bool Editor::Release(const glm::vec2 & position, int64_t id)
 {
     static const float MINIMUM_MOVE_FOR_CLICK = 2.0f;
 
-    m_isPressed = false;
+    m_gizmo.UpdateSelectedAxis({});
 
     // if there is no move, cast a ray to select new editor object
     if (glm::length(position - m_pressPosition) < MINIMUM_MOVE_FOR_CLICK)
@@ -69,7 +73,7 @@ bool Editor::Release(const glm::vec2 & position, int64_t id)
 
 bool Editor::Move(const glm::vec2 & position, int64_t id)
 {
-    if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || !m_isPressed || m_gui.shapeEditMode == UserInterface::ShapeEditMode::Camera)
+    if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || m_gizmo.GetSelectedAxis() == Gizmo::Axis::None)
         return false;
 
     if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Translate)
@@ -78,6 +82,8 @@ bool Editor::Move(const glm::vec2 & position, int64_t id)
         RotateShape(position);
     else if (m_gui.shapeEditMode == UserInterface::ShapeEditMode::Scale)
         ScaleShape(position);
+
+    m_cursorPosition = position;
 
     ResetEditShape();
 
@@ -89,11 +95,13 @@ void Editor::Clicked(const glm::vec2 & position)
     Common::Math::Line ray = Common::GetRay(position, m_camera);
 
     auto rayCastResult = m_scene.RayCast(m_camera.GetPosition(), ray.vector);
+    // remove gizmo shapes
+    m_gizmo.FilterGizmoShapes(rayCastResult);
 
     if (!rayCastResult.empty())
     {
         // pick the closest
-
+        // TODO !!!!!!!!!!! this doesnt work
         float minDistance = FLT_MAX;
         Scene::Shape shape = nullptr;
 
@@ -111,21 +119,45 @@ void Editor::Clicked(const glm::vec2 & position)
     }
 }
 
-Common::Math::Plane Editor::GetEditPlane()
+Common::Math::Plane Editor::GetRotatePlane()
 {
-    glm::vec3 a, b;
+    glm::vec3 a(1.0f, 0.0f, 0.0f), b(0.0f, 0.0f, 1.0f);
 
-    switch (m_gui.shapeEditAxis)
+    switch (m_gizmo.GetSelectedAxis())
     {
-    case UserInterface::ShapeEditAxis::XY:
+    case Gizmo::Axis::X: // YZ plane
+        a = glm::vec3(0.0f, 1.0f, 0.0f);
+        b = glm::vec3(0.0f, 0.0f, 1.0f);
+        break;
+    case Gizmo::Axis::Z: // XY plane
         a = glm::vec3(1.0f, 0.0f, 0.0f);
         b = glm::vec3(0.0f, 1.0f, 0.0f);
         break;
-    case UserInterface::ShapeEditAxis::XZ:
+    case Gizmo::Axis::Y: // XZ plane
         a = glm::vec3(1.0f, 0.0f, 0.0f);
         b = glm::vec3(0.0f, 0.0f, 1.0f);
         break;
-    case UserInterface::ShapeEditAxis::YZ:
+    }
+
+    return Common::Math::Plane::CreateFromPoints({ 0.0f, 0.0f, 0.0f }, a, b);
+}
+
+Common::Math::Plane Editor::GetEditPlane()
+{
+    // TODO edit plane must be chosen according to camera
+    glm::vec3 a(1.0f, 0.0f, 0.0f), b(0.0f, 0.0f, 1.0f);
+
+    switch (m_gizmo.GetSelectedAxis())
+    {
+    case Gizmo::Axis::X: // XY plane
+        a = glm::vec3(1.0f, 0.0f, 0.0f);
+        b = glm::vec3(0.0f, 1.0f, 0.0f);
+        break;
+    case Gizmo::Axis::Z: // XZ plane
+        a = glm::vec3(1.0f, 0.0f, 0.0f);
+        b = glm::vec3(0.0f, 0.0f, 1.0f);
+        break;
+    case Gizmo::Axis::Y: // YZ plane
         a = glm::vec3(0.0f, 1.0f, 0.0f);
         b = glm::vec3(0.0f, 0.0f, 1.0f);
         break;
@@ -152,25 +184,37 @@ void Editor::ScaleShape(const glm::vec2 & position)
         p2 = Common::Math::GetIntersection(plane, ray);
     }
 
-    glm::vec3 scaleVector(p1 - p2);
+    glm::vec3 scaleVector(p2 - p1);
 
-    m_gui.shapeScale += scaleVector;
+    m_gui.shapeScale += RestrictToLine(scaleVector);
     
     static const float MINIMUM_SCALE = 0.1f;
     m_gui.shapeScale.x = m_gui.shapeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.x;
     m_gui.shapeScale.y = m_gui.shapeScale.y < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.y;
     m_gui.shapeScale.z = m_gui.shapeScale.z < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.z;
-
-    m_cursorPosition = position;
 }
 
 void Editor::RotateShape(const glm::vec2 & position)
 {
-    glm::vec2 delta = position - m_cursorPosition;
-    m_cursorPosition = position;
+    Common::Math::Plane plane = GetRotatePlane();
 
-    m_gui.shapeRotation.y += glm::radians(delta.x);
-    m_gui.shapeRotation.x += glm::radians(delta.y);
+    plane.Translate(m_gui.shapePosition);
+    plane.Rotate(m_gui.shapeRotation);
+
+    glm::vec3 p1;
+    {
+        Common::Math::Line ray = Common::GetRay(m_cursorPosition, m_camera);
+        p1 = Common::Math::GetIntersection(plane, ray);
+    }
+    glm::vec3 p2;
+    {
+        Common::Math::Line ray = Common::GetRay(position, m_camera);
+        p2 = Common::Math::GetIntersection(plane, ray);
+    }
+
+    float angle = Common::Math::GetAngle(p1, p2, plane);
+
+    m_gui.shapeRotation += Common::Math::GetRotation(angle, GetEditLineUnit());
 }
 
 void Editor::TranslateShape(const glm::vec2 & position)
@@ -188,14 +232,35 @@ void Editor::TranslateShape(const glm::vec2 & position)
     // ***********************************************************************
 
     Common::Math::Line ray = Common::GetRay(position, m_camera);
+    
     Common::Math::Plane plane = GetEditPlane();
-
     plane.Translate(m_gui.shapePosition);
 
-    m_gui.shapePosition = Common::Math::GetIntersection(plane, ray);
+    glm::vec3 planeIntersection = Common::Math::GetIntersection(plane, ray);
+
+    m_gui.shapePosition += RestrictToLine(planeIntersection - m_gui.shapePosition) - RestrictToLine(m_gizmoOffset);
 }
 
-void Editor::AddEditShape(const glm::vec3 & color)
+glm::vec3 Editor::RestrictToLine(const glm::vec3& point)
+{
+    return point * GetEditLineUnit();
+}
+
+glm::vec3 Editor::GetEditLineUnit()
+{
+    switch (m_gizmo.GetSelectedAxis())
+    {
+    case Gizmo::Axis::X:
+        return glm::vec3(1.0f, 0.0f, 0.0f);
+    case Gizmo::Axis::Y:
+        return glm::vec3(0.0f, 1.0f, 0.0f);
+    case Gizmo::Axis::Z:
+        return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+    return glm::vec3(1.0f, 0.0f, 0.0f);
+}
+
+Scene::Body Editor::AddBodyToScene(const glm::vec3& color)
 {
     Material::Data material;
     material.ambient = material.diffuse = material.specular = color;
@@ -204,7 +269,7 @@ void Editor::AddEditShape(const glm::vec3 & color)
     bool isEdit = color == EDIT_COLOR;
     bool isStatic = isEdit ? true : m_gui.isStatic;
 
-    Scene::Body newBody;
+    Scene::Body newBody = nullptr;
 
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
         newBody = m_scene.AddCube({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale }, material, isStatic);
@@ -215,8 +280,17 @@ void Editor::AddEditShape(const glm::vec3 & color)
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cone)
         newBody = m_scene.AddCone({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, material, isStatic);
 
+    return newBody;
+}
+
+void Editor::AddEditShape(const glm::vec3 & color)
+{
+    Scene::Body body = AddBodyToScene(color);
+
     // just pick first shape
-    m_editShape = newBody->GetShapes()[0];
+    m_editShape = body->GetShapes()[0];
+
+    UpdateGizmo();
 }
 
 void Editor::SetEditShape(Scene::Shape shape)
@@ -224,7 +298,7 @@ void Editor::SetEditShape(Scene::Shape shape)
     if (m_editShape && m_editShape != shape)
     {
         m_scene.RemoveBody(m_editShape->GetBody());
-        AddEditShape(ADD_COLOR);
+        AddBodyToScene(ADD_COLOR);
     }
 
     m_editShape = shape;
@@ -254,6 +328,44 @@ void Editor::SetEditShape(Scene::Shape shape)
 void Editor::ResetEditShape()
 {
     m_scene.RemoveBody(m_editShape->GetBody());
+    m_editShape = nullptr;
 
     AddEditShape(EDIT_COLOR);
+}
+
+void Editor::UpdateGizmo()
+{
+    if (!m_editShape)
+    {
+        m_gizmo.SetMode(Gizmo::Mode::None);
+        return;
+    }
+
+    switch (m_gui.shapeEditMode)
+    {
+    case UserInterface::ShapeEditMode::Translate:
+        m_gizmo.SetMode(Gizmo::Mode::Move);
+        break;
+    case UserInterface::ShapeEditMode::Rotate:
+        m_gizmo.SetMode(Gizmo::Mode::Rotate);
+        break;
+    case UserInterface::ShapeEditMode::Scale:
+        m_gizmo.SetMode(Gizmo::Mode::Scale);
+        break;
+    }
+
+    // currently expect only single shape bodies
+    m_gizmo.UpdateBody(m_editShape->GetBody());
+}
+
+void Editor::ComputeGizmoOffset(const glm::vec2& position)
+{
+    Common::Math::Line ray = Common::GetRay(position, m_camera);
+
+    Common::Math::Plane plane = GetEditPlane();
+    plane.Translate(m_gui.shapePosition);
+
+    glm::vec3 planeIntersection = Common::Math::GetIntersection(plane, ray);
+
+    m_gizmoOffset = planeIntersection - m_editShape->GetBody()->GetPosition();
 }

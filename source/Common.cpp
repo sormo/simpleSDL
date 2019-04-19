@@ -221,6 +221,27 @@ namespace Common
 
             return result;
         }
+
+        float GetAngle(const glm::vec3& p1, const glm::vec3& p2)
+        {
+            float length1 = glm::length(p1);
+            float length2 = glm::length(p2);
+
+            float dot = glm::dot(p1, p2);
+
+            float a = dot / (length1 * length2);
+
+            return acos(a);
+        }
+
+        float GetAngle(const glm::vec3& p1, const glm::vec3& p2, const Plane& plane)
+        {
+            float angle = GetAngle(p1, p2);
+            const glm::vec3 cross = glm::cross(p1, p2);
+            if (glm::dot(plane.normal, cross) < 0.0f)
+                angle = -angle;
+            return angle;
+        }
     }
 
     Math::Line GetRay(const glm::vec2 & position, const Camera & camera)

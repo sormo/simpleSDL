@@ -20,6 +20,8 @@ private:
     void ResetEditShape();
     void AddEditShape(const glm::vec3 & color);
     void SetEditShape(Scene::Shape shape);
+    Scene::Body AddBodyToScene(const glm::vec3& color);
+
 
     void TranslateShape(const glm::vec2 & position);
     void RotateShape(const glm::vec2 & position);
@@ -28,6 +30,9 @@ private:
     void Clicked(const glm::vec2 & position);
 
     Common::Math::Plane GetEditPlane();
+    Common::Math::Plane GetRotatePlane();
+    glm::vec3 RestrictToLine(const glm::vec3& planeIntersection);
+    glm::vec3 GetEditLineUnit();
 
     Scene & m_scene;
     UserInterface & m_gui;
@@ -35,9 +40,12 @@ private:
 
     Scene::Shape m_editShape = nullptr;
 
-    bool m_isPressed = false;
     glm::vec2 m_cursorPosition;
     glm::vec2 m_pressPosition;
 
+    void UpdateGizmo();
+
     Gizmo m_gizmo;
+    glm::vec3 m_gizmoOffset;
+    void ComputeGizmoOffset(const glm::vec2& position);
 };

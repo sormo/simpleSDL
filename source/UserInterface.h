@@ -9,10 +9,11 @@ struct UserInterface
     bool bulletDebug = false;
 
     enum class ShapeEditType { None, Cube, Sphere, Cylinder, Cone } shapeEditType;
-    enum class ShapeEditMode { Translate, Rotate, Scale, Camera } shapeEditMode;
+    enum class ShapeEditMode { Translate, Rotate, Scale } shapeEditMode;
     enum class ShapeEditAxis { XY, XZ, YZ } shapeEditAxis;
 
-    std::function<void()> shapeEditClicked;
+    std::function<void()> shapeEditTypeClicked;
+    std::function<void()> shapeEditModeClicked;
     std::function<void()> shapeAcceptClicked;
 
     glm::vec3 shapePosition;

@@ -35,8 +35,13 @@ public:
         friend class Scene;
 
         glm::vec3 GetPosition();
+        void SetPosition(const glm::vec3& position);
+
         glm::vec3 GetRotation();
+        void SetRotation(const glm::vec3& rotation);
+
         bool IsStatic();
+        bool IsCompound();
         const std::vector<Shape> & GetShapes();
     private:
         std::set<BodyData>::iterator it;
@@ -52,6 +57,8 @@ public:
         const std::vector<std::tuple<Shapes::Defintion::Sphere, Material::Data>> & sphere,
         const std::vector<std::tuple<Shapes::Defintion::Cylinder, Material::Data>> & cylinder,
         const std::vector<std::tuple<Shapes::Defintion::Cone, Material::Data>> & cone);
+    template<class T>
+    Shape AddShape(Body compound, const T & definition, const Material::Data & material);
     void RemoveBody(Body body);
 
     void Step();

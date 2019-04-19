@@ -9,6 +9,14 @@ glm::vec3 Scene::BodyHandle::GetPosition()
     return { p.x(), p.y(), p.z() };
 }
 
+void Scene::BodyHandle::SetPosition(const glm::vec3& position)
+{
+    btTransform t(it->body->getWorldTransform());
+    t.setOrigin({ position.x, position.y, position.z });
+
+    it->body->setWorldTransform(t);
+}
+
 glm::vec3 Scene::BodyHandle::GetRotation()
 {
     btQuaternion q = it->body->getWorldTransform().getRotation();
@@ -19,9 +27,24 @@ glm::vec3 Scene::BodyHandle::GetRotation()
     return r;
 }
 
+void Scene::BodyHandle::SetRotation(const glm::vec3& rotation)
+{
+    btTransform t(it->body->getWorldTransform());
+    btQuaternion q;
+    q.setEulerZYX(rotation.x, rotation.y, rotation.z);
+    t.setRotation(q);
+
+    it->body->setWorldTransform(t);
+}
+
 bool Scene::BodyHandle::IsStatic()
 {
     return it->body->isStaticObject();
+}
+
+bool Scene::BodyHandle::IsCompound()
+{
+    return it->body->getCollisionShape()->isCompound();
 }
 
 const std::vector<Scene::Shape> & Scene::BodyHandle::GetShapes()
@@ -187,6 +210,41 @@ Scene::Shape Scene::AddShape(btCollisionShape * shape, const glm::mat4 & localTr
     shapes.push_back(newShape);
 
     return newShape;
+}
+
+template<class T>
+Scene::Shape Scene::AddShape(Body compound, const T& definition, const Material::Data& material)
+{
+    printf("Unsupported definition type fpr Scene AddShape");
+    throw std::runtime_error("Unsupported definition type fpr Scene AddShape");
+}
+
+template<>
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Box & definition, const Material::Data & material)
+{
+    return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition), 
+        definition.extents, compound, material, m_cube.get());
+}
+
+template<>
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Sphere & definition, const Material::Data & material)
+{
+    return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition), 
+        glm::vec3(definition.radius), compound, material, m_sphere.get());
+}
+
+template<>
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Cylinder & definition, const Material::Data & material)
+{
+    return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition),
+        glm::vec3(definition.radius, definition.height, definition.radius), compound, material, m_cylinder.get());
+}
+
+template<>
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Cone & definition, const Material::Data & material)
+{
+    return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition),
+        glm::vec3(definition.radius, definition.height, definition.radius), compound, material, m_cone.get());
 }
 
 void Scene::RemoveBody(Body body)

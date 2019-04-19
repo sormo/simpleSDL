@@ -62,24 +62,24 @@ void UserInterface::Generate()
     if (ToggleButton("Cube", &cubeEdit))
     {
         shapeEditType = cubeEdit ? ShapeEditType::Cube : ShapeEditType::None;
-        shapeEditClicked();
+        shapeEditTypeClicked();
     }
     ImGui::SameLine();
     if (ToggleButton("Circle", &circleEdit))
     {
         shapeEditType = circleEdit ? ShapeEditType::Sphere : ShapeEditType::None;
-        shapeEditClicked();
+        shapeEditTypeClicked();
     }
     if (ToggleButton("Cylinder", &cylinderEdit))
     {
         shapeEditType = cylinderEdit ? ShapeEditType::Cylinder : ShapeEditType::None;
-        shapeEditClicked();
+        shapeEditTypeClicked();
     }
     ImGui::SameLine();
     if (ToggleButton("Cone", &coneEdit))
     {
         shapeEditType = coneEdit ? ShapeEditType::Cone : ShapeEditType::None;
-        shapeEditClicked();
+        shapeEditTypeClicked();
     }
 
     if (cubeEdit || circleEdit || cylinderEdit || coneEdit)
@@ -94,17 +94,18 @@ void UserInterface::Generate()
         ImGui::Text("%06.2f %06.2f %06.2f", shapePosition.x, shapePosition.y, shapePosition.z);
         {
             static int32_t e = 0;
-            ImGui::RadioButton("translate", &e, 0);
-            ImGui::RadioButton("rotate", &e, 1);
-            ImGui::RadioButton("scale", &e, 2);
-            ImGui::RadioButton("camera", &e, 3);
+            bool clicked = false;
+            clicked |= ImGui::RadioButton("translate", &e, 0);
+            clicked |= ImGui::RadioButton("rotate", &e, 1);
+            clicked |= ImGui::RadioButton("scale", &e, 2);
             switch (e)
             {
             case 0: shapeEditMode = ShapeEditMode::Translate; break;
             case 1: shapeEditMode = ShapeEditMode::Rotate; break;
             case 2: shapeEditMode = ShapeEditMode::Scale; break;
-            case 3: shapeEditMode = ShapeEditMode::Camera; break;
             }
+            if (clicked)
+                shapeEditModeClicked();
         }
 
         if (shapeEditMode == ShapeEditMode::Translate || shapeEditMode == ShapeEditMode::Scale)
