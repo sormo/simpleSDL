@@ -211,7 +211,21 @@ void Editor::RotateShape(const glm::vec2 & position)
         p2 = Common::Math::GetIntersection(plane, ray);
     }
 
-    float angle = Common::Math::GetAngle(p1, p2, plane);
+    auto bodyPosition = m_editShape->GetBody()->GetPosition();
+    float angle = Common::Math::GetAngle(p1 - bodyPosition, p2 - bodyPosition, plane);
+
+    // invert angle if plane is rotated on the other side
+    if (Common::Math::GetDistance(plane, m_camera.GetPosition()) < 0.0f)
+        angle = -angle;
+
+    // rotated axis
+    //auto axis = GetEditLineUnit();
+    //glm::mat4 rotationMatrix(1.0f);
+    //rotationMatrix = glm::rotate(rotationMatrix, m_gui.shapeRotation.x, { 0.0f, 0.0f, 1.0f });
+    //rotationMatrix = glm::rotate(rotationMatrix, m_gui.shapeRotation.y, { 0.0f, 1.0f, 0.0f });
+    //rotationMatrix = glm::rotate(rotationMatrix, m_gui.shapeRotation.z, { 1.0f, 0.0f, 0.0f });
+
+    //axis = rotationMatrix * glm::vec4(axis, 0.0f);
 
     m_gui.shapeRotation += Common::Math::GetRotation(angle, GetEditLineUnit());
 }

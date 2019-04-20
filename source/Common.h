@@ -95,6 +95,8 @@ namespace Common
         float GetAngle(const glm::vec3& p1, const glm::vec3& p2);
         // signed angle according to plane normal
         float GetAngle(const glm::vec3& p1, const glm::vec3& p2, const Plane & plane);
+
+        float GetDistance(const Plane& plane, const glm::vec3& p);
     }
 
     // get ray from camera going through position in screen coordinates

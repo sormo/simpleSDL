@@ -224,23 +224,27 @@ namespace Common
 
         float GetAngle(const glm::vec3& p1, const glm::vec3& p2)
         {
-            float length1 = glm::length(p1);
-            float length2 = glm::length(p2);
+            float dot = glm::dot(glm::normalize(p1), glm::normalize(p2));
 
-            float dot = glm::dot(p1, p2);
+            // domain of acos is [-1, 1]
+            dot = dot < -1.0f ? -1.0f : (dot > 1.0f ? 1.0f : dot);
 
-            float a = dot / (length1 * length2);
-
-            return acos(a);
+            return acos(dot);
         }
 
         float GetAngle(const glm::vec3& p1, const glm::vec3& p2, const Plane& plane)
         {
             float angle = GetAngle(p1, p2);
+
             const glm::vec3 cross = glm::cross(p1, p2);
             if (glm::dot(plane.normal, cross) < 0.0f)
                 angle = -angle;
             return angle;
+        }
+
+        float GetDistance(const Plane& plane, const glm::vec3& p)
+        {
+            return (plane.normal.x * p.x + plane.normal.y * p.y + plane.normal.z * p.z + plane.value) / glm::length(plane.normal);
         }
     }
 
