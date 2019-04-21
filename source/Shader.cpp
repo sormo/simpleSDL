@@ -156,6 +156,29 @@ void Shader::BindBuffer(GLuint buffer, GLuint location, uint32_t offset, uint32_
 }
 
 template<>
+void Shader::BindBuffer<glm::vec4>(GLuint buffer, GLuint location, uint32_t offset, uint32_t stride)
+{
+    glEnableVertexAttribArray(location);
+    CheckGlError("glEnableVertexAttribArray");
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    CheckGlError("glBindBuffer");
+
+    glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, stride, (void*)offset);
+    CheckGlError("glVertexAttribPointer");
+
+    m_boundLocations.push_back(location);
+}
+
+template<>
+void Shader::BindBuffer<glm::vec4>(GLuint buffer, const char* locationName, uint32_t offset, uint32_t stride)
+{
+    GLuint location = GetLocation(locationName, LocationType::Attrib);
+
+    BindBuffer<glm::vec4>(buffer, location, offset, stride);
+}
+
+template<>
 void Shader::BindBuffer<glm::vec3>(GLuint buffer, GLuint location, uint32_t offset, uint32_t stride)
 {
     glEnableVertexAttribArray(location);
@@ -171,7 +194,7 @@ void Shader::BindBuffer<glm::vec3>(GLuint buffer, GLuint location, uint32_t offs
 }
 
 template<>
-void Shader::BindBuffer<glm::vec3>(GLuint buffer, const char * locationName, uint32_t offset, uint32_t stride)
+void Shader::BindBuffer<glm::vec3>(GLuint buffer, const char* locationName, uint32_t offset, uint32_t stride)
 {
     GLuint location = GetLocation(locationName, LocationType::Attrib);
 

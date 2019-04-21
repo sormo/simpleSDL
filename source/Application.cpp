@@ -24,6 +24,8 @@
 #include "MouseDispatcher.h"
 #include "Editor.h"
 
+#include "DebugDraw.h"
+
 namespace Application
 {
     glm::vec3 g_lightPositionWorldSpace;
@@ -42,6 +44,7 @@ namespace Application
     std::unique_ptr<ShadowScene> g_shadowScene;
     std::unique_ptr<Scene> g_scene;
     std::unique_ptr<Editor> g_editor;
+    std::unique_ptr<DebugDraw> g_debugDraw;
 
     void InitScene()
     {
@@ -101,6 +104,22 @@ namespace Application
 
         if (g_userInterface.bulletDebug)
             g_scene->DrawDebug(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+    }
+
+    void DrawTestDebugDraw()
+    {
+        g_debugDraw->DrawPoint({ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawPoint({ 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawPoint({ 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f });
+
+        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f });
+
+        g_debugDraw->DrawTriangle({ 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 0.5f });
+
+        g_debugDraw->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        g_debugDraw->Clear();
     }
 
     void BindModel()
@@ -166,6 +185,7 @@ namespace Application
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
         DrawScene();
+        //DrawTestDebugDraw();
 
         // drawing single model
         //BindModel();
@@ -176,10 +196,10 @@ namespace Application
         //g_objModel->DrawSkyboxReflection(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
         //g_objModel->DrawSkyboxRefraction(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());
 
-        glm::mat4 lightModel = glm::mat4(1.0f);
-        lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
-        lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
-        g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        //glm::mat4 lightModel = glm::mat4(1.0f);
+        //lightModel = glm::translate(lightModel, g_lightPositionWorldSpace);
+        //lightModel = glm::scale(lightModel, glm::vec3(0.1f)); // a smaller cube
+        //g_light->Draw(lightModel, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //g_skybox->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
@@ -244,7 +264,7 @@ namespace Application
         //g_model.reset(new Model("models/craneo/craneo.model", light));
         //g_model.reset(new Model("models/cube/cube.model", light));
         //g_objModel.reset(new ObjModel());
-        g_light.reset(new LightObject());
+        //g_light.reset(new LightObject());
 
         //g_skybox.reset(new Skybox({ "skybox/islands/right.jpg",
         //                            "skybox/islands/left.jpg",
@@ -258,6 +278,8 @@ namespace Application
         g_shadowScene.reset(new ShadowScene());
 
         g_editor.reset(new Editor(*g_scene, g_userInterface, g_camera));
+
+        g_debugDraw.reset(new DebugDraw());
 
         g_mouseDispatcher.Add(g_editor.get());
         g_mouseDispatcher.Add(&g_camera);

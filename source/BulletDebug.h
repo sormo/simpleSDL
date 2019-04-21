@@ -2,13 +2,11 @@
 #include "OpenGL.h"
 #include <btBulletDynamicsCommon.h>
 #include "Shader.h"
+#include "DebugDraw.h"
 
 class BulletDebug : public btIDebugDraw
 {
 public:
-    BulletDebug();
-    ~BulletDebug();
-
     void Draw(const glm::mat4 & view, const glm::mat4 & projection);
     void Clear();
 
@@ -22,11 +20,5 @@ public:
 
     int m_debugMode;
 
-    Shader m_shader;
-    GLuint m_locationVP;
-    GLuint m_locationPosition;
-    GLuint m_locationColor;
-
-    std::vector<glm::vec3> m_lineData;
-    std::vector<glm::vec3> m_colorData;
+    DebugDraw m_debugDraw;
 };

@@ -9,6 +9,7 @@
 
 class Editor : public MouseReceiver
 {
+    friend class EditorDebug;
 public:
     Editor(Scene & scene, UserInterface & userInterface, Camera & camera);
 
