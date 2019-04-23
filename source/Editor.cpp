@@ -5,7 +5,7 @@ static const glm::vec3 EDIT_COLOR(0.0f, 1.0f, 0.0f);
 static const glm::vec3 ADD_COLOR(1.0f, 1.0f, 1.0f);
 
 Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
-    : m_scene(scene), m_gui(userInterface), m_camera(camera), m_gizmo(scene)
+    : m_scene(scene), m_gui(userInterface), m_camera(camera), m_gizmo(scene), m_debug(*this)
 {
     m_gui.shapeEditTypeClicked = [this]()
     {
@@ -93,8 +93,12 @@ bool Editor::Move(const glm::vec2 & position, int64_t id)
 void Editor::Clicked(const glm::vec2 & position)
 {
     Common::Math::Line ray = Common::GetRay(position, m_camera);
+    glm::vec3 cameraPosition = m_camera.GetPosition();
 
-    auto rayCastResult = m_scene.RayCast(m_camera.GetPosition(), ray.vector);
+    auto rayCastResult = m_scene.RayCast(cameraPosition, ray.vector);
+
+    m_debug.Ray(cameraPosition, ray.vector, rayCastResult);
+
     // remove gizmo shapes
     m_gizmo.FilterGizmoShapes(rayCastResult);
 
@@ -228,6 +232,8 @@ void Editor::RotateShape(const glm::vec2 & position)
     //axis = rotationMatrix * glm::vec4(axis, 0.0f);
 
     m_gui.shapeRotation += Common::Math::GetRotation(angle, GetEditLineUnit());
+
+    m_debug.EditPlane(plane, bodyPosition);
 }
 
 void Editor::TranslateShape(const glm::vec2 & position)
@@ -381,4 +387,10 @@ void Editor::ComputeGizmoOffset(const glm::vec2& position)
     glm::vec3 planeIntersection = Common::Math::GetIntersection(plane, ray);
 
     m_gizmoOffset = planeIntersection - m_editShape->GetBody()->GetPosition();
+}
+
+void Editor::Draw(const glm::mat4& view, const glm::mat4& projection)
+{
+    m_debug.Draw(view, projection);
+    m_debug.Clear();
 }

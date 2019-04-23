@@ -104,19 +104,45 @@ namespace Application
 
         if (g_userInterface.bulletDebug)
             g_scene->DrawDebug(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+
+        g_editor->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
     }
 
     void DrawTestDebugDraw()
     {
-        g_debugDraw->DrawPoint({ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
-        g_debugDraw->DrawPoint({ 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f });
-        g_debugDraw->DrawPoint({ 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f });
+        for (float i = 1.0f; i <= 10.0f; i += 1.0f)
+        {
+            g_debugDraw->DrawPoint({ i, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+            g_debugDraw->DrawPoint({ 0.0f, i, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f });
+            g_debugDraw->DrawPoint({ 0.0f, 0.0f, i }, { 0.0f, 0.0f, 1.0f, 1.0f });
+        }
 
-        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
-        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f });
-        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f });
+        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 10.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 10.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 10.0f }, { 0.0f, 0.0f, 1.0f, 1.0f });
 
         g_debugDraw->DrawTriangle({ 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 0.5f });
+
+        Common::Math::Plane plane = Common::Math::Plane::CreateFromPoints({ 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
+        g_debugDraw->DrawRectangle({ 0.0f, 0.0f, 0.0f }, { 0.5f, 1.0f }, plane.normal, { 0.0f, 1.0f, 0.0f, 0.5f });
+        
+        plane.Translate({ 0.0f, 2.0f, 0.0f });
+        g_debugDraw->DrawPlane(plane, { 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 0.2f });
+
+        Common::Math::Plane plane2 = Common::Math::Plane::CreateFromPoints({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 1.0f });
+
+        //g_debugDraw->DrawPlane(plane2, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f });
+
+        plane2.Rotate(Common::Math::GetRotation(glm::radians(45.0f), { 0.0f, 0.0f, 1.0f }));
+        plane2.Position({ 1.0f, 0.0f, 0.0f });
+
+        g_debugDraw->DrawPlane(plane2, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 0.5f });
+
+        Common::Math::Line line = Common::Math::Line::CreateFromPoints({-1.0f, 1.0f, 1.0f}, {-0.5f, -0.5f, 0.0f});
+        g_debugDraw->DrawLine(line, 5.0f, { 1.0f, 1.0f, 1.0f, 0.5f });
+
+        glm::vec3 intersection = Common::Math::GetIntersection(plane2, line);
+        g_debugDraw->DrawPoint(intersection, { 1.0f, 0.0f, 0.0f, 1.0f });
 
         g_debugDraw->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
         g_debugDraw->Clear();
@@ -184,8 +210,8 @@ namespace Application
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     
 
-        DrawScene();
-        //DrawTestDebugDraw();
+        //DrawScene();
+        DrawTestDebugDraw();
 
         // drawing single model
         //BindModel();

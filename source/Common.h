@@ -80,9 +80,12 @@ namespace Common
         {
             static Plane CreateFromPoints(const glm::vec3 & p1, const glm::vec3 & p2, const glm::vec3 & p3);
             void Translate(const glm::vec3 & vector);
+            // rotation will "displace" plane, 
             void Rotate(const glm::vec3 & radians);
+            // move plane such point is contained within plane
+            void Position(const glm::vec3& point);
 
-            // plane: normal.x * x + normal.y * y + normal.z * z = value;
+            // plane: normal.x * x + normal.y * y + normal.z * z - value = 0;
 
             glm::vec3 normal;
             float value;
@@ -97,6 +100,8 @@ namespace Common
         float GetAngle(const glm::vec3& p1, const glm::vec3& p2, const Plane & plane);
 
         float GetDistance(const Plane& plane, const glm::vec3& p);
+
+        glm::vec3 GetClosestPointOnLine(const Line& line, const glm::vec3& p);
     }
 
     // get ray from camera going through position in screen coordinates

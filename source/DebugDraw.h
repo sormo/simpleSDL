@@ -13,12 +13,11 @@ public:
     void DrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
     void DrawTriangle(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec4& color);
     
-    void DrawSquare(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color);
-
-    void DrawPlane(const Common::Math::Plane& plane, const glm::vec4& color);
-    void DrawLine(const Common::Math::Line& line, const glm::vec4& color);
-
+    void DrawRectangle(const glm::vec3& center, const glm::vec2& halfExtents, const glm::vec3& planeNormal, const glm::vec4& color);
     void DrawCircle(const glm::vec3& center, float radius, const Common::Math::Plane& plane, const glm::vec4& color);
+
+    void DrawLine(const Common::Math::Line& line, float length, const glm::vec4& color);
+    void DrawPlane(const Common::Math::Plane& plane, const glm::vec2& halfExtents, const glm::vec4& color);
 
     void Draw(const glm::mat4& view, const glm::mat4& projection);
     void Clear();

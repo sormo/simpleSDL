@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "Common.h"
 #include "Gizmo.h"
+#include "EditorDebug.h"
 
 class Editor : public MouseReceiver
 {
@@ -16,6 +17,8 @@ public:
     bool Press(const glm::vec2 & position, int64_t id) override;
     bool Release(const glm::vec2 &  position, int64_t id) override;
     bool Move(const glm::vec2 &  position, int64_t id) override;
+
+    void Draw(const glm::mat4& view, const glm::mat4& projection);
 
 private:
     void ResetEditShape();
@@ -38,6 +41,8 @@ private:
     Scene & m_scene;
     UserInterface & m_gui;
     Camera & m_camera;
+
+    EditorDebug m_debug;
 
     Scene::Shape m_editShape = nullptr;
 

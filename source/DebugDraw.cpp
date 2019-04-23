@@ -61,14 +61,50 @@ void DebugDraw::DrawTriangle(const glm::vec3& p1, const glm::vec3& p2, const glm
     m_triangleColor.push_back(color);
 }
 
-void DebugDraw::DrawPlane(const Common::Math::Plane& plane, const glm::vec4& color)
+void DebugDraw::DrawRectangle(const glm::vec3& center, const glm::vec2& halfExtents, const glm::vec3& planeNormal, const glm::vec4& color)
 {
+    auto SolveZ = [](const glm::vec2 & v, const glm::vec3 & n)
+    {
+        return (-n.x * v.x - n.y * v.y) / n.z;
+    };
 
-}
+    auto GetUpVector = [](const glm::vec3 & normal, const glm::vec2 & halfExtents)
+    {
+        if (normal.z != 0.0f)
+            return glm::vec3(0.0f, halfExtents.y, -normal.y * halfExtents.y / normal.z);
+        else if (normal.y != 0.0f)
+            return glm::vec3(halfExtents.x, -normal.x * halfExtents.x / normal.y, 0.0f);
+        else if (normal.x != 0.0f)
+            return glm::vec3(-normal.y * halfExtents.y / normal.x, halfExtents.y, 0.0f);
+    };
 
-void DebugDraw::DrawLine(const Common::Math::Line& line, const glm::vec4& color)
-{
+    auto normal = glm::normalize(planeNormal);
 
+    glm::vec3 upVectorPlane = GetUpVector(normal, halfExtents);
+
+    DrawLine(center, center + upVectorPlane, { 1.0f, 1.0f, 1.0f, 1.0f });
+
+    glm::vec3 rightVectorPlane = glm::cross(normal, upVectorPlane);
+
+    rightVectorPlane = rightVectorPlane * (halfExtents.x / halfExtents.y);
+
+    DrawLine(center, center + rightVectorPlane, { 1.0f, 1.0f, 1.0f, 1.0f });
+
+    m_triangleData.push_back(center - upVectorPlane - rightVectorPlane);
+    m_triangleData.push_back(center - upVectorPlane + rightVectorPlane);
+    m_triangleData.push_back(center + upVectorPlane + rightVectorPlane);
+
+    m_triangleData.push_back(center - upVectorPlane - rightVectorPlane);
+    m_triangleData.push_back(center + upVectorPlane + rightVectorPlane);
+    m_triangleData.push_back(center + upVectorPlane - rightVectorPlane);
+
+    m_triangleColor.push_back(color);
+    m_triangleColor.push_back(color);
+    m_triangleColor.push_back(color);
+
+    m_triangleColor.push_back(color);
+    m_triangleColor.push_back(color);
+    m_triangleColor.push_back(color);
 }
 
 void DebugDraw::DrawCircle(const glm::vec3& center, float radius, const Common::Math::Plane& plane, const glm::vec4& color)
@@ -76,9 +112,30 @@ void DebugDraw::DrawCircle(const glm::vec3& center, float radius, const Common::
 
 }
 
-void DebugDraw::DrawSquare(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color)
+void DebugDraw::DrawLine(const Common::Math::Line& line, float length, const glm::vec4& color)
 {
+    glm::vec3 center = Common::Math::GetClosestPointOnLine(line, { 0.0f, 0.0f, 0.0f });
+    glm::vec3 vector = glm::normalize(line.point - center);
 
+    DrawLine(center - vector * (length / 2.0f), center + vector * (length / 2.0f), color);
+}
+
+void DebugDraw::DrawPlane(const Common::Math::Plane& plane, const glm::vec2& halfExtents, const glm::vec4& color)
+{
+    // compute the center of plane
+    // it will be on some axis (plane must intercept at least one axis)
+    glm::vec3 center;
+
+    // if normal component is not zero there is interception of plane with that axis
+    // compute value of that component such other components are set to zero
+    if (plane.normal.y != 0.0f)
+        center = glm::vec3(0.0f, -plane.value / plane.normal.y, 0.0f);
+    else if (plane.normal.x != 0.0f)
+        center = glm::vec3(-plane.value / plane.normal.x, 0.0f, 0.0f);
+    else
+        center = glm::vec3(0.0f, 0.0f, -plane.value / plane.normal.z);
+
+    DrawRectangle(center, halfExtents, plane.normal, color);
 }
 
 void DebugDraw::Draw(const glm::mat4& view, const glm::mat4& projection)
@@ -147,6 +204,12 @@ void DebugDraw::DrawCommon(const glm::mat4& view, const glm::mat4& projection,
 
 void DebugDraw::Clear()
 {
+    m_pointData.clear();
+    m_pointColor.clear();
+
     m_lineData.clear();
     m_lineColor.clear();
+
+    m_triangleData.clear();
+    m_triangleColor.clear();
 }

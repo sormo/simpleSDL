@@ -165,12 +165,17 @@ namespace Common
 
         void Plane::Translate(const glm::vec3 & vector)
         {
-            value += normal.x * vector.x + normal.y * vector.y + normal.z * vector.z;
+            value -= normal.x * vector.x + normal.y * vector.y + normal.z * vector.z;
+        }
+
+        void Plane::Position(const glm::vec3& point)
+        {
+            value = -point.x * normal.x - point.y * normal.y - point.z * normal.z;
         }
 
         void Plane::Rotate(const glm::vec3 & radians)
         {
-            glm::mat4 model(1.0f);
+            glm::mat3 model(0.0f);
 
             btQuaternion rotationQuaternion;
             rotationQuaternion.setEulerZYX(radians.x, radians.y, radians.z);
@@ -190,7 +195,7 @@ namespace Common
             model[2][1] = matrix[2][1];
             model[2][2] = matrix[2][2];
 
-            normal = glm::vec3(model * glm::vec4(normal, 0.0f));
+            normal = model * normal;
         }
 
         glm::vec3 GetIntersection(const Plane & plane, const Line & line)
@@ -201,8 +206,8 @@ namespace Common
             const glm::vec3 & v = line.vector;
 
             // plug parametric equations of line to euqation of plane and compute t
-            float t = (d - n.x * a.x - n.y * a.y - n.z * a.z) / (n.x * v.x + n.y * v.y + n.z * v.z);
-            // use t in parametrix equation of line
+            float t = (-d - n.x * a.x - n.y * a.y - n.z * a.z) / (n.x * v.x + n.y * v.y + n.z * v.z);
+            // use t in parametric equation of line
             glm::vec3 result;
 
             result = a + v * t;
@@ -246,6 +251,18 @@ namespace Common
         {
             return (plane.normal.x * p.x + plane.normal.y * p.y + plane.normal.z * p.z + plane.value) / glm::length(plane.normal);
         }
+
+        glm::vec3 GetClosestPointOnLine(const Line& line, const glm::vec3& p)
+        {
+            // get two points
+            glm::vec3 a = line.point, b = line.point + line.vector;
+
+            glm::vec3 d = (a - b) / glm::distance(a, b);
+            glm::vec3 v = p - b;
+            float dot = glm::dot(v, d);
+
+            return b + dot * d;
+        }
     }
 
     Math::Line GetRay(const glm::vec2 & position, const Camera & camera)
@@ -253,7 +270,7 @@ namespace Common
         Math::Line result;
 
         result.point = camera.GetPosition();
-        result.vector = Common::GetPointWorldSpace(position, 10.0f, camera) - result.point;
+        result.vector = glm::normalize(Common::GetPointWorldSpace(position, 10.0f, camera) - result.point);
 
         return result;
     }
