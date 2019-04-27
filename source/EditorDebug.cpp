@@ -21,11 +21,25 @@ void EditorDebug::Draw(const glm::mat4& view, const glm::mat4& projection)
             m_debugDraw.DrawLine(ray.collisions.front(), ray.collisions.back(), { 1.0f, 0.0f, 0.0f, 0.5f });
     }
 
-    // editplane
-    if (!m_editPlane.empty())
+    // edit plane
+    if (m_editPlane)
     {
-        m_debugDraw.DrawTriangle(m_editPlane[0], m_editPlane[1], m_editPlane[2], { 0.0f, 1.0f, 0.0f, 0.5f });
-        m_debugDraw.DrawTriangle(m_editPlane[3], m_editPlane[4], m_editPlane[5], { 0.0f, 1.0f, 0.0f, 0.5f });
+        const Common::Math::Plane & plane = std::get<0>(*m_editPlane);
+        const glm::vec3 & center = std::get<1>(*m_editPlane);
+
+        m_debugDraw.DrawRectangle(center, { 2.0f, 2.0f }, plane.normal, {0.0f, 1.0f, 0.0f, 0.5f});
+    }
+
+    // rotation axis
+    if (m_rotationAxis)
+    {
+        m_debugDraw.DrawLine(std::get<0>(*m_rotationAxis), std::get<1>(*m_rotationAxis), { 1.0f, 0.0f, 0.0f, 0.5f });
+    }
+
+    // current axis
+    if (m_rotationAxis)
+    {
+        m_debugDraw.DrawLine(std::get<0>(*m_currentAxis), std::get<1>(*m_currentAxis), { 0.0f, 1.0f, 0.0f, 0.5f });
     }
 
     m_debugDraw.Draw(view, projection);
@@ -51,35 +65,24 @@ void EditorDebug::Ray(const glm::vec3& from, const glm::vec3& direction, const s
 
 void EditorDebug::EditPlane(const Common::Math::Plane& plane, const glm::vec3& center)
 {
-    static const float HALF_EXTENT = 50.0f;
-
-    m_editPlane.clear();
-
-    auto SolveForZ = [](float x, float y, const Common::Math::Plane & plane)
-    {
-        return (plane.value - plane.normal.x * x - plane.normal.y * y) / plane.normal.z;
-    };
-
-    glm::vec3 rectangle[4] =
-    {
-        { -HALF_EXTENT,-HALF_EXTENT, SolveForZ(-HALF_EXTENT,-HALF_EXTENT, plane) },
-        {  HALF_EXTENT, HALF_EXTENT, SolveForZ( HALF_EXTENT, HALF_EXTENT, plane) },
-        {  HALF_EXTENT,-HALF_EXTENT, SolveForZ( HALF_EXTENT,-HALF_EXTENT, plane) },
-        { -HALF_EXTENT, HALF_EXTENT, SolveForZ(-HALF_EXTENT, HALF_EXTENT, plane) }
-    };
-
-    glm::vec3 centerDisplacement(0.0f, 0.0f, SolveForZ(0.0f, 0.0f, plane));
-
-    m_editPlane.push_back(rectangle[0] + center + centerDisplacement);
-    m_editPlane.push_back(rectangle[1] + center + centerDisplacement);
-    m_editPlane.push_back(rectangle[2] + center + centerDisplacement);
-
-    m_editPlane.push_back(rectangle[0] + center + centerDisplacement);
-    m_editPlane.push_back(rectangle[1] + center + centerDisplacement);
-    m_editPlane.push_back(rectangle[3] + center + centerDisplacement);
+    m_editPlane = { plane, center };
 }
 
 void EditorDebug::EditPlaneClear()
 {
-    m_editPlane.clear();
+    m_editPlane = std::nullopt;
+}
+
+void EditorDebug::RotationAxis(const glm::vec3& axis, const glm::vec3& center)
+{
+    glm::vec3 v = glm::normalize(axis);
+
+    m_rotationAxis = { center + v * 5.0f, center + v * -5.0f };
+}
+
+void EditorDebug::CurrentAxis(const glm::vec3& axis, const glm::vec3& center)
+{
+    glm::vec3 v = glm::normalize(axis);
+
+    m_currentAxis = { center + v * 5.0f, center + v * -5.0f };
 }

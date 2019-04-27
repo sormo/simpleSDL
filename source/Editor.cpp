@@ -97,7 +97,7 @@ void Editor::Clicked(const glm::vec2 & position)
 
     auto rayCastResult = m_scene.RayCast(cameraPosition, ray.vector);
 
-    m_debug.Ray(cameraPosition, ray.vector, rayCastResult);
+    //m_debug.Ray(cameraPosition, ray.vector, rayCastResult);
 
     // remove gizmo shapes
     m_gizmo.FilterGizmoShapes(rayCastResult);
@@ -201,8 +201,11 @@ void Editor::RotateShape(const glm::vec2 & position)
 {
     Common::Math::Plane plane = GetRotatePlane();
 
+    auto bodyPosition = m_editShape->GetBody()->GetPosition();
+
     plane.Translate(m_gui.shapePosition);
     plane.Rotate(m_gui.shapeRotation);
+    plane.Position(bodyPosition);
 
     glm::vec3 p1;
     {
@@ -215,25 +218,19 @@ void Editor::RotateShape(const glm::vec2 & position)
         p2 = Common::Math::GetIntersection(plane, ray);
     }
 
-    auto bodyPosition = m_editShape->GetBody()->GetPosition();
     float angle = Common::Math::GetAngle(p1 - bodyPosition, p2 - bodyPosition, plane);
 
     // invert angle if plane is rotated on the other side
-    if (Common::Math::GetDistance(plane, m_camera.GetPosition()) < 0.0f)
-        angle = -angle;
+    //if (Common::Math::GetDistance(plane, m_camera.GetPosition()) < 0.0f)
+    //    angle = -angle;
 
-    // rotated axis
-    //auto axis = GetEditLineUnit();
-    //glm::mat4 rotationMatrix(1.0f);
-    //rotationMatrix = glm::rotate(rotationMatrix, m_gui.shapeRotation.x, { 0.0f, 0.0f, 1.0f });
-    //rotationMatrix = glm::rotate(rotationMatrix, m_gui.shapeRotation.y, { 0.0f, 1.0f, 0.0f });
-    //rotationMatrix = glm::rotate(rotationMatrix, m_gui.shapeRotation.z, { 1.0f, 0.0f, 0.0f });
+    glm::vec3 axis = glm::normalize(plane.normal);
 
-    //axis = rotationMatrix * glm::vec4(axis, 0.0f);
+    m_gui.shapeRotation = Common::Math::Rotate(m_gui.shapeRotation, angle, axis);
 
-    m_gui.shapeRotation += Common::Math::GetRotation(angle, GetEditLineUnit());
-
-    m_debug.EditPlane(plane, bodyPosition);
+    //m_debug.EditPlane(plane, bodyPosition);
+    //m_debug.RotationAxis(axis, bodyPosition);
+    //m_debug.CurrentAxis(currentAxis, bodyPosition);
 }
 
 void Editor::TranslateShape(const glm::vec2 & position)

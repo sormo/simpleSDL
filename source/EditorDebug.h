@@ -17,6 +17,9 @@ public:
     void EditPlane(const Common::Math::Plane& plane, const glm::vec3 & center);
     void EditPlaneClear();
 
+    void RotationAxis(const glm::vec3 & axis, const glm::vec3& center);
+    void CurrentAxis(const glm::vec3& axis, const glm::vec3& center);
+
 private:
     struct RayCast
     {
@@ -27,7 +30,9 @@ private:
 
     std::vector<RayCast> m_raycasts;
 
-    std::vector<glm::vec3> m_editPlane;
+    std::optional<std::tuple<Common::Math::Plane, glm::vec3>> m_editPlane;
+    std::optional<std::tuple<glm::vec3, glm::vec3>> m_rotationAxis;
+    std::optional<std::tuple<glm::vec3, glm::vec3>> m_currentAxis;
 
     Editor& m_editor;
     DebugDraw m_debugDraw;

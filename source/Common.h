@@ -94,6 +94,7 @@ namespace Common
         glm::vec3 GetIntersection(const Plane & plane, const Line & line);
 
         glm::vec3 GetRotation(float radians, const glm::vec3 & axis);
+        glm::vec3 Rotate(const glm::vec3& currentRotation, float radians, const glm::vec3& axis);
 
         float GetAngle(const glm::vec3& p1, const glm::vec3& p2);
         // signed angle according to plane normal

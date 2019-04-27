@@ -8,7 +8,6 @@
 #include "Camera.h"
 #include "LinearMath/btQuaternion.h"
 #include "LinearMath/btMatrix3x3.h"
-
 #include "glm/gtc/matrix_transform.hpp"
 
 extern SDL_Window* g_window;
@@ -180,19 +179,24 @@ namespace Common
             btQuaternion rotationQuaternion;
             rotationQuaternion.setEulerZYX(radians.x, radians.y, radians.z);
 
+            //glm::mat4 test;
+            //btTransform t;
+            //t.setRotation(rotationQuaternion);
+            //t.getOpenGLMatrix(&test[0][0]);
+
             btMatrix3x3 matrix;
             matrix.setRotation(rotationQuaternion);
 
             // TODO optimize
 
             model[0][0] = matrix[0][0];
-            model[0][1] = matrix[0][1];
-            model[0][2] = matrix[0][2];
-            model[1][0] = matrix[1][0];
+            model[0][1] = matrix[1][0];
+            model[0][2] = matrix[2][0];
+            model[1][0] = matrix[0][1];
             model[1][1] = matrix[1][1];
-            model[1][2] = matrix[1][2];
-            model[2][0] = matrix[2][0];
-            model[2][1] = matrix[2][1];
+            model[1][2] = matrix[2][1];
+            model[2][0] = matrix[0][2];
+            model[2][1] = matrix[1][2];
             model[2][2] = matrix[2][2];
 
             normal = model * normal;
@@ -218,7 +222,6 @@ namespace Common
         glm::vec3 GetRotation(float radians, const glm::vec3 & axis)
         {
             btQuaternion rotationQuaternion;
-
             rotationQuaternion.setRotation({ axis.x, axis.y, axis.z }, radians);
 
             glm::vec3 result;
@@ -262,6 +265,20 @@ namespace Common
             float dot = glm::dot(v, d);
 
             return b + dot * d;
+        }
+
+        glm::vec3 Rotate(const glm::vec3& currentRotation, float radians, const glm::vec3& axis)
+        {
+            btQuaternion currentQuaternion;
+            currentQuaternion.setEulerZYX(currentRotation.x, currentRotation.y, currentRotation.z);
+            btQuaternion rotationQuaternion(btVector3(axis.x, axis.y, axis.z), radians);
+
+            btQuaternion resultQuaternion = rotationQuaternion * currentQuaternion;
+            
+            glm::vec3 result;
+            resultQuaternion.getEulerZYX(result.x, result.y, result.z);
+
+            return result;
         }
     }
 
