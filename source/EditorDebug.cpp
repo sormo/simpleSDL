@@ -37,7 +37,7 @@ void EditorDebug::Draw(const glm::mat4& view, const glm::mat4& projection)
     }
 
     // current axis
-    if (m_rotationAxis)
+    if (m_currentAxis)
     {
         m_debugDraw.DrawLine(std::get<0>(*m_currentAxis), std::get<1>(*m_currentAxis), { 0.0f, 1.0f, 0.0f, 0.5f });
     }

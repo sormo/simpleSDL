@@ -267,10 +267,10 @@ namespace Common
             return b + dot * d;
         }
 
-        glm::vec3 Rotate(const glm::vec3& currentRotation, float radians, const glm::vec3& axis)
+        glm::vec3 RotateRotation(const glm::vec3& rotation, float radians, const glm::vec3& axis)
         {
             btQuaternion currentQuaternion;
-            currentQuaternion.setEulerZYX(currentRotation.x, currentRotation.y, currentRotation.z);
+            currentQuaternion.setEulerZYX(rotation.x, rotation.y, rotation.z);
             btQuaternion rotationQuaternion(btVector3(axis.x, axis.y, axis.z), radians);
 
             btQuaternion resultQuaternion = rotationQuaternion * currentQuaternion;
@@ -279,6 +279,17 @@ namespace Common
             resultQuaternion.getEulerZYX(result.x, result.y, result.z);
 
             return result;
+        }
+
+        glm::vec3 RotateVector(const glm::vec3& vector, const glm::vec3& rotation)
+        {
+            btQuaternion currentQuaternion;
+            currentQuaternion.setEulerZYX(rotation.x, rotation.y, rotation.z);
+
+            btVector3 currentVector(vector.x, vector.y, vector.z);
+            btVector3 rotatedVector = quatRotate(currentQuaternion, currentVector);
+
+            return { rotatedVector.x(), rotatedVector.y(), rotatedVector.z() };
         }
     }
 

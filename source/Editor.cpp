@@ -191,14 +191,28 @@ void Editor::ScaleShape(const glm::vec2 & position)
 
     glm::vec3 scaleVector(p2 - p1);
 
-    m_gui.shapeScale += RestrictToLine(scaleVector);
-    
+    //m_gui.shapeScale += RestrictToLine(scaleVector);
+
+    auto editVector = Common::Math::RotateVector(GetEditLineUnit(), m_gui.shapeRotation);
+    float scaleValue = glm::dot(scaleVector, editVector);
+
+    switch (m_gizmo.GetSelectedAxis())
+    {
+    case Gizmo::Axis::X:
+        m_gui.shapeScale.x += scaleValue; break;
+    case Gizmo::Axis::Y:
+        m_gui.shapeScale.y += scaleValue; break;
+    case Gizmo::Axis::Z:
+        m_gui.shapeScale.z += scaleValue; break;
+    }
+
     static const float MINIMUM_SCALE = 0.1f;
     m_gui.shapeScale.x = m_gui.shapeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.x;
     m_gui.shapeScale.y = m_gui.shapeScale.y < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.y;
     m_gui.shapeScale.z = m_gui.shapeScale.z < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.z;
 
-    m_debug.EditPlane(plane, m_editShape->GetBody()->GetPosition());
+    //m_debug.EditPlane(plane, m_editShape->GetBody()->GetPosition());
+    //m_debug.CurrentAxis(editVector, m_editShape->GetBody()->GetPosition());
 }
 
 void Editor::RotateShape(const glm::vec2 & position)
@@ -230,7 +244,7 @@ void Editor::RotateShape(const glm::vec2 & position)
 
     glm::vec3 axis = glm::normalize(plane.normal);
 
-    m_gui.shapeRotation = Common::Math::Rotate(m_gui.shapeRotation, angle, axis);
+    m_gui.shapeRotation = Common::Math::RotateRotation(m_gui.shapeRotation, angle, axis);
 
     //m_debug.EditPlane(plane, bodyPosition);
     //m_debug.RotationAxis(axis, bodyPosition);
