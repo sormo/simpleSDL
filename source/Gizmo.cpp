@@ -146,28 +146,32 @@ Gizmo::Mode Gizmo::GetMode()
     return m_mode;
 }
 
-void Gizmo::UpdateSelectedAxis(const std::vector<Scene::RayCastResult>& shapes)
+void Gizmo::UpdateSelectedAxis(const std::vector<Scene::RayCastResult>& shapes, const glm::vec3& cameraPosition)
 {
-    for (auto[shape, _] : shapes)
+    Axis axis = Axis::None;
+    float distance = FLT_MAX;
+
+    auto UpdateAxis = [&axis, &distance, cameraPosition](Scene::Shape shape, const glm::vec3 & position, Axis shapeAxis)
+    {
+        float shapeDistance = glm::distance(cameraPosition, position);
+        if (shapeDistance < distance)
+        {
+            distance = shapeDistance;
+            axis = shapeAxis;
+        }
+    };
+
+    for (auto[shape, position] : shapes)
     {
         if (auto it = m_redShapes.find(shape); it != std::end(m_redShapes))
-        {
-            m_selectedAxis = Axis::Y;
-            return;
-        }
+            UpdateAxis(shape, position, Axis::Y);
         else if (auto it = m_greenShapes.find(shape); it != std::end(m_greenShapes))
-        {
-            m_selectedAxis = Axis::Z;
-            return;
-        }
+            UpdateAxis(shape, position, Axis::Z);
         else if (auto it = m_blueShapes.find(shape); it != std::end(m_blueShapes))
-        {
-            m_selectedAxis = Axis::X;
-            return;
-        }
+            UpdateAxis(shape, position, Axis::X);
     }
 
-    m_selectedAxis = Axis::None;
+    m_selectedAxis = axis;
 }
 
 void Gizmo::UpdateBody(Scene::Body body)

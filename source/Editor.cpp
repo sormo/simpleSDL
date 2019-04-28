@@ -45,7 +45,7 @@ bool Editor::Press(const glm::vec2 & position, int64_t id)
     m_pressPosition = position;
 
     Common::Math::Line ray = Common::GetRay(position, m_camera);
-    m_gizmo.UpdateSelectedAxis(m_scene.RayCast(m_camera.GetPosition(), ray.vector));
+    m_gizmo.UpdateSelectedAxis(m_scene.RayCast(m_camera.GetPosition(), ray.vector), m_camera.GetPosition());
 
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::None || m_gizmo.GetSelectedAxis() == Gizmo::Axis::None)
         return false;
@@ -60,7 +60,7 @@ bool Editor::Release(const glm::vec2 & position, int64_t id)
 {
     static const float MINIMUM_MOVE_FOR_CLICK = 2.0f;
 
-    m_gizmo.UpdateSelectedAxis({});
+    m_gizmo.UpdateSelectedAxis({}, m_camera.GetPosition());
 
     // if there is no move, cast a ray to select new editor object
     if (glm::length(position - m_pressPosition) < MINIMUM_MOVE_FOR_CLICK)

@@ -25,7 +25,7 @@ public:
     void SetMode(Mode mode);
     Mode GetMode();
 
-    void UpdateSelectedAxis(const std::vector<Scene::RayCastResult> & shapes);
+    void UpdateSelectedAxis(const std::vector<Scene::RayCastResult> & shapes, const glm::vec3 & cameraPosition);
     void UpdateBody(Scene::Body body);
 
     void FilterGizmoShapes(std::vector<Scene::RayCastResult>& shapes);
