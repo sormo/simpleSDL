@@ -18,6 +18,7 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
         if (m_editShape)
             m_scene.RemoveBody(m_editShape->GetBody());
         m_editShape = nullptr;
+        UpdateGizmo();
 
         if (m_gui.shapeEditType != UserInterface::ShapeEditType::None)
             AddEditShape(EDIT_COLOR);
@@ -29,6 +30,7 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
 
         AddBodyToScene(ADD_COLOR);
         m_editShape = nullptr;
+        UpdateGizmo();
 
         m_gui.shapeEditTypeClicked();
     };
@@ -195,6 +197,8 @@ void Editor::ScaleShape(const glm::vec2 & position)
     m_gui.shapeScale.x = m_gui.shapeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.x;
     m_gui.shapeScale.y = m_gui.shapeScale.y < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.y;
     m_gui.shapeScale.z = m_gui.shapeScale.z < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.z;
+
+    m_debug.EditPlane(plane, m_editShape->GetBody()->GetPosition());
 }
 
 void Editor::RotateShape(const glm::vec2 & position)
