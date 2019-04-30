@@ -194,7 +194,9 @@ void Editor::ScaleShape(const glm::vec2 & position)
     //m_gui.shapeScale += RestrictToLine(scaleVector);
 
     auto editVector = Common::Math::RotateVector(GetEditLineUnit(), m_gui.shapeRotation);
-    float scaleValue = glm::dot(scaleVector, editVector);
+    float scaleValue = glm::dot(editVector, scaleVector);
+
+    scaleValue *= 2.0f;
 
     switch (m_gizmo.GetSelectedAxis())
     {
