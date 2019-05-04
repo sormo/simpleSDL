@@ -7,6 +7,11 @@
 #define MOUSE_SPEED 0.005f
 #define SPEED 3.0f // 3 units / second
 
+void Camera::WindowResized(int32_t, int32_t)
+{
+    Init();
+}
+
 void CameraKeyboard::Init()
 {
     RecomputeMatrices();

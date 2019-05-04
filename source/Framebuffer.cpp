@@ -2,6 +2,12 @@
 #include "Common.h"
 #include "OpenGL.h"
 #include "Texture.h"
+#include "EventDispatchers.h"
+
+namespace Application
+{
+    extern ResizeDispatcher g_resizeDispatcher;
+}
 
 void CheckRenderBufferSize(uint32_t width, uint32_t height)
 {
@@ -34,30 +40,55 @@ GLenum GetOverridenDataTypeOfPixel(GLenum requested)
 Framebuffer::Framebuffer(uint32_t samples)
     : Framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), samples)
 {
-
+    Application::g_resizeDispatcher.Add(this);
 }
 
 Framebuffer::Framebuffer(uint32_t width, uint32_t height, uint32_t samples)
     : m_width(width), m_height(height), m_samples(samples)
 {
-    CheckRenderBufferSize(width, height);
-
-    std::tie(m_framebuffer, m_texture) = GenerateFramebuffer(width, height);
-
-#if !defined(EMSCRIPTEN) && !defined(ANDROID)
-    if (samples)
-    {
-        std::tie(m_multisampleFramebuffer, m_multisampleTexture) = GenerateMultisampleFramebuffer(width, height, samples);
-    }
-#endif
+    Init();
 }
 
 Framebuffer::~Framebuffer()
 {
+    Application::g_resizeDispatcher.Remove(this);
+
+    Deinit();
+}
+
+void Framebuffer::WindowResized(int32_t width, int32_t height)
+{
+    Deinit();
+
+    m_width = width;
+    m_height = height;
+
+    Init();
+}
+
+void Framebuffer::Init()
+{
+    CheckRenderBufferSize(m_width, m_height);
+
+    std::tie(m_framebuffer, m_texture) = GenerateFramebuffer(m_width, m_height);
+
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
+    if (m_samples)
+    {
+        std::tie(m_multisampleFramebuffer, m_multisampleTexture) = GenerateMultisampleFramebuffer(m_width, m_height, m_samples);
+    }
+#endif
+}
+
+void Framebuffer::Deinit()
+{
     glDeleteTextures(1, &m_texture);
-    glDeleteTextures(1, &m_multisampleTexture);
     glDeleteFramebuffers(1, &m_framebuffer);
-    glDeleteFramebuffers(1, &m_multisampleFramebuffer);
+    if (m_samples)
+    {
+        glDeleteTextures(1, &m_multisampleTexture);
+        glDeleteFramebuffers(1, &m_multisampleFramebuffer);
+    }
 }
 
 void Framebuffer::BeginRender()

@@ -16,6 +16,7 @@ class MouseDispatcher
 {
 public:
     void Add(MouseReceiver * receiver);
+    void Remove(MouseReceiver* receiver);
     bool Dispatch(const SDL_Event & event);
 private:
     bool DispatchPress(const glm::vec2 & position, int64_t id);
@@ -24,4 +25,23 @@ private:
     bool DispatchWheel(float value);
 
     std::vector<MouseReceiver*> m_receivers;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class ResizeReceiver
+{
+public:
+    virtual void WindowResized(int32_t width, int32_t height) = 0;
+};
+
+class ResizeDispatcher
+{
+public:
+    void Add(ResizeReceiver* receiver);
+    void Remove(ResizeReceiver* receiver);
+    bool Dispatch(const SDL_Event& event);
+private:
+    std::vector<ResizeReceiver*> m_receivers;
+
 };

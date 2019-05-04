@@ -21,7 +21,7 @@
 #include "ShadowScene.h"
 #include "Scene.h"
 #include "UserInterface.h"
-#include "MouseDispatcher.h"
+#include "EventDispatchers.h"
 #include "Editor.h"
 
 #include "DebugDraw.h"
@@ -35,6 +35,7 @@ namespace Application
 
     UserInterface g_userInterface;
     MouseDispatcher g_mouseDispatcher;
+    ResizeDispatcher g_resizeDispatcher;
 
     std::unique_ptr<Postprocess> g_postprocess;
     std::unique_ptr<ObjModel> g_objModel;
@@ -309,6 +310,8 @@ namespace Application
         g_mouseDispatcher.Add(g_editor.get());
         g_mouseDispatcher.Add(&g_camera);
 
+        g_resizeDispatcher.Add(&g_camera);
+
         return true;
     }
 
@@ -333,13 +336,8 @@ namespace Application
         if (g_mouseDispatcher.Dispatch(event))
             return;
 
-#if !defined(__ANDROID__)
-    if (event.type == SDL_WINDOWEVENT)
-        {
-            if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                g_camera.Init();
-        }
-#endif
+        if (g_resizeDispatcher.Dispatch(event))
+            return;
     }
 
     void Deinit()

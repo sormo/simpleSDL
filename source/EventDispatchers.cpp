@@ -1,9 +1,21 @@
-#include "MouseDispatcher.h"
+#include "EventDispatchers.h"
 #include "Common.h"
 
 void MouseDispatcher::Add(MouseReceiver * receiver)
 {
     m_receivers.push_back(receiver);
+}
+
+void MouseDispatcher::Remove(MouseReceiver* receiver)
+{
+    for (auto it = std::begin(m_receivers); it != std::end(m_receivers); it++)
+    {
+        if (*it == receiver)
+        {
+            m_receivers.erase(it);
+            return;
+        }
+    }
 }
 
 bool MouseDispatcher::Dispatch(const SDL_Event & event)
@@ -84,5 +96,42 @@ bool MouseDispatcher::DispatchWheel(float value)
         if (receiver->Wheel(value))
             return true;
     }
+    return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void ResizeDispatcher::Add(ResizeReceiver* receiver)
+{
+    m_receivers.push_back(receiver);
+}
+
+void ResizeDispatcher::Remove(ResizeReceiver* receiver)
+{
+    for (auto it = std::begin(m_receivers); it != std::end(m_receivers); it++)
+    {
+        if (*it == receiver)
+        {
+            m_receivers.erase(it);
+            return;
+        }
+    }
+}
+
+bool ResizeDispatcher::Dispatch(const SDL_Event& event)
+{
+#if !defined(__ANDROID__)
+    if (event.type == SDL_WINDOWEVENT)
+    {
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+        {
+            auto [width, height] = Common::GetWindowSize();
+
+            for (auto receiver : m_receivers)
+                receiver->WindowResized(width, height);
+        }
+    }
+#endif
+
     return false;
 }

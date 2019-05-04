@@ -57,7 +57,7 @@ static const uint32_t DEFAULT_SAMPLES = 0;
 
 Postprocess::Postprocess(Type type)
     : m_shader(Common::ReadFileToString("shaders/vertPostprocess.glsl").c_str(), Common::ReadFileToString(GetShaderForType(type)).c_str()),
-      m_framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), DEFAULT_SAMPLES)
+      m_framebuffer(DEFAULT_SAMPLES)
 {
     m_kernel = GetKernelForType(type);
 

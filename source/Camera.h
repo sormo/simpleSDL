@@ -1,11 +1,13 @@
 #pragma once
 #include "glm/glm.hpp"
 #include <map>
-#include "MouseDispatcher.h"
+#include "EventDispatchers.h"
 
-class Camera
+class Camera : public ResizeReceiver
 {
 public:
+    virtual void Init() = 0;
+
     virtual const glm::mat4 & GetViewMatrix() const = 0;
     virtual const glm::mat4 & GetProjectionMatrix() const = 0;
     virtual const glm::vec3 & GetPosition() const = 0;
@@ -14,6 +16,8 @@ public:
     float GetFoV() const { return m_FoV; }
 
 protected:
+    virtual void WindowResized(int32_t, int32_t) override;
+
     // Field of View in radians
     float m_FoV = 0.785f;
 };
@@ -22,7 +26,7 @@ class CameraKeyboard : public MouseReceiver, public Camera
 {
 public:
     // we may use constructor but window size is needed in camera initialization
-    void Init();
+    void Init() override;
 
     void RecomputeMatrices();
 
@@ -49,7 +53,7 @@ class CameraRotate : public MouseReceiver, public Camera
 {
 public:
     // we may use constructor but window size is needed in camera initialization
-    void Init();
+    void Init() override;
 
     // inputs provided by application
     bool Press(const glm::vec2 & position, int64_t id) override;
@@ -84,7 +88,7 @@ class Camera2D : public MouseReceiver, public Camera
 {
 public:
     // we may use constructor but window size is needed in camera initialization
-    void Init();
+    void Init() override;
 
     // inputs provided by application
     bool Press(const glm::vec2 & position, int64_t id) override;

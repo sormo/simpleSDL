@@ -2,7 +2,7 @@
 #include "Scene.h"
 #include "UserInterface.h"
 #include <SDL.h>
-#include "MouseDispatcher.h"
+#include "EventDispatchers.h"
 #include "Camera.h"
 #include "Common.h"
 #include "Gizmo.h"
