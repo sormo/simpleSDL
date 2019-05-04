@@ -292,8 +292,8 @@ void AppendFunctionShadowDirectional(const ModelShader::Config & config, std::st
     result += "    float currentDepth = projCoords.z;\n";
     result += "    // check whether current frag pos is in shadow\n";
     result += "    // bias to prevent shadow acne\n";
-    //result += "    float bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);\n";
-    result += "    float bias = 0.001;\n";
+    result += "    float bias = max(0.001 * (1.0 - dot(normal, lightDirection)), 0.001);\n";
+    //result += "    float bias = 0.001;\n";
     result += "    // check whether current frag pos is in shadow\n";
     //result += "    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.1;\n";
     result += "    // PCF\n";
