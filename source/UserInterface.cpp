@@ -107,20 +107,6 @@ void UserInterface::Generate()
             if (clicked)
                 shapeEditModeClicked();
         }
-
-        if (shapeEditMode == ShapeEditMode::Translate || shapeEditMode == ShapeEditMode::Scale)
-        {
-            static int a = 0;
-            ImGui::RadioButton("XY", &a, 0); ImGui::SameLine();
-            ImGui::RadioButton("XZ", &a, 1); ImGui::SameLine();
-            ImGui::RadioButton("YZ", &a, 2);
-            switch (a)
-            {
-            case 0: shapeEditAxis = ShapeEditAxis::XY; break;
-            case 1: shapeEditAxis = ShapeEditAxis::XZ; break;
-            case 2: shapeEditAxis = ShapeEditAxis::YZ; break;
-            }
-        }
     }
 
     ImGui::End();

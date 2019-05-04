@@ -10,7 +10,6 @@ struct UserInterface
 
     enum class ShapeEditType { None, Cube, Sphere, Cylinder, Cone } shapeEditType;
     enum class ShapeEditMode { Translate, Rotate, Scale } shapeEditMode;
-    enum class ShapeEditAxis { XY, XZ, YZ } shapeEditAxis;
 
     std::function<void()> shapeEditTypeClicked;
     std::function<void()> shapeEditModeClicked;
