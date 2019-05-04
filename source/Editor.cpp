@@ -9,11 +9,6 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
 {
     m_gui.shapeEditTypeClicked = [this]()
     {
-        m_gui.shapePosition = Common::GetPointWorldSpace(glm::vec2(Common::GetWindowWidth() / 2.0f, Common::GetWindowHeight() / 2.0f), 10.0f, m_camera);
-        m_gui.shapeScale = glm::vec3(1.0f, 1.0f, 1.0f);
-        m_gui.shapeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
-        m_gui.isStatic = true;
-
         // remove whole body
         if (m_editShape)
             m_scene.RemoveBody(m_editShape->GetBody());
@@ -21,7 +16,17 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
         UpdateGizmo();
 
         if (m_gui.shapeEditType != UserInterface::ShapeEditType::None)
+        {
             AddEditShape(EDIT_COLOR);
+        }
+        else
+        {
+            // edit has been turned off, reset edit shape data
+            m_gui.shapePosition = Common::GetPointWorldSpace(glm::vec2(Common::GetWindowWidth() / 2.0f, Common::GetWindowHeight() / 2.0f), 10.0f, m_camera);
+            m_gui.shapeScale = glm::vec3(1.0f, 1.0f, 1.0f);
+            m_gui.shapeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
+            m_gui.isStatic = true;
+        }
     };
 
     m_gui.shapeAcceptClicked = [this]()
@@ -32,6 +37,8 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
         m_editShape = nullptr;
         UpdateGizmo();
 
+        // translate shape a little and add it again as edit shape
+        m_gui.shapePosition += glm::vec3(0.3f, 0.0f, 0.0f);
         m_gui.shapeEditTypeClicked();
     };
 
