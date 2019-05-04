@@ -62,12 +62,16 @@ Framebuffer::~Framebuffer()
 
 void Framebuffer::BeginRender()
 {
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &m_originalFramebuffer);
+
 #if !defined(EMSCRIPTEN) && !defined(ANDROID)
     if (m_samples)
         glBindFramebuffer(GL_FRAMEBUFFER, m_multisampleFramebuffer);
     else
 #endif
         glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+
+    CheckGlError("glBindFramebuffer");
 }
 
 void Framebuffer::EndRender()
@@ -78,10 +82,12 @@ void Framebuffer::EndRender()
         glBindFramebuffer(GL_READ_FRAMEBUFFER, m_multisampleFramebuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebuffer);
         glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        CheckGlError("glBlitFramebuffer");
     }
 #endif
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_originalFramebuffer);
 }
 
 GLuint Framebuffer::GetTextureAttachment()
@@ -98,7 +104,7 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateFramebuffer(uint32_t width, uint
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -135,6 +141,8 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateFramebuffer(uint32_t width, uint
         throw std::runtime_error("Error initializing frame buffer.");
     }
 
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return { framebuffer, texture };
@@ -150,7 +158,7 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateMultisampleFramebuffer(uint32_t 
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA, width, height, GL_TRUE);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -187,6 +195,8 @@ std::tuple<GLuint, GLuint> Framebuffer::GenerateMultisampleFramebuffer(uint32_t 
         throw std::runtime_error("Error initializing frame buffer.");
     }
 
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return { framebuffer, texture };
@@ -259,12 +269,13 @@ FramebufferDepth::~FramebufferDepth()
 
 void FramebufferDepth::BeginRender()
 {
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &m_originalFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
 }
 
 void FramebufferDepth::EndRender()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_originalFramebuffer);
 }
 
 GLuint FramebufferDepth::GetTextureAttachment()
@@ -308,12 +319,13 @@ FramebufferDepthCube::~FramebufferDepthCube()
 
 void FramebufferDepthCube::BeginRender()
 {
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &m_originalFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
 }
 
 void FramebufferDepthCube::EndRender()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_originalFramebuffer);
 }
 
 GLuint FramebufferDepthCube::GetTextureAttachment()

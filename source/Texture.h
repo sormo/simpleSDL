@@ -10,6 +10,8 @@ namespace Texture
     std::optional<GLuint> LoadBMP(const char * imagePath);
     std::optional<GLuint> LoadDDS(const char * imagePath);
 
+    bool WriteTGA(const char* imagePath, GLuint texture);
+
     // load image using STB
     std::optional<GLuint> Load(const char * imagePath);
 

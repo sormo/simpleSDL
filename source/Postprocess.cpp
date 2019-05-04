@@ -53,9 +53,11 @@ std::vector<float> GetKernelForType(Postprocess::Type type)
     return {};
 }
 
+static const uint32_t DEFAULT_SAMPLES = 0;
+
 Postprocess::Postprocess(Type type)
     : m_shader(Common::ReadFileToString("shaders/vertPostprocess.glsl").c_str(), Common::ReadFileToString(GetShaderForType(type)).c_str()),
-      m_framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), 4)
+      m_framebuffer(Common::GetWindowWidth(), Common::GetWindowHeight(), DEFAULT_SAMPLES)
 {
     m_kernel = GetKernelForType(type);
 
@@ -98,6 +100,8 @@ void Postprocess::InitBuffers()
 
         glBindVertexArray(0);
     }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Postprocess::Draw()
@@ -129,18 +133,29 @@ void Postprocess::Draw()
 void Postprocess::BeginRender()
 {
     m_framebuffer.BeginRender();
+    // set viewport after setting framebuffer and clear it
+    glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
+
+    GLfloat currentColor[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, currentColor);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glClearColor(currentColor[0], currentColor[1], currentColor[2], currentColor[3]);
 }
 
 void Postprocess::EndRender()
 {
     m_framebuffer.EndRender();
 
-    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    //glClear(GL_COLOR_BUFFER_BIT);
 
     // draw to default framebuffer
     Draw();
 
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 }

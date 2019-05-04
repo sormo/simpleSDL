@@ -10,6 +10,6 @@ uniform sampler2D screenTexture;
 
 void main(void)
 {
-    vec3 color = texture2D(screenTexture, vertexUVA).rgb;
-    gl_FragColor = vec4(color, 1.0);
+    vec4 color = texture2D(screenTexture, vertexUVA).rgba;
+    gl_FragColor = vec4(color);
 }

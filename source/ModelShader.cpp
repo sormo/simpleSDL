@@ -238,7 +238,8 @@ void ModelShader::EndRender()
 
 void ModelShader::BindMaterial(const Material::Data & data)
 {
-    Bind(data, m_locations.material);
+    if (m_config.flags & (uint32_t)Config::Flags::UseRuntimeMaterial)
+        Bind(data, m_locations.material);
 }
 
 void ModelShader::BindLight(const Light::Data & data)

@@ -40,6 +40,33 @@ namespace Common
         return result;
     }
 
+    bool WriteFileInternal(const char* name, const std::vector<uint8_t>& data, const char* mode)
+    {
+        SDL_RWops* file = SDL_RWFromFile(name, mode);
+
+        if (!file)
+        {
+            printf("Error opening file %s\n", name);
+            return false;
+        }
+
+        size_t written = SDL_RWwrite(file, data.data(), 1, data.size());
+
+        SDL_RWclose(file);
+
+        return written == data.size();
+    }
+
+    bool WriteFile(const char* name, const std::vector<uint8_t>& data)
+    {
+        return WriteFileInternal(name, data, "wb");
+    }
+
+    bool AppendFile(const char* name, const std::vector<uint8_t>& data)
+    {
+        return WriteFileInternal(name, data, "ab");
+    }
+
     std::string ReadFileToString(const char * name)
     {
         auto data = ReadFile(name);

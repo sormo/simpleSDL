@@ -84,6 +84,7 @@ extern PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 extern PFNGLUNIFORM1FVPROC glUniform1fv;
 extern PFNGLBLENDEQUATIONSEPARATEPROC glBlendEquationSeparate;
 extern PFNGLBLENDFUNCSEPARATEEXTPROC glBlendFuncSeparate;
+extern PFNGLUNIFORM4FPROC glUniform4f;
 // opengl 1.2 and 1.3 is defined for emscripten
 // gl in windows SDK has only opengl 1.1
 #ifndef EMSCRIPTEN

@@ -408,6 +408,8 @@ void Editor::ComputeGizmoOffset(const glm::vec2& position)
 
 void Editor::Draw(const glm::mat4& view, const glm::mat4& projection)
 {
+    m_gizmo.Draw(view, projection);
+
     m_debug.Draw(view, projection);
     m_debug.Clear();
 }

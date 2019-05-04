@@ -18,6 +18,9 @@ namespace Common
     std::vector<uint8_t> ReadFile(const char * name);
     std::string ReadFileToString(const char * name);
     
+    bool WriteFile(const char* name, const std::vector<uint8_t>& data);
+    bool AppendFile(const char* name, const std::vector<uint8_t>& data);
+
     std::tuple<int32_t, int32_t> GetWindowSize();
     int32_t GetWindowWidth();
     int32_t GetWindowHeight();

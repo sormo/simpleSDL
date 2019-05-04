@@ -164,16 +164,16 @@ namespace Application
         data.light.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
         data.light.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
 
-        //Light::Data::LightPoint pointLight;
-        //pointLight.position = g_lightPositionWorldSpace;
-        //pointLight.constant = 1.0f;
-        //pointLight.linear = 0.09f;
-        //pointLight.quadratic = 0.032f;
-        //pointLight.ambient = { 0.1f, 0.1f, 0.1f };
-        //pointLight.diffuse = { 0.9f, 0.9f, 0.9f };
-        //pointLight.specular = { 0.5f, 0.5f, 0.5f };
+        Light::Data::LightPoint pointLight;
+        pointLight.position = g_lightPositionWorldSpace;
+        pointLight.constant = 1.0f;
+        pointLight.linear = 0.09f;
+        pointLight.quadratic = 0.032f;
+        pointLight.ambient = { 0.1f, 0.1f, 0.1f };
+        pointLight.diffuse = { 0.9f, 0.9f, 0.9f };
+        pointLight.specular = { 0.5f, 0.5f, 0.5f };
 
-        //data.light.lightPoint.push_back(pointLight);
+        data.light.lightPoint.push_back(pointLight);
 
         Light::Data::LightSpot spotLight;
         spotLight.position = g_lightPositionWorldSpace;
@@ -194,10 +194,10 @@ namespace Application
 
     void Draw()
     {
-        //g_postprocess->BeginRender();
-
         glViewport(0, 0, Common::GetWindowWidth(), Common::GetWindowHeight());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+         //g_postprocess->BeginRender();
 
 #ifndef EMSCRIPTEN
         if (g_userInterface.wireframe)
@@ -215,8 +215,7 @@ namespace Application
 
         // drawing single model
         //BindModel();
-        //glm::mat4 model = glm::mat4(1.0f);
-        //g_model->Draw(model, g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
+        //g_model->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());
 
         //g_objModel->Draw(glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_lightPositionWorldSpace, g_camera.GetPosition());
         //g_objModel->DrawSkyboxReflection(g_skybox->GetSkyboxTexture(), glm::mat4(1.0f), g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition());

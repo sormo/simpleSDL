@@ -3,7 +3,7 @@
 
 namespace Shapes
 {
-    Shape::Shape(ModelShader & ashader, Type atype)
+    Shape::Shape(ShapeShader ashader, Type atype)
         : shader(ashader), type(atype)
     {
 
@@ -15,6 +15,39 @@ namespace Shapes
         glDeleteBuffers(1, &vboIndices);
         glDeleteVertexArrays(1, &vao);
     }
+
+    void EnableAttributes(Shader* shader, GLuint position, GLuint normal, GLuint uvCoord)
+    {
+        assert(position != -1);
+
+        glEnableVertexAttribArray(position);
+        glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+
+        if (normal != -1)
+        {
+            glEnableVertexAttribArray(normal);
+            glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        }
+
+        if (uvCoord != -1)
+        {
+            glEnableVertexAttribArray(uvCoord);
+            glVertexAttribPointer(uvCoord, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        }
+    }
+
+    struct EnableAttributesVisitor
+    {
+        void operator()(ModelShader* shader) const
+        {
+            EnableAttributes(&shader->GetShader(), shader->GetLocations().buffers.positions, shader->GetLocations().buffers.normals, -1);
+        }
+
+        void operator()(FreeShader* shader) const
+        {
+            EnableAttributes(shader->shader, shader->locationPosition, shader->locationNormal, shader->locationUV);
+        }
+    };
 
     void Shape::Init(const float * data, size_t dataSize, const uint16_t * indices, size_t indicesSize, size_t acount)
     {
@@ -33,14 +66,7 @@ namespace Shapes
 
         if (IsVAOSupported())
         {
-            glEnableVertexAttribArray(shader.GetLocations().buffers.positions);
-            glVertexAttribPointer(shader.GetLocations().buffers.positions, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-
-            glEnableVertexAttribArray(shader.GetLocations().buffers.normals);
-            glVertexAttribPointer(shader.GetLocations().buffers.normals, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-
-            //glEnableVertexAttribArray(m_locationVertexUV);
-            //glVertexAttribPointer(m_locationVertexUV, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+            std::visit(EnableAttributesVisitor(), shader);
 
             CheckGlError("glEnableVertexAttribArray");
         }
@@ -61,7 +87,15 @@ namespace Shapes
     {
         if (IsVAOSupported())
         {
-            shader.GetShader().BindVAO(vao);
+            switch (shader.index())
+            {
+            case 0:
+                std::get<ModelShader*>(shader)->GetShader().BindVAO(vao);
+                break;
+            case 1:
+                std::get<FreeShader*>(shader)->shader->BindVAO(vao);
+                break;
+            }
         }
         else
         {
@@ -69,14 +103,7 @@ namespace Shapes
 
             glBindBuffer(GL_ARRAY_BUFFER, vboData);
 
-            glEnableVertexAttribArray(shader.GetLocations().buffers.positions);
-            glVertexAttribPointer(shader.GetLocations().buffers.positions, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-
-            glEnableVertexAttribArray(shader.GetLocations().buffers.normals);
-            glVertexAttribPointer(shader.GetLocations().buffers.normals, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-
-            //glEnableVertexAttribArray(m_locationVertexUV);
-            //glVertexAttribPointer(m_locationVertexUV, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+            std::visit(EnableAttributesVisitor(), shader);
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndices);
@@ -147,7 +174,7 @@ namespace Shapes
         32, 33, 34, 35
     };
 
-    Cube::Cube(ModelShader & shader)
+    Cube::Cube(ShapeShader  shader)
         : Shape(shader, Type::Cube)
     {
         Init(VERTICES_CUBE, sizeof(VERTICES_CUBE), INDICES_CUBE, sizeof(INDICES_CUBE), 36);
@@ -292,7 +319,7 @@ namespace Shapes
         return ret;
     }
 
-    Sphere::Sphere(ModelShader & shader)
+    Sphere::Sphere(ShapeShader shader)
         : Shape(shader, Type::Sphere)
     {
         auto sphere = GenerateSphere(10, 10);
@@ -378,7 +405,7 @@ namespace Shapes
         return buffers;
     }
 
-    Cylinder::Cylinder(ModelShader & shader)
+    Cylinder::Cylinder(ShapeShader shader)
         : Shape(shader, Type::Cylinder)
     {
         static const size_t COUNT = 10;
@@ -434,7 +461,7 @@ namespace Shapes
         return buffers;
     }
 
-    Cone::Cone(ModelShader & shader)
+    Cone::Cone(ShapeShader shader)
         : Shape(shader, Type::Cone)
     {
         static const size_t COUNT = 10;

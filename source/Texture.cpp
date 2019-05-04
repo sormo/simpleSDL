@@ -229,6 +229,35 @@ namespace Texture
         return textureID;
     }
 
+    bool WriteTGA(const char* imagePath, GLuint texture)
+    {
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        GLint width, height;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+        std::vector<uint8_t> buffer(width * height * 3);
+
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, buffer.data());
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        int xa = width % 256;
+        int xb = (width - xa) / 256;
+        int ya = height % 256;
+        int yb = (height - ya) / 256;
+        
+        //assemble the header
+        std::vector<uint8_t> header{ 0,0,2,0,0,0,0,0,0,0,0,0,(uint8_t)xa,(uint8_t)xb,(uint8_t)ya,(uint8_t)yb,24,0 };
+
+        // write header and data to file
+        bool result = Common::WriteFile(imagePath, header);
+        result &= Common::AppendFile(imagePath, buffer);
+
+        return result;
+    }
+
     std::optional<GLuint> Load(const char * imagePath)
     {
         printf("Reading image %s\n", imagePath);

@@ -25,27 +25,27 @@ void Gizmo::CreateMoveGizmo()
     m_body = m_scene.AddCompound({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, true, {}, {}, {}, {});
     m_centralSphere = m_scene.AddShape(m_body, Shapes::Defintion::Sphere{ glm::vec3(0.0f), glm::vec3(0.0f), SPHERE_RADIUS }, WHITE_MATERIAL);
 
-    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.5f, 0.0f }, RED_ROTATION, AXIS_RADIUS, 1.0f }, RED_MATERIAL));
-    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.0f, 0.5f }, GREEN_ROTATION, AXIS_RADIUS, 1.0f }, GREEN_MATERIAL));
-    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.5f, 0.0f, 0.0f }, BLUE_ROTATION, AXIS_RADIUS, 1.0f }, BLUE_MATERIAL));
+    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.5f, 0.0f }, RED_ROTATION, AXIS_RADIUS, 1.0f }, RED_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.0f, 0.5f }, GREEN_ROTATION, AXIS_RADIUS, 1.0f }, GREEN_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.5f, 0.0f, 0.0f }, BLUE_ROTATION, AXIS_RADIUS, 1.0f }, BLUE_MATERIAL, Scene::ShapeFlagNoDraw));
 
-    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cone{ { 0.0f, 1.2f, 0.0f }, RED_ROTATION, ARROW_RADIUS, 0.4f }, RED_MATERIAL));
-    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cone{ { 0.0f, 0.0f, 1.2f }, GREEN_ROTATION, ARROW_RADIUS, 0.4f }, GREEN_MATERIAL));
-    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cone{ { 1.2f, 0.0f, 0.0f }, BLUE_ROTATION, ARROW_RADIUS, 0.4f }, BLUE_MATERIAL));
+    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cone{ { 0.0f, 1.2f, 0.0f }, RED_ROTATION, ARROW_RADIUS, 0.4f }, RED_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cone{ { 0.0f, 0.0f, 1.2f }, GREEN_ROTATION, ARROW_RADIUS, 0.4f }, GREEN_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cone{ { 1.2f, 0.0f, 0.0f }, BLUE_ROTATION, ARROW_RADIUS, 0.4f }, BLUE_MATERIAL, Scene::ShapeFlagNoDraw));
 }
 
 void Gizmo::CreateScaleGizmo()
 {
     m_body = m_scene.AddCompound({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, true, {}, {}, {}, {});
-    m_centralSphere = m_scene.AddShape(m_body, Shapes::Defintion::Sphere{ glm::vec3(0.0f), glm::vec3(0.0f), SPHERE_RADIUS }, WHITE_MATERIAL);
+    m_centralSphere = m_scene.AddShape(m_body, Shapes::Defintion::Sphere{ glm::vec3(0.0f), glm::vec3(0.0f), SPHERE_RADIUS }, WHITE_MATERIAL, Scene::ShapeFlagNoDraw);
 
-    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.5f, 0.0f }, RED_ROTATION, AXIS_RADIUS, 1.0f }, RED_MATERIAL));
-    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.0f, 0.5f }, GREEN_ROTATION, AXIS_RADIUS, 1.0f }, GREEN_MATERIAL));
-    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.5f, 0.0f, 0.0f }, BLUE_ROTATION, AXIS_RADIUS, 1.0f }, BLUE_MATERIAL));
+    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.5f, 0.0f }, RED_ROTATION, AXIS_RADIUS, 1.0f }, RED_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.0f, 0.0f, 0.5f }, GREEN_ROTATION, AXIS_RADIUS, 1.0f }, GREEN_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Cylinder{ { 0.5f, 0.0f, 0.0f }, BLUE_ROTATION, AXIS_RADIUS, 1.0f }, BLUE_MATERIAL, Scene::ShapeFlagNoDraw));
 
-    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Box{ { 0.0f, 1.1f, 0.0f }, RED_ROTATION, glm::vec3{ 0.2f } }, RED_MATERIAL));
-    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Box{ { 0.0f, 0.0f, 1.1f }, GREEN_ROTATION, glm::vec3{ 0.2f } }, GREEN_MATERIAL));
-    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Box{ { 1.1f, 0.0f, 0.0f }, BLUE_ROTATION, glm::vec3{ 0.2f } }, BLUE_MATERIAL));
+    m_redShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Box{ { 0.0f, 1.1f, 0.0f }, RED_ROTATION, glm::vec3{ 0.2f } }, RED_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_greenShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Box{ { 0.0f, 0.0f, 1.1f }, GREEN_ROTATION, glm::vec3{ 0.2f } }, GREEN_MATERIAL, Scene::ShapeFlagNoDraw));
+    m_blueShapes.insert(m_scene.AddShape(m_body, Shapes::Defintion::Box{ { 1.1f, 0.0f, 0.0f }, BLUE_ROTATION, glm::vec3{ 0.2f } }, BLUE_MATERIAL, Scene::ShapeFlagNoDraw));
 }
 
 void Gizmo::CreateRotateGizmo()
@@ -104,13 +104,13 @@ void Gizmo::CreateRotateGizmo()
     auto definitionsZ = GenerateTorus(AXIS_RADIUS, 1.0f, 32, RotationAxis::X);
 
     for (auto def : definitionsX)
-        m_redShapes.insert(m_scene.AddShape(m_body, def, RED_MATERIAL));
+        m_redShapes.insert(m_scene.AddShape(m_body, def, RED_MATERIAL, Scene::ShapeFlagNoDraw));
 
     for (auto def : definitionsY)
-        m_greenShapes.insert(m_scene.AddShape(m_body, def, GREEN_MATERIAL));
+        m_greenShapes.insert(m_scene.AddShape(m_body, def, GREEN_MATERIAL, Scene::ShapeFlagNoDraw));
 
     for (auto def : definitionsZ)
-        m_blueShapes.insert(m_scene.AddShape(m_body, def, BLUE_MATERIAL));
+        m_blueShapes.insert(m_scene.AddShape(m_body, def, BLUE_MATERIAL, Scene::ShapeFlagNoDraw));
 }
 
 Gizmo::Axis Gizmo::GetSelectedAxis()
@@ -137,6 +137,8 @@ void Gizmo::SetMode(Mode mode)
         CreateRotateGizmo();
         break;
     }
+
+    AddShapesToDraw();
 
     m_mode = mode;
 }
@@ -187,6 +189,7 @@ void Gizmo::UpdateBody(Scene::Body body)
 
 void Gizmo::ClearBody()
 {
+    m_draw.ClearShapes();
     if (m_body)
         m_scene.RemoveBody(m_body);
     m_body = nullptr;
@@ -214,4 +217,24 @@ void Gizmo::FilterGizmoShapes(std::vector<Scene::RayCastResult>& shapes)
         else
             it++;
     }
+}
+
+void Gizmo::Draw(const glm::mat4& view, const glm::mat4& projection)
+{
+    m_draw.DrawShapes(view, projection);
+}
+
+void Gizmo::AddShapesToDraw()
+{
+    if (m_centralSphere)
+        m_draw.AddShape(m_centralSphere, { 1.0f, 1.0f, 1.0f, 0.5f });
+
+    for (auto shape : m_redShapes)
+        m_draw.AddShape(shape, { 1.0f, 0.0f, 0.0f, 0.5f });
+
+    for (auto shape : m_greenShapes)
+        m_draw.AddShape(shape, { 0.0f, 1.0f, 0.0f, 0.5f });
+
+    for (auto shape : m_blueShapes)
+        m_draw.AddShape(shape, { 0.0f, 0.0f, 1.0f, 0.5f });
 }

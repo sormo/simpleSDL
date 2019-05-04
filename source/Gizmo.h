@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene.h"
+#include "GizmoDraw.h"
 
 class Gizmo
 {
@@ -30,11 +31,15 @@ public:
 
     void FilterGizmoShapes(std::vector<Scene::RayCastResult>& shapes);
 
+    void Draw(const glm::mat4& view, const glm::mat4& projection);
+
 private:
 
     void CreateMoveGizmo();
     void CreateScaleGizmo();
     void CreateRotateGizmo();
+
+    void AddShapesToDraw();
 
     Axis m_selectedAxis = Axis::None;
     Mode m_mode = Mode::None;
@@ -49,4 +54,6 @@ private:
     std::set<Scene::Shape> m_redShapes;
     std::set<Scene::Shape> m_greenShapes;
     std::set<Scene::Shape> m_blueShapes;
+
+    GizmoDraw m_draw;
 };

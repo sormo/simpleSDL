@@ -61,6 +61,7 @@ PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
 PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
 PFNGLBLENDEQUATIONSEPARATEPROC glBlendEquationSeparate;
 PFNGLBLENDFUNCSEPARATEEXTPROC glBlendFuncSeparate;
+PFNGLUNIFORM4FPROC glUniform4f;
 #ifndef EMSCRIPTEN
 PFNGLCOMPRESSEDTEXIMAGE2DPROC glCompressedTexImage2D;
 PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -124,6 +125,7 @@ bool InitOpenGL()
     glUniform1fv = (PFNGLUNIFORM1FVPROC)SDL_GL_GetProcAddress("glUniform1fv");
     glBlendEquationSeparate = (PFNGLBLENDEQUATIONSEPARATEPROC)SDL_GL_GetProcAddress("glBlendEquationSeparate");
     glBlendFuncSeparate = (PFNGLBLENDFUNCSEPARATEEXTPROC)SDL_GL_GetProcAddress("glBlendFuncSeparate");
+    glUniform4f = (PFNGLUNIFORM4FPROC)SDL_GL_GetProcAddress("glUniform4f");
 #ifndef EMSCRIPTEN
     glCompressedTexImage2D = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCompressedTexImage2D");
     glActiveTexture = (PFNGLACTIVETEXTUREPROC)SDL_GL_GetProcAddress("glActiveTexture");
@@ -148,7 +150,7 @@ bool InitOpenGL()
         glBindFramebuffer && glFramebufferTexture2D && glGenRenderbuffers &&
         glBindRenderbuffer && glRenderbufferStorage && glFramebufferRenderbuffer &&
         glCheckFramebufferStatus && glUniform1fv && glBlendEquationSeparate &&
-        glBlendFuncSeparate &&
+        glBlendFuncSeparate && glUniform4f &&
 #ifndef EMSCRIPTEN
         glCompressedTexImage2D && glActiveTexture && glGetStringi &&
         glRenderbufferStorageMultisample && glBlitFramebuffer && glTexImage2DMultisample &&

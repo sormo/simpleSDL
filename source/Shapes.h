@@ -1,6 +1,7 @@
 #pragma once
 #include "OpenGL.h"
 #include "ModelShader.h"
+#include <variant>
 
 namespace Shapes
 {
@@ -41,9 +42,18 @@ namespace Shapes
 
     enum class Type { Cube, Sphere, Cylinder, Cone };
 
+    struct FreeShader
+    {
+        Shader * shader;
+        GLuint locationPosition = -1;
+        GLuint locationNormal = -1;
+        GLuint locationUV = -1;
+    };
+    using ShapeShader = std::variant<ModelShader*, FreeShader*>;
+
     struct Shape
     {
-        Shape(ModelShader & ashader, Type atype);
+        Shape(ShapeShader ashader, Type atype);
         ~Shape();
 
         void Init(const float * data, size_t dataSize, const uint16_t * indices, size_t indicesSize, size_t count);
@@ -54,28 +64,28 @@ namespace Shapes
         GLuint vao;
         GLuint vboData;
         GLuint vboIndices;
-        ModelShader & shader;
+        ShapeShader shader;
         size_t count;
         Type type;
     };
 
     struct Cube : public Shape
     {
-        Cube(ModelShader & ashader);
+        Cube(ShapeShader ashader);
     };
 
     struct Sphere : public Shape
     {
-        Sphere(ModelShader & shader);
+        Sphere(ShapeShader shader);
     };
 
     struct Cylinder : public Shape
     {
-        Cylinder(ModelShader & shader);
+        Cylinder(ShapeShader shader);
     };
 
     struct Cone : public Shape
     {
-        Cone(ModelShader & shader);
+        Cone(ShapeShader shader);
     };
 }

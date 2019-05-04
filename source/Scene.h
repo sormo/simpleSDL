@@ -15,6 +15,8 @@ public:
     // desctructor must be implemented  where SceneShapeHandle is defined
     ~Scene();
 
+    static const uint32_t ShapeFlagNoDraw = 0x0001;
+
     struct BodyHandle;
     struct ShapeHandle
     {
@@ -25,6 +27,9 @@ public:
         glm::vec3 GetScale();
         Shapes::Type GetType();
         BodyHandle * GetBody();
+        uint32_t & GetFlags();
+        const glm::mat4& GetTransform();
+
     private:
         std::multimap<Shapes::Shape*, ShapeData>::iterator it;
     };
@@ -58,7 +63,7 @@ public:
         const std::vector<std::tuple<Shapes::Defintion::Cylinder, Material::Data>> & cylinder,
         const std::vector<std::tuple<Shapes::Defintion::Cone, Material::Data>> & cone);
     template<class T>
-    Shape AddShape(Body compound, const T & definition, const Material::Data & material);
+    Shape AddShape(Body compound, const T & definition, const Material::Data & material, uint32_t flags = 0);
     void RemoveBody(Body body);
 
     void Step();
@@ -81,6 +86,7 @@ private:
         BodyHandle * body;
         btCollisionShape * shape;
         std::unique_ptr<ShapeHandle> handle;
+        uint32_t flags = 0;
     };
     std::multimap<Shapes::Shape*, ShapeData> m_shapes;
 
@@ -100,7 +106,7 @@ private:
     void RefreshShapeModels();
     void RefreshShapeModel(ShapeData & cube);
 
-    Scene::Shape AddShape(btCollisionShape * shape, const glm::mat4 & local, const glm::vec3 & scale, BodyHandle * body, const Material::Data & material, Shapes::Shape * drawShape);
+    Scene::Shape AddShape(btCollisionShape * shape, const glm::mat4 & local, const glm::vec3 & scale, BodyHandle * body, const Material::Data & material, Shapes::Shape * drawShape, uint32_t flags);
     Scene::Body AddBody(btRigidBody * body);
 
     std::unique_ptr<Shapes::Cube> m_cube;

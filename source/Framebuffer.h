@@ -26,6 +26,7 @@ private:
 
     GLuint m_framebuffer;
     GLuint m_texture;
+    GLint m_originalFramebuffer;
 
     GLuint m_multisampleFramebuffer;
     GLuint m_multisampleTexture;
@@ -44,6 +45,7 @@ public:
 private:
     GLuint m_framebuffer;
     GLuint m_texture;
+    GLint m_originalFramebuffer;
 };
 
 #if !defined(EMSCRIPTEN) && !defined(ANDROID)
@@ -60,6 +62,7 @@ public:
 private:
     GLuint m_framebuffer;
     GLuint m_texture;
+    GLint m_originalFramebuffer;
 };
 #else
 class FramebufferDepthCube

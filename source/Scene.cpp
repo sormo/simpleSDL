@@ -79,6 +79,16 @@ Scene::BodyHandle * Scene::ShapeHandle::GetBody()
     return it->second.body;
 }
 
+uint32_t& Scene::ShapeHandle::GetFlags()
+{
+    return it->second.flags;
+}
+
+const glm::mat4& Scene::ShapeHandle::GetTransform()
+{
+    return it->second.model;
+}
+
 Scene::Scene(const Light::Config & light)
     : m_world(WORLD_GRAVITY)
 {
@@ -89,10 +99,10 @@ Scene::Scene(const Light::Config & light)
     config.flags = (uint32_t)ModelShader::Config::Flags::UseRuntimeMaterial;
 
     m_shader = std::make_unique<ModelShader>(config);
-    m_cube = std::make_unique<Shapes::Cube>(*m_shader.get());
-    m_sphere = std::make_unique<Shapes::Sphere>(*m_shader.get());
-    m_cylinder = std::make_unique<Shapes::Cylinder>(*m_shader.get());
-    m_cone = std::make_unique<Shapes::Cone>(*m_shader.get());
+    m_cube = std::make_unique<Shapes::Cube>(m_shader.get());
+    m_sphere = std::make_unique<Shapes::Sphere>(m_shader.get());
+    m_cylinder = std::make_unique<Shapes::Cylinder>(m_shader.get());
+    m_cone = std::make_unique<Shapes::Cone>(m_shader.get());
 }
 
 Scene::~Scene()
@@ -103,7 +113,7 @@ Scene::~Scene()
 Scene::Body Scene::AddCube(const Shapes::Defintion::Box & definition, const Material::Data & material, bool isStatic)
 {
     Body body = AddBody(m_world.AddBox(definition, isStatic));
-    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), definition.extents, body, material, m_cube.get());
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), definition.extents, body, material, m_cube.get(), 0);
 
     return body;
 }
@@ -111,7 +121,7 @@ Scene::Body Scene::AddCube(const Shapes::Defintion::Box & definition, const Mate
 Scene::Body Scene::AddSphere(const Shapes::Defintion::Sphere & definition, const Material::Data & material, bool isStatic)
 {
     Body body = AddBody(m_world.AddSphere(definition, isStatic));
-    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius), body, material, m_sphere.get());
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius), body, material, m_sphere.get(), 0);
 
     return body;
 }
@@ -119,7 +129,7 @@ Scene::Body Scene::AddSphere(const Shapes::Defintion::Sphere & definition, const
 Scene::Body Scene::AddCylinder(const Shapes::Defintion::Cylinder & definition, const Material::Data & material, bool isStatic)
 {
     Body body = AddBody(m_world.AddCylinder(definition, isStatic));
-    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cylinder.get());
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cylinder.get(), 0);
 
     return body;
 }
@@ -127,7 +137,7 @@ Scene::Body Scene::AddCylinder(const Shapes::Defintion::Cylinder & definition, c
 Scene::Body Scene::AddCone(const Shapes::Defintion::Cone & definition, const Material::Data & material, bool isStatic)
 {
     Body body = AddBody(m_world.AddCone(definition, isStatic));
-    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cone.get());
+    AddShape(body->it->body->getCollisionShape(), glm::mat4(1.0f), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cone.get(), 0);
 
     return body;
 }
@@ -155,16 +165,16 @@ Scene::Body Scene::AddCompound(const glm::vec3 & position, const glm::vec3 & rot
     Body body = AddBody(worldBody);
 
     for (const auto&[definition, material] : box)
-        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), definition.extents, body, material, m_cube.get());
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), definition.extents, body, material, m_cube.get(), 0);
 
     for (const auto&[definition, material] : sphere)
-        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius), body, material, m_sphere.get());
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius), body, material, m_sphere.get(), 0);
 
     for (const auto&[definition, material] : cylinder)
-        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cylinder.get());
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cylinder.get(), 0);
 
     for (const auto&[definition, material] : cone)
-        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cone.get());
+        AddShape(m_world.AddShape(worldBody, definition), GetTransform(definition), glm::vec3(definition.radius, definition.height, definition.radius), body, material, m_cone.get(), 0);
 
     return body;
 }
@@ -185,7 +195,7 @@ Scene::Body Scene::AddBody(btRigidBody * body)
     return newBody;
 }
 
-Scene::Shape Scene::AddShape(btCollisionShape * shape, const glm::mat4 & localTransform, const glm::vec3 & scale, BodyHandle * body, const Material::Data & material, Shapes::Shape * drawShape)
+Scene::Shape Scene::AddShape(btCollisionShape * shape, const glm::mat4 & localTransform, const glm::vec3 & scale, BodyHandle * body, const Material::Data & material, Shapes::Shape * drawShape, uint32_t flags)
 {
     ShapeHandle * newShape = new ShapeHandle;
 
@@ -197,6 +207,7 @@ Scene::Shape Scene::AddShape(btCollisionShape * shape, const glm::mat4 & localTr
     data.scale = scale;
     data.shape = shape;
     data.localTransform = localTransform;
+    data.flags = flags;
 
     std::multimap<Shapes::Shape*, ShapeData>::iterator it = m_shapes.insert({ drawShape, std::move(data) });
     newShape->it = it;
@@ -213,38 +224,38 @@ Scene::Shape Scene::AddShape(btCollisionShape * shape, const glm::mat4 & localTr
 }
 
 template<class T>
-Scene::Shape Scene::AddShape(Body compound, const T& definition, const Material::Data& material)
+Scene::Shape Scene::AddShape(Body compound, const T& definition, const Material::Data& material, uint32_t flags)
 {
     printf("Unsupported definition type fpr Scene AddShape");
     throw std::runtime_error("Unsupported definition type fpr Scene AddShape");
 }
 
 template<>
-Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Box & definition, const Material::Data & material)
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Box & definition, const Material::Data & material, uint32_t flags)
 {
     return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition), 
-        definition.extents, compound, material, m_cube.get());
+        definition.extents, compound, material, m_cube.get(), flags);
 }
 
 template<>
-Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Sphere & definition, const Material::Data & material)
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Sphere & definition, const Material::Data & material, uint32_t flags)
 {
     return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition), 
-        glm::vec3(definition.radius), compound, material, m_sphere.get());
+        glm::vec3(definition.radius), compound, material, m_sphere.get(), flags);
 }
 
 template<>
-Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Cylinder & definition, const Material::Data & material)
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Cylinder & definition, const Material::Data & material, uint32_t flags)
 {
     return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition),
-        glm::vec3(definition.radius, definition.height, definition.radius), compound, material, m_cylinder.get());
+        glm::vec3(definition.radius, definition.height, definition.radius), compound, material, m_cylinder.get(), flags);
 }
 
 template<>
-Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Cone & definition, const Material::Data & material)
+Scene::Shape Scene::AddShape(Body compound, const Shapes::Defintion::Cone & definition, const Material::Data & material, uint32_t flags)
 {
     return AddShape(m_world.AddShape(compound->it->body, definition), GetTransform(definition),
-        glm::vec3(definition.radius, definition.height, definition.radius), compound, material, m_cone.get());
+        glm::vec3(definition.radius, definition.height, definition.radius), compound, material, m_cone.get(), flags);
 }
 
 void Scene::RemoveBody(Body body)
@@ -301,6 +312,12 @@ void Scene::DrawShapes(DrawType drawType, const glm::mat4 & view, const glm::mat
 
         while (it != std::end(m_shapes) && it->first == shape)
         {
+            if (it->second.flags & ShapeFlagNoDraw)
+            {
+                it++;
+                continue;
+            }
+
             if (drawType == DrawType::Shadow)
             {
                 m_shader->BindTransformShadow(it->second.model);
