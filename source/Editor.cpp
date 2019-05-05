@@ -156,26 +156,25 @@ Common::Math::Plane Editor::GetRotatePlane()
 
 Common::Math::Plane Editor::GetEditPlane()
 {
-    // TODO edit plane must be chosen according to camera
-    glm::vec3 a(1.0f, 0.0f, 0.0f), b(0.0f, 0.0f, 1.0f);
+    const glm::vec3& c = m_camera.GetPosition();
+    Common::Math::Plane result;
+
+    result.value = 0.0f;
 
     switch (m_gizmo.GetSelectedAxis())
     {
-    case Gizmo::Axis::X: // XY plane
-        a = glm::vec3(1.0f, 0.0f, 0.0f);
-        b = glm::vec3(0.0f, 1.0f, 0.0f);
+    case Gizmo::Axis::X:
+        result.normal = glm::normalize(glm::vec3{ 0.0f, c.y, c.z });
         break;
-    case Gizmo::Axis::Z: // XZ plane
-        a = glm::vec3(1.0f, 0.0f, 0.0f);
-        b = glm::vec3(0.0f, 0.0f, 1.0f);
+    case Gizmo::Axis::Z:
+        result.normal = glm::normalize(glm::vec3{ c.x, c.y, 0.0f });
         break;
-    case Gizmo::Axis::Y: // YZ plane
-        a = glm::vec3(0.0f, 1.0f, 0.0f);
-        b = glm::vec3(0.0f, 0.0f, 1.0f);
+    case Gizmo::Axis::Y:
+        result.normal = glm::normalize(glm::vec3{ c.x, 0.0f, c.z });
         break;
     }
 
-    return Common::Math::Plane::CreateFromPoints({0.0f, 0.0f, 0.0f}, a, b);
+    return result;
 }
 
 void Editor::ScaleShape(const glm::vec2 & position)
@@ -313,6 +312,8 @@ void Editor::TranslateShape(const glm::vec2 & position)
     glm::vec3 planeIntersection = Common::Math::GetIntersection(plane, ray);
 
     m_gui.shapePosition += RestrictToLine(planeIntersection - m_gui.shapePosition) - RestrictToLine(m_gizmoOffset);
+
+    //m_debug.EditPlane(plane, m_gui.shapePosition);
 }
 
 glm::vec3 Editor::RestrictToLine(const glm::vec3& point)

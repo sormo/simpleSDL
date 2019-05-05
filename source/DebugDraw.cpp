@@ -140,7 +140,7 @@ void DebugDraw::DrawPlane(const Common::Math::Plane& plane, const glm::vec2& hal
 
 void DebugDraw::Draw(const glm::mat4& view, const glm::mat4& projection)
 {
-    //glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
     glEnable(GL_BLEND);
