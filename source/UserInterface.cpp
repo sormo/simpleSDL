@@ -2,6 +2,12 @@
 #include "Common.h"
 #include <SDL.h>
 
+UserInterface::UserInterface()
+    : shapeScale(1.0f, 1.0f, 1.0f)
+{
+
+}
+
 bool ToggleButton(const char * name, bool * toggled)
 {
     bool result;

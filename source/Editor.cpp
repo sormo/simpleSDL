@@ -205,15 +205,7 @@ void Editor::ScaleShape(const glm::vec2 & position)
 
     scaleValue *= 2.0f;
 
-    switch (m_gizmo.GetSelectedAxis())
-    {
-    case Gizmo::Axis::X:
-        m_gui.shapeScale.x += scaleValue; break;
-    case Gizmo::Axis::Y:
-        m_gui.shapeScale.y += scaleValue; break;
-    case Gizmo::Axis::Z:
-        m_gui.shapeScale.z += scaleValue; break;
-    }
+    ModifyScaleValue(scaleValue);
 
     static const float MINIMUM_SCALE = 0.1f;
     m_gui.shapeScale.x = m_gui.shapeScale.x < MINIMUM_SCALE ? MINIMUM_SCALE : m_gui.shapeScale.x;
@@ -222,6 +214,45 @@ void Editor::ScaleShape(const glm::vec2 & position)
 
     //m_debug.EditPlane(plane, m_editShape->GetBody()->GetPosition());
     //m_debug.CurrentAxis(editVector, m_editShape->GetBody()->GetPosition());
+}
+
+void Editor::ModifyScaleValue(float scaleValue)
+{
+    if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
+    {
+        switch (m_gizmo.GetSelectedAxis())
+        {
+        case Gizmo::Axis::X:
+            m_gui.shapeScale.x += scaleValue; break;
+        case Gizmo::Axis::Y:
+            m_gui.shapeScale.y += scaleValue; break;
+        case Gizmo::Axis::Z:
+            m_gui.shapeScale.z += scaleValue; break;
+        }
+    }
+    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Sphere)
+    {
+        switch (m_gizmo.GetSelectedAxis())
+        {
+        case Gizmo::Axis::X:
+        case Gizmo::Axis::Y:
+        case Gizmo::Axis::Z:
+            m_gui.shapeScale.z += scaleValue; break;
+        }
+        m_gui.shapeScale.x += scaleValue;
+    }
+    else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cylinder ||
+             m_gui.shapeEditType == UserInterface::ShapeEditType::Cone)
+    {
+        switch (m_gizmo.GetSelectedAxis())
+        {
+        case Gizmo::Axis::X:
+        case Gizmo::Axis::Z:
+            m_gui.shapeScale.x += scaleValue; break;
+        case Gizmo::Axis::Y:
+            m_gui.shapeScale.y += scaleValue; break;
+        }
+    }
 }
 
 void Editor::RotateShape(const glm::vec2 & position)

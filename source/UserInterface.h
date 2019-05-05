@@ -5,6 +5,8 @@
 
 struct UserInterface
 {
+    UserInterface();
+
     bool wireframe = false;
     bool bulletDebug = false;
 

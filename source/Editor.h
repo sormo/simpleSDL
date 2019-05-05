@@ -31,6 +31,8 @@ private:
     void RotateShape(const glm::vec2 & position);
     void ScaleShape(const glm::vec2 & position);
 
+    void ModifyScaleValue(float scaleValue);
+
     void Clicked(const glm::vec2 & position);
 
     Common::Math::Plane GetEditPlane();
