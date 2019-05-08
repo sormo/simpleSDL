@@ -16,6 +16,7 @@ struct UserInterface
     std::function<void()> shapeEditTypeClicked;
     std::function<void()> shapeEditModeClicked;
     std::function<void()> shapeAcceptClicked;
+    std::function<void()> shapeCameraClicked;
 
     glm::vec3 shapePosition;
     glm::vec3 shapeRotation;

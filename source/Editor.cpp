@@ -46,6 +46,11 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
     {
         UpdateGizmo();
     };
+
+    m_gui.shapeCameraClicked = [this]()
+    {
+        m_camera.SetLookPoint(m_gui.shapePosition);
+    };
 }
 
 bool Editor::Press(const glm::vec2 & position, int64_t id)
@@ -370,10 +375,20 @@ void Editor::AddEditShape(const glm::vec3 & color)
 
 void Editor::SetEditShape(Scene::Shape shape)
 {
-    if (m_editShape && m_editShape != shape)
+    if (m_editShape)
     {
         m_scene.RemoveBody(m_editShape->GetBody());
         AddBodyToScene(ADD_COLOR);
+    }
+
+    // un-select
+    if (m_editShape == shape)
+    {
+        m_editShape = nullptr;
+        UpdateGizmo();
+        m_gui.shapeEditType = UserInterface::ShapeEditType::None;
+
+        return;
     }
 
     m_editShape = shape;

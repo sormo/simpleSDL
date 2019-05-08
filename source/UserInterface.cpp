@@ -94,6 +94,11 @@ void UserInterface::Generate()
         {
             shapeAcceptClicked();
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Camera"))
+        {
+            shapeCameraClicked();
+        }
 
         ImGui::Checkbox("Static", &isStatic);
 

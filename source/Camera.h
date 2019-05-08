@@ -15,6 +15,9 @@ public:
     
     float GetFoV() const { return m_FoV; }
 
+    // TODO implement in subclasses ???
+    virtual void SetLookPoint(const glm::vec3& point) {};
+
 protected:
     virtual void WindowResized(int32_t, int32_t) override;
 
@@ -66,7 +69,7 @@ public:
     const glm::vec3 & GetPosition() const override;
 
     // set point at which camera is looking
-    void SetLookPoint(const glm::vec3 & lookPoint);
+    void SetLookPoint(const glm::vec3 & lookPoint) override;
 
 private:
     void RecomputeViewMatrix();

@@ -202,7 +202,7 @@ void CameraRotate::RecomputeViewMatrix()
         m_distance * std::cos(m_verticalAngle) * std::sin(m_horizontalAngle),
         m_distance * std::sin(m_verticalAngle),
         m_distance * std::cos(m_verticalAngle) * std::cos(m_horizontalAngle)
-    );
+    ) + m_lookPoint;
 
     m_viewMatrix = glm::lookAt(m_position, m_lookPoint, glm::vec3{ 0.0f, 1.0f, 0.0f });
 }
