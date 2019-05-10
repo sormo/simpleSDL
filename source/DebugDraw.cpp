@@ -76,6 +76,7 @@ void DebugDraw::DrawRectangle(const glm::vec3& center, const glm::vec2& halfExte
             return glm::vec3(halfExtents.x, -normal.x * halfExtents.x / normal.y, 0.0f);
         else if (normal.x != 0.0f)
             return glm::vec3(-normal.y * halfExtents.y / normal.x, halfExtents.y, 0.0f);
+        return glm::vec3{ 0.0f, 1.0f, 0.0f };
     };
 
     auto normal = glm::normalize(planeNormal);
@@ -158,11 +159,15 @@ void DebugDraw::Draw(const glm::mat4& view, const glm::mat4& projection)
 
 void DebugDraw::DrawPoints(const glm::mat4& view, const glm::mat4& projection)
 {
+#if !defined(ANDROID)
     glEnable(GL_PROGRAM_POINT_SIZE);
+#endif
 
     DrawCommon(view, projection, GL_POINTS, m_pointData, m_pointColor);
 
+#if !defined(ANDROID)
     glDisable(GL_PROGRAM_POINT_SIZE);
+#endif
 }
 
 void DebugDraw::DrawLines(const glm::mat4& view, const glm::mat4& projection)

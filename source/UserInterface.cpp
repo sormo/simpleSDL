@@ -87,6 +87,8 @@ void UserInterface::Generate()
         cylinderEdit = true; break;
     case ShapeEditType::Cone:
         coneEdit = true; break;
+    default:
+        break;
     }
 
     if (ToggleButton("Cube", &cubeEdit))

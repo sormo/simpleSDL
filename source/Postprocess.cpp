@@ -49,8 +49,9 @@ std::vector<float> GetKernelForType(Postprocess::Type type)
         return { 2.0f,   2.0f, 2.0f,
                  2.0f, -15.0f, 2.0f,
                  2.0f,   2.0f, 2.0f };
+    default:
+        return {};
     }
-    return {};
 }
 
 static const uint32_t DEFAULT_SAMPLES = 0;

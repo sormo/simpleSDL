@@ -43,9 +43,9 @@ void guiRender()
 {
     ImGui_ImplSdlGLES2_NewFrame(g_window);
 
-    static bool showDemoWindow = true;
-    if (showDemoWindow)
-        ImGui::ShowDemoWindow(&showDemoWindow);
+    //static bool showDemoWindow = true;
+    //if (showDemoWindow)
+    //    ImGui::ShowDemoWindow(&showDemoWindow);
 
     Application::Gui();
 

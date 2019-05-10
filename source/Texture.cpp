@@ -21,7 +21,7 @@ namespace Texture
 
         if (data.size() < 54)
         {
-            printf("Error, size of BMP file is only %lu.\n", data.size());
+            printf("Error, size of BMP file is only %u.\n", data.size());
             return std::nullopt;
         }
 
@@ -155,7 +155,7 @@ namespace Texture
 
         if (data.size() < 128)
         {
-            printf("Error, size of DDS file is only %lu", data.size());
+            printf("Error, size of DDS file is only %u", data.size());
             return std::nullopt;
         }
 
@@ -229,6 +229,7 @@ namespace Texture
         return textureID;
     }
 
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
     bool WriteTGA(const char* imagePath, GLuint texture)
     {
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -257,6 +258,7 @@ namespace Texture
 
         return result;
     }
+#endif
 
     std::optional<GLuint> Load(const char * imagePath)
     {

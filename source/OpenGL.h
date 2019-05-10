@@ -18,6 +18,10 @@
 #define GL_GEOMETRY_SHADER 0x8DD9
 #endif
 
+#ifndef GL_DRAW_FRAMEBUFFER_BINDING
+#define GL_DRAW_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING
+#endif
+
 #else // ANDROID not defined
 //#ifdef EMSCRIPTEN
 //#include <gl\glew.h>

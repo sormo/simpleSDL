@@ -195,7 +195,7 @@ namespace Application
 
          //g_postprocess->BeginRender();
 
-#ifndef EMSCRIPTEN
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
         if (g_userInterface.wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
@@ -230,7 +230,7 @@ namespace Application
 
         //g_postprocess->EndRender();
 
-#ifndef EMSCRIPTEN
+#if !defined(EMSCRIPTEN) && !defined(ANDROID)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 #endif
     }
