@@ -22,10 +22,12 @@ public:
 
 private:
     void ResetEditShape();
-    void AddEditShape(const glm::vec3 & color);
+    // create new shape according to data in m_gui
+    void AddEditShape();
+    // set data in m_gui according to existing shape
     void SetEditShape(Scene::Shape shape);
-    Scene::Body AddBodyToScene(const glm::vec3& color);
 
+    Scene::Body AddBodyToScene(bool isStatic);
 
     void TranslateShape(const glm::vec2 & position);
     void RotateShape(const glm::vec2 & position);

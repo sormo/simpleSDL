@@ -1,9 +1,6 @@
 #include "Editor.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-static const glm::vec3 EDIT_COLOR(0.0f, 1.0f, 0.0f);
-static const glm::vec3 ADD_COLOR(1.0f, 1.0f, 1.0f);
-
 Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
     : m_scene(scene), m_gui(userInterface), m_camera(camera), m_gizmo(scene), m_debug(*this)
 {
@@ -17,7 +14,13 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
 
         if (m_gui.shapeEditType != UserInterface::ShapeEditType::None)
         {
-            AddEditShape(EDIT_COLOR);
+            Material::Data material;
+
+            material.ambient = material.diffuse = material.specular = glm::vec3(1.0f);
+            material.shininess = 10.0f;
+
+            // create new shape, expect m_gui is initialized to default values
+            AddEditShape();
         }
         else
         {
@@ -26,16 +29,17 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
             m_gui.shapeScale = glm::vec3(1.0f, 1.0f, 1.0f);
             m_gui.shapeRotation = glm::vec3(0.0f, 0.0f, 0.0f);
             m_gui.isStatic = true;
+            //m_gui.materialData = nullptr;
         }
     };
 
     m_gui.shapeAcceptClicked = [this]()
     {
         m_scene.RemoveBody(m_editShape->GetBody());
-
-        AddBodyToScene(ADD_COLOR);
         m_editShape = nullptr;
         UpdateGizmo();
+
+        AddBodyToScene(m_gui.isStatic);
 
         // translate shape a little and add it again as edit shape
         m_gui.shapePosition += glm::vec3(0.3f, 0.0f, 0.0f);
@@ -50,6 +54,12 @@ Editor::Editor(Scene & scene, UserInterface & userInterface, Camera & camera)
     m_gui.shapeCameraClicked = [this]()
     {
         m_camera.SetLookPoint(m_gui.shapePosition);
+    };
+
+    m_gui.shapeMaterialChanged = [this]()
+    {
+        if (m_editShape)
+            m_editShape->GetMaterial() = m_gui.materialData;
     };
 }
 
@@ -340,35 +350,30 @@ glm::vec3 Editor::GetEditLineUnit()
     return glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
-Scene::Body Editor::AddBodyToScene(const glm::vec3& color)
+Scene::Body Editor::AddBodyToScene(bool isStatic)
 {
-    Material::Data material;
-    material.ambient = material.diffuse = material.specular = color;
-    material.shininess = 10.0f;
-
-    bool isEdit = color == EDIT_COLOR;
-    bool isStatic = isEdit ? true : m_gui.isStatic;
-
     Scene::Body newBody = nullptr;
 
     if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cube)
-        newBody = m_scene.AddCube({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale }, material, isStatic);
+        newBody = m_scene.AddCube({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale }, m_gui.materialData, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Sphere)
-        newBody = m_scene.AddSphere({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f }, material, isStatic);
+        newBody = m_scene.AddSphere({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f }, m_gui.materialData, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cylinder)
-        newBody = m_scene.AddCylinder({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, material, isStatic);
+        newBody = m_scene.AddCylinder({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, m_gui.materialData, isStatic);
     else if (m_gui.shapeEditType == UserInterface::ShapeEditType::Cone)
-        newBody = m_scene.AddCone({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, material, isStatic);
+        newBody = m_scene.AddCone({ m_gui.shapePosition, m_gui.shapeRotation, m_gui.shapeScale.x / 2.0f, m_gui.shapeScale.y }, m_gui.materialData, isStatic);
 
     return newBody;
 }
 
-void Editor::AddEditShape(const glm::vec3 & color)
+void Editor::AddEditShape()
 {
-    Scene::Body body = AddBodyToScene(color);
+    Scene::Body body = AddBodyToScene(true);
 
     // just pick first shape
     m_editShape = body->GetShapes()[0];
+
+    m_gui.materialData = m_editShape->GetMaterial();
 
     UpdateGizmo();
 }
@@ -378,7 +383,7 @@ void Editor::SetEditShape(Scene::Shape shape)
     if (m_editShape)
     {
         m_scene.RemoveBody(m_editShape->GetBody());
-        AddBodyToScene(ADD_COLOR);
+        AddBodyToScene(m_gui.isStatic);
     }
 
     // un-select
@@ -396,6 +401,7 @@ void Editor::SetEditShape(Scene::Shape shape)
     m_gui.shapePosition = shape->GetBody()->GetPosition();
     m_gui.shapeRotation = shape->GetBody()->GetRotation();
     m_gui.shapeScale = shape->GetScale();
+    m_gui.materialData = shape->GetMaterial();
     // TODO check this scaling
     if (shape->GetType() != Shapes::Type::Cube)
     {
@@ -412,7 +418,8 @@ void Editor::SetEditShape(Scene::Shape shape)
     case Shapes::Type::Sphere: m_gui.shapeEditType = UserInterface::ShapeEditType::Sphere; break;
     }
 
-    ResetEditShape();
+    UpdateGizmo();
+    //ResetEditShape();
 }
 
 void Editor::ResetEditShape()
@@ -420,7 +427,7 @@ void Editor::ResetEditShape()
     m_scene.RemoveBody(m_editShape->GetBody());
     m_editShape = nullptr;
 
-    AddEditShape(EDIT_COLOR);
+    AddEditShape();
 }
 
 void Editor::UpdateGizmo()

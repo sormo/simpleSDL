@@ -29,6 +29,7 @@ public:
         BodyHandle * GetBody();
         uint32_t & GetFlags();
         const glm::mat4& GetTransform();
+        Material::Data& GetMaterial();
 
     private:
         std::multimap<Shapes::Shape*, ShapeData>::iterator it;

@@ -69,39 +69,34 @@ namespace Application
 
     void DrawScene()
     {
-        Light::Data light;
+        g_userInterface.lightData.lightDirectional.direction = -g_lightPositionWorldSpace;
 
-        light.lightDirectional.direction = -g_lightPositionWorldSpace;
-        light.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
-        light.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
-        light.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+        //Light::Data::LightSpot spotLight;
+        //spotLight.position = g_lightPositionWorldSpace;
+        //spotLight.direction = -g_lightPositionWorldSpace;
+        //spotLight.cutOff = glm::cos(glm::radians(60.0f));
+        //spotLight.outerCutOff = glm::cos(glm::radians(70.0f));
+        //spotLight.ambient = { 0.1f, 0.1f, 0.1f };
+        //spotLight.diffuse = { 1.0f, 1.0f, 1.0f };
+        //spotLight.specular = { 0.5f, 0.5f, 0.5f };
+        //spotLight.constant = 1.0f;
+        //spotLight.linear = 0.09f;
+        //spotLight.quadratic = 0.032f;
+        //light.lightSpot.push_back(spotLight);
 
-        Light::Data::LightSpot spotLight;
-        spotLight.position = g_lightPositionWorldSpace;
-        spotLight.direction = -g_lightPositionWorldSpace;
-        spotLight.cutOff = glm::cos(glm::radians(60.0f));
-        spotLight.outerCutOff = glm::cos(glm::radians(70.0f));
-        spotLight.ambient = { 0.1f, 0.1f, 0.1f };
-        spotLight.diffuse = { 1.0f, 1.0f, 1.0f };
-        spotLight.specular = { 0.5f, 0.5f, 0.5f };
-        spotLight.constant = 1.0f;
-        spotLight.linear = 0.09f;
-        spotLight.quadratic = 0.032f;
-        light.lightSpot.push_back(spotLight);
-
-        Light::Data::LightPoint pointLight;
-        pointLight.position = g_lightPositionWorldSpace;
-        pointLight.ambient = { 0.1f, 0.1f, 0.1f };
-        pointLight.diffuse = { 1.0f, 1.0f, 1.0f };
-        pointLight.specular = { 0.5f, 0.5f, 0.5f };
-        pointLight.constant = 1.0f;
-        pointLight.linear = 0.09f;
-        pointLight.quadratic = 0.032f;
-        light.lightPoint.push_back(pointLight);
+        //Light::Data::LightPoint pointLight;
+        //pointLight.position = g_lightPositionWorldSpace;
+        //pointLight.ambient = { 0.1f, 0.1f, 0.1f };
+        //pointLight.diffuse = { 1.0f, 1.0f, 1.0f };
+        //pointLight.specular = { 0.5f, 0.5f, 0.5f };
+        //pointLight.constant = 1.0f;
+        //pointLight.linear = 0.09f;
+        //pointLight.quadratic = 0.032f;
+        //light.lightPoint.push_back(pointLight);
 
         g_scene->Step();
 
-        g_scene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), light);
+        g_scene->Draw(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix(), g_camera.GetPosition(), g_userInterface.lightData);
 
         if (g_userInterface.bulletDebug)
             g_scene->DrawDebug(g_camera.GetViewMatrix(), g_camera.GetProjectionMatrix());

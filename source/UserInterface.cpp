@@ -5,6 +5,13 @@
 UserInterface::UserInterface()
     : shapeScale(1.0f, 1.0f, 1.0f)
 {
+    lightData.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
+    lightData.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
+    lightData.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+
+    materialData.ambient = materialData.diffuse = materialData.specular = glm::vec3(1.0, 1.0, 1.0);
+    materialData.shininess = 15.0f;
+    materialData.shininessStrength = 1.0f;
 
 }
 
@@ -52,6 +59,17 @@ void UserInterface::Generate()
     ImGui::Checkbox("Wireframe", &wireframe);
     ImGui::Checkbox("Bullet debug", &bulletDebug);
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    if (ImGui::CollapsingHeader("Light"))
+    {
+        ImGui::ColorEdit3("Ambient", &lightData.lightDirectional.ambient[0]);
+        ImGui::ColorEdit3("Diffuse", &lightData.lightDirectional.diffuse[0]);
+        ImGui::ColorEdit3("Specular", &lightData.lightDirectional.specular[0]);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     bool cubeEdit = false, circleEdit = false, cylinderEdit = false, coneEdit = false;
     switch (shapeEditType)
     {
@@ -88,6 +106,8 @@ void UserInterface::Generate()
         shapeEditTypeClicked();
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
     if (cubeEdit || circleEdit || cylinderEdit || coneEdit)
     {
         if (ImGui::Button("Accept"))
@@ -117,6 +137,19 @@ void UserInterface::Generate()
             }
             if (clicked)
                 shapeEditModeClicked();
+        }
+
+        if (ImGui::CollapsingHeader("Material"))
+        {
+            bool modified = false;
+
+            modified |= ImGui::ColorEdit3("Ambient", &materialData.ambient[0]);
+            modified |= ImGui::ColorEdit3("Diffuse", &materialData.diffuse[0]);
+            modified |= ImGui::ColorEdit3("Specular", &materialData.specular[0]);
+            modified |= ImGui::SliderFloat("Shininess", &materialData.shininess, 0.0f, 50.0f, "%.4f", 2.0f);
+
+            if (modified && shapeMaterialChanged)
+                shapeMaterialChanged();
         }
     }
 

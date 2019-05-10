@@ -89,6 +89,11 @@ const glm::mat4& Scene::ShapeHandle::GetTransform()
     return it->second.model;
 }
 
+Material::Data& Scene::ShapeHandle::GetMaterial()
+{
+    return it->second.material;
+}
+
 Scene::Scene(const Light::Config & light)
     : m_world(WORLD_GRAVITY)
 {
