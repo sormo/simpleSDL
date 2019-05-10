@@ -13,6 +13,7 @@ UserInterface::UserInterface()
     materialData.shininess = 15.0f;
     materialData.shininessStrength = 1.0f;
 
+    clearColor = glm::vec4(0.0f);
 }
 
 bool ToggleButton(const char * name, bool * toggled)
@@ -60,6 +61,11 @@ void UserInterface::Generate()
     ImGui::Checkbox("Bullet debug", &bulletDebug);
 
     ///////////////////////////////////////////////////////////////////////////
+
+    if (ImGui::ColorEdit3("Clear", &clearColor[0]))
+    {
+        glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
+    }
 
     if (ImGui::CollapsingHeader("Light"))
     {

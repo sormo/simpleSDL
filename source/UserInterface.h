@@ -28,6 +28,7 @@ struct UserInterface
 
     Light::Data lightData;
     Material::Data materialData;
+    glm::vec4 clearColor;
 
     void Generate();
 };
