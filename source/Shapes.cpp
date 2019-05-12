@@ -322,7 +322,7 @@ namespace Shapes
     Sphere::Sphere(ShapeShader shader)
         : Shape(shader, Type::Sphere)
     {
-        auto sphere = GenerateSphere(10, 10);
+        auto sphere = GenerateSphere(50, 50);
         auto sphereData = GetShapeBuffer(sphere.vertices, sphere.normals, sphere.texCoords);
 
         Init(sphereData.data(), sphereData.size()*sizeof(float), sphere.indices.data(), sphere.indices.size() * sizeof(uint16_t), sphere.indices.size());

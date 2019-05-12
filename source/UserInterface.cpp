@@ -2,9 +2,15 @@
 #include "Common.h"
 #include "Generator.h"
 #include <SDL.h>
+#include "Camera.h"
+
+namespace Application
+{
+    extern CameraRotate g_camera;
+}
 
 UserInterface::UserInterface()
-    : shapeScale(1.0f, 1.0f, 1.0f)
+    : shapeScale(1.0f, 1.0f, 1.0f), cameraPlanes(0.1f, 1000.0f)
 {
     lightData.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
     lightData.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
@@ -67,6 +73,19 @@ void UserInterface::Generate()
     if (ImGui::Combo("", &currentGenerator, Generator::GetNames(), Generator::GetCount()))
     {
         Generator::Changed(currentGenerator);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    if (ImGui::CollapsingHeader("Camera"))
+    {
+        bool modified = false;
+
+        modified |= ImGui::SliderFloat("Near plane", &cameraPlanes.x, 0.1f, 100.0f, "%.4f", 1.0f);
+        modified |= ImGui::SliderFloat("Far plane", &cameraPlanes.y, 1.0f, 1000.0f, "%.4f", 1.0f);
+
+        if (modified)
+            Application::g_camera.SetPlanes(cameraPlanes);
     }
 
     ///////////////////////////////////////////////////////////////////////////

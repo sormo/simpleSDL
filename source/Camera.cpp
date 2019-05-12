@@ -7,14 +7,33 @@
 #define MOUSE_SPEED 0.005f
 #define SPEED 3.0f // 3 units / second
 
+Camera::Camera()
+    : m_planes(0.1f, 1000.0f)
+{
+
+}
+
 void Camera::WindowResized(int32_t, int32_t)
 {
     Init();
 }
 
+void Camera::SetPlanes(const glm::vec2& planes)
+{
+    m_planes = planes;
+
+    Init();
+}
+
+const glm::vec2 Camera::GetPlanes() const
+{
+    return m_planes;
+}
+
 void CameraKeyboard::Init()
 {
     RecomputeMatrices();
+    // TODO changing planes / resizing will init wheel to 0.0f ???
     Wheel(0.0f);
 }
 
@@ -115,8 +134,6 @@ const glm::mat4 & CameraKeyboard::GetProjectionMatrix() const
 
 void CameraRotate::Init()
 {
-    m_lookPoint = glm::vec3(0.0f, 0.0f, 0.0f);
-
     auto[width, height] = Common::GetWindowSize();
 
     m_projectionMatrix = glm::perspective(m_FoV, (float)width / (float)height, GetPlanes().x, GetPlanes().y);

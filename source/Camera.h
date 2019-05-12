@@ -6,12 +6,16 @@
 class Camera : public ResizeReceiver
 {
 public:
+    Camera();
+
     virtual void Init() = 0;
 
     virtual const glm::mat4 & GetViewMatrix() const = 0;
     virtual const glm::mat4 & GetProjectionMatrix() const = 0;
     virtual const glm::vec3 & GetPosition() const = 0;
-    virtual const glm::vec2 GetPlanes() const { return glm::vec2(0.1f, 1000.0f); }
+
+    void SetPlanes(const glm::vec2& planes);
+    const glm::vec2 GetPlanes() const;
     
     float GetFoV() const { return m_FoV; }
 
@@ -20,6 +24,9 @@ public:
 
 protected:
     virtual void WindowResized(int32_t, int32_t) override;
+
+    // near (x) and far (y) planes
+    glm::vec2 m_planes;
 
     // Field of View in radians
     float m_FoV = 0.785f;

@@ -29,6 +29,7 @@ struct UserInterface
     Light::Data lightData;
     Material::Data materialData;
     glm::vec4 clearColor;
+    glm::vec2 cameraPlanes;
 
     void Generate();
 };
