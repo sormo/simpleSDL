@@ -13,6 +13,8 @@
 
 class Camera;
 
+#define COUNTOF(_ARR) ((uint32_t)(sizeof(_ARR)/sizeof(*_ARR)))
+
 namespace Common
 {
     std::vector<uint8_t> ReadFile(const char * name);

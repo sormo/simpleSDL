@@ -75,6 +75,8 @@ public:
     using RayCastResult = std::tuple<Shape, glm::vec3>;
     std::vector<RayCastResult> RayCast(const glm::vec3 & position, const glm::vec3 & direction);
 
+    void Clear();
+
 private:
     std::unique_ptr<ModelShader> m_shader;
 

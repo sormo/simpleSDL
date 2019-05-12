@@ -99,7 +99,8 @@ LOCAL_SRC_FILES :=  \
   ../../../source/EditorDebug.cpp \
   ../../../source/Gizmo.cpp \
   ../../../source/GizmoDraw.cpp \
-  ../../../source/Shapes.cpp
+  ../../../source/Shapes.cpp \
+  ../../../source/Generator.cpp
 
 
 # Linking options

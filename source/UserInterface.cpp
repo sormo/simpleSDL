@@ -1,5 +1,6 @@
 #include "UserInterface.h"
 #include "Common.h"
+#include "Generator.h"
 #include <SDL.h>
 
 UserInterface::UserInterface()
@@ -59,6 +60,14 @@ void UserInterface::Generate()
 
     ImGui::Checkbox("Wireframe", &wireframe);
     ImGui::Checkbox("Bullet debug", &bulletDebug);
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    static int currentGenerator = 0;
+    if (ImGui::Combo("", &currentGenerator, Generator::GetNames(), Generator::GetCount()))
+    {
+        Generator::Changed(currentGenerator);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 

@@ -91,7 +91,7 @@ namespace Material
         glm::vec3 ambient;
         glm::vec3 diffuse;
         glm::vec3 specular;
-        float shininess;
+        float shininess = 0.0f;
         // factor of specular component
         float shininessStrength = 1.0f;
     };

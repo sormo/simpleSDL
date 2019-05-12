@@ -378,6 +378,12 @@ std::vector<std::tuple<Scene::Shape, glm::vec3>> Scene::RayCast(const glm::vec3 
     return result;
 }
 
+void Scene::Clear()
+{
+    m_bodies.clear();
+    m_shapes.clear();
+}
+
 bool Scene::BodyData::operator<(const BodyData & o) const
 {
     return body < o.body;
