@@ -3,8 +3,8 @@
 #include "model_generated.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Texture.h"
-#include "Shader.h"
+#include "utils/Texture.h"
+#include "utils/Shader.h"
 #include "Common.h"
 #include "CommonProject.h"
 #include "TextureManager.h"

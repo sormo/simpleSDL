@@ -83,10 +83,6 @@ endforeach()
 
 set(flatbuffersDir "${projectDir}/contrib/flatbuffers")
 set(modelConvertDir "${projectDir}/modelConvert")
-#
-# GLM include directory
-#
-set(includeForGlm "${sourceCommonDir}")
 
 # Include dirs.
 set(projectIncludeDirs ${projectIncludeDirs}
@@ -94,7 +90,8 @@ set(projectIncludeDirs ${projectIncludeDirs}
   "${flatbuffersDir}/include"
   "${modelConvertDir}/include"
   "${bulletDir}/src"
-  "${includeForGlm}"
+  "${sourceCommonDir}"
+  "${sourceDir}"
 )
 
 message("Sources: ${projectSources}")

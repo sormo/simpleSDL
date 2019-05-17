@@ -1,7 +1,7 @@
 #pragma once
 #include "OpenGL.h"
 #include <btBulletDynamicsCommon.h>
-#include "Shader.h"
+#include "utils/Shader.h"
 #include "DebugDraw.h"
 
 class BulletDebug : public btIDebugDraw

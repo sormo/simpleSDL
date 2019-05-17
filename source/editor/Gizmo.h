@@ -1,5 +1,5 @@
 #pragma once
-#include "Scene.h"
+#include "scene/Scene.h"
 #include "GizmoDraw.h"
 
 class Gizmo

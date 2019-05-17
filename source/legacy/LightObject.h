@@ -1,8 +1,9 @@
 #pragma once
 #include "glm/glm.hpp"
-#include "Shader.h"
+#include "utils/Shader.h"
 #include "ObjLoader.h"
 #include "VboIndexer.h"
+#include "Common.h"
 
 class LightObject
 {

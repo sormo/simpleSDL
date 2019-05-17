@@ -1,9 +1,9 @@
 #pragma once
-#include "Scene.h"
+#include "scene/Scene.h"
 #include "UserInterface.h"
 #include <SDL.h>
 #include "EventDispatchers.h"
-#include "Camera.h"
+#include "utils/Camera.h"
 #include "Common.h"
 #include "Gizmo.h"
 #include "EditorDebug.h"

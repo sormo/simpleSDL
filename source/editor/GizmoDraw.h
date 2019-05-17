@@ -1,9 +1,9 @@
 #pragma once
-#include "Shader.h"
+#include "utils/Shader.h"
 #include "Shapes.h"
 #include <set>
-#include "Scene.h"
-#include "Postprocess.h"
+#include "scene/Scene.h"
+#include "utils/Postprocess.h"
 
 class GizmoDraw
 {

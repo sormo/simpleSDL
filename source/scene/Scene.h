@@ -4,7 +4,7 @@
 #include <set>
 #include "Bullet.h"
 #include "Shapes.h"
-#include "ModelShader.h"
+#include "model/ModelShader.h"
 
 class Scene
 {

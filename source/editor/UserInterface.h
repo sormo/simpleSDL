@@ -2,7 +2,7 @@
 #include "glm/glm.hpp"
 #include <functional>
 #include "imgui/imgui.h"
-#include "ModelShader.h"
+#include "model/ModelShader.h"
 
 struct UserInterface
 {

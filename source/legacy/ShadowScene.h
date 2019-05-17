@@ -1,6 +1,7 @@
 #pragma once
-#include "Shader.h"
-#include "Shadow.h"
+#include "utils/Shader.h"
+// TODO should be shadow in utils ???
+#include "model/Shadow.h"
 
 #define SHADOW_DIRECTIONAL
 //#define SHADOW_POINT

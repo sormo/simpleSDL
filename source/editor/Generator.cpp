@@ -1,6 +1,6 @@
 #include "Generator.h"
 #include "Common.h"
-#include "Scene.h"
+#include "scene/Scene.h"
 #include <memory>
 
 static const char* GENERATORS[] = { "Empty", "Boxes", "Moon-Earth" };

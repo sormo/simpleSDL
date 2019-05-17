@@ -26,6 +26,7 @@ void ModelShader::InitLocation<Light::Locations::LightDirectional>(const std::st
 {
     InitLocation<Light::Locations::Light>(path, location);
     location.direction = m_shader->GetLocation(path + "direction", Shader::LocationType::Uniform);
+    location.shadowParams = m_shader->GetLocation(path + "shadowParams", Shader::LocationType::Uniform);
 }
 
 template<>
@@ -189,6 +190,7 @@ void ModelShader::Bind<Light::Data::LightDirectional, Light::Locations::LightDir
     Bind<Light::Data::Light, Light::Locations::Light>(data, locations);
 
     m_shader->SetUniform(data.direction, locations.direction);
+    m_shader->SetUniform(data.shadowParams, locations.shadowParams);
 }
 
 template<>

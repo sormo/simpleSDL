@@ -2,8 +2,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Shader.h"
-#include "Texture.h"
+#include "utils/Shader.h"
+#include "utils/Texture.h"
 #include "Common.h"
 #include <sstream>
 

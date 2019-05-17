@@ -5,7 +5,7 @@
 #include <chrono>
 #include <inttypes.h>
 #include <cmath>
-#include "Camera.h"
+#include "utils/Camera.h"
 #include "LinearMath/btQuaternion.h"
 #include "LinearMath/btMatrix3x3.h"
 #include "glm/gtc/matrix_transform.hpp"

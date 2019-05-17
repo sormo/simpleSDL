@@ -1,6 +1,6 @@
 #pragma once
-#include "Shader.h"
-#include "Texture.h"
+#include "utils/Shader.h"
+#include "utils/Texture.h"
 #include "Common.h"
 #include "ObjLoader.h"
 #include "VboIndexer.h"

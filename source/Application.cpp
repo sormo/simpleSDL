@@ -1,10 +1,10 @@
 #include "Application.h"
 #include "Common.h"
-#include "Shader.h"
-#include "Texture.h"
-#include "Camera.h"
+#include "utils/Shader.h"
+#include "utils/Texture.h"
+#include "utils/Camera.h"
 #include "VboIndexer.h"
-#include "Text2D.h"
+#include "legacy/Text2D.h"
 #include <string>
 #include "OpenGL.h"
 #include <cmath>
@@ -12,17 +12,17 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include <inttypes.h>
-#include "ObjModel.h"
-#include "LightObject.h"
-#include "Model.h"
-#include "ModelShader.h"
-#include "Skybox.h"
-#include "Postprocess.h"
-#include "ShadowScene.h"
-#include "Scene.h"
-#include "UserInterface.h"
+#include "legacy/ObjModel.h"
+#include "legacy/LightObject.h"
+#include "model/Model.h"
+#include "model/ModelShader.h"
+#include "utils/Skybox.h"
+#include "utils/Postprocess.h"
+#include "legacy/ShadowScene.h"
+#include "scene/Scene.h"
+#include "editor/UserInterface.h"
 #include "EventDispatchers.h"
-#include "Editor.h"
+#include "editor/Editor.h"
 
 #include "DebugDraw.h"
 
@@ -296,6 +296,10 @@ namespace Application
         g_mouseDispatcher.Add(&g_camera);
 
         g_resizeDispatcher.Add(&g_camera);
+
+#ifdef ANDROID
+        ImGui::GetStyle().ScaleAllSizes(4.0f);
+#endif
 
         return true;
     }

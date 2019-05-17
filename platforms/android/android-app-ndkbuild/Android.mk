@@ -56,52 +56,25 @@ LOCAL_C_INCLUDES +=  \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/SDL/include \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/SDL_image \
   $(LOCAL_PATH)/../../../sourceCommon \
+  $(LOCAL_PATH)/../../../source \
   $(LOCAL_PATH)/../../../modelConvert/include \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/flatbuffers/include \
   $(LOCAL_PATH)/$(EXTERNAL_LIB_PATH)/bullet3/src
 
 
 # Source files
-LOCAL_SRC_FILES :=  \
-  ../../../source/main.cpp \
-  ../../../source/Common.cpp \
-  ../../../source/Application.cpp \
-  ../../../source/OpenGL.cpp \
-  ../../../source/Shader.cpp \
-  ../../../source/Texture.cpp \
-  ../../../source/Camera.cpp \
-  ../../../source/ObjLoader.cpp \
-  ../../../sourceCommon/VboIndexer.cpp \
-  ../../../sourceCommon/TangentSpace.cpp \
-  ../../../source/Text2D.cpp \
-  ../../../source/Model.cpp \
-  ../../../source/ModelShader.cpp \
-  ../../../source/ShaderGenerator.cpp \
-  ../../../source/TextureManager.cpp \
-  ../../../sourceCommon/CommonProject.cpp \
-  ../../../source/Skybox.cpp \
-  ../../../source/Framebuffer.cpp \
-  ../../../source/Postprocess.cpp \
-  ../../../source/ShadowScene.cpp \
-  ../../../source/Shadow.cpp \
-  ../../../source/imgui/imgui.cpp \
-  ../../../source/imgui/imgui_demo.cpp \
-  ../../../source/imgui/imgui_draw.cpp \
-  ../../../source/imgui/imgui_impl_gles2.cpp \
-  ../../../source/imgui/imgui_widgets.cpp \
-  ../../../source/Scene.cpp \
-  ../../../source/Editor.cpp \
-  ../../../source/EventDispatchers.cpp \
-  ../../../source/UserInterface.cpp \
-  ../../../source/Bullet.cpp \
-  ../../../source/BulletDebug.cpp \
-  ../../../source/DebugDraw.cpp \
-  ../../../source/EditorDebug.cpp \
-  ../../../source/Gizmo.cpp \
-  ../../../source/GizmoDraw.cpp \
-  ../../../source/Shapes.cpp \
-  ../../../source/Generator.cpp
+SOURCE_FILE_LIST := $(wildcard \
+	$(LOCAL_PATH)/../../../sourceCommon/*.cpp \
+	$(LOCAL_PATH)/../../../source/*.cpp \
+	$(LOCAL_PATH)/../../../source/editor/*.cpp \
+	$(LOCAL_PATH)/../../../source/legacy/*.cpp \
+	$(LOCAL_PATH)/../../../source/model/*.cpp \
+	$(LOCAL_PATH)/../../../source/scene/*.cpp \
+	$(LOCAL_PATH)/../../../source/utils/*.cpp \
+	$(LOCAL_PATH)/../../../source/imgui/*.cpp \
+	)
 
+LOCAL_SRC_FILES := $(SOURCE_FILE_LIST:$(LOCAL_PATH)/%=%)
 
 # Linking options
 LOCAL_SHARED_LIBRARIES := SDL2

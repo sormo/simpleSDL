@@ -1,8 +1,8 @@
 #include "UserInterface.h"
 #include "Common.h"
-#include "Generator.h"
+#include "editor/Generator.h"
 #include <SDL.h>
-#include "Camera.h"
+#include "utils/Camera.h"
 
 namespace Application
 {
@@ -15,6 +15,7 @@ UserInterface::UserInterface()
     lightData.lightDirectional.ambient = { 0.1f, 0.1f, 0.1f };
     lightData.lightDirectional.diffuse = { 0.5f, 0.5f, 0.5f };
     lightData.lightDirectional.specular = { 0.3f, 0.3f, 0.3f };
+    lightData.lightDirectional.shadowParams = { 0.001f, 0.001f };
 
     materialData.ambient = materialData.diffuse = materialData.specular = glm::vec3(1.0, 1.0, 1.0);
     materialData.shininess = 15.0f;
@@ -100,6 +101,9 @@ void UserInterface::Generate()
         ImGui::ColorEdit3("Ambient", &lightData.lightDirectional.ambient[0]);
         ImGui::ColorEdit3("Diffuse", &lightData.lightDirectional.diffuse[0]);
         ImGui::ColorEdit3("Specular", &lightData.lightDirectional.specular[0]);
+
+        ImGui::SliderFloat("Shadow 1", &lightData.lightDirectional.shadowParams.x, 0.00001f, 0.01f, "%.5f", 1.0f);
+        ImGui::SliderFloat("Shadow 2", &lightData.lightDirectional.shadowParams.y, 0.00001f, 0.01f, "%.5f", 1.0f);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -151,7 +155,7 @@ void UserInterface::Generate()
             shapeAcceptClicked();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Camera"))
+        if (ImGui::Button("Center"))
         {
             shapeCameraClicked();
         }

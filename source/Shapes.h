@@ -1,6 +1,7 @@
 #pragma once
 #include "OpenGL.h"
-#include "ModelShader.h"
+// TODO remove dependency
+#include "model/ModelShader.h"
 #include <variant>
 
 namespace Shapes

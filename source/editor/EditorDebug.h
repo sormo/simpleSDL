@@ -1,6 +1,6 @@
 #pragma once
 #include "DebugDraw.h"
-#include "Scene.h"
+#include "scene/Scene.h"
 
 class Editor;
 

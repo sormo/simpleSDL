@@ -1,7 +1,7 @@
 #pragma once
-#include "Shader.h"
-#include "Framebuffer.h"
-#include "Texture.h"
+#include "utils/Shader.h"
+#include "utils/Framebuffer.h"
+#include "utils/Texture.h"
 #include <vector>
 
 class ShadowDirectionalLight

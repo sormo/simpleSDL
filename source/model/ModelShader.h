@@ -1,5 +1,5 @@
 #pragma once
-#include "Shader.h"
+#include "utils/Shader.h"
 #include "Shadow.h"
 
 namespace Light
@@ -23,6 +23,7 @@ namespace Light
         struct LightDirectional : Light
         {
             glm::vec3 direction;
+            glm::vec2 shadowParams;
         };
 
         struct LightPoint : Light
@@ -64,6 +65,7 @@ namespace Light
         struct LightDirectional : Light
         {
             GLuint direction;
+            GLuint shadowParams;
         };
         struct LightPoint : Light
         {
