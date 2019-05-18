@@ -338,7 +338,6 @@ void Scene::DrawShapes(DrawType drawType, const glm::mat4 & view, const glm::mat
             it++;
         }
     }
-
 }
 
 void Scene::Draw(const glm::mat4 & view, const glm::mat4 & projection, const glm::vec3 & cameraPosition, const Light::Data & data)

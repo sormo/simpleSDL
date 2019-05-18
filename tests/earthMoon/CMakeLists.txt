@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6.0 FATAL_ERROR)
-project(simpleSDL C CXX)
+project(earthMoon C CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -7,13 +7,16 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Set some helper variables.
 #
 string(TOLOWER "${CMAKE_SYSTEM_NAME}" targetSystem)
+
 set(projectDir      "${CMAKE_CURRENT_LIST_DIR}")
-set(sourceDir       "${projectDir}/source")
-set(sourceCommonDir "${projectDir}/sourceCommon")
-set(targetName      "SimpleExample")
-set(binDir          "${projectDir}/bin")
-set(flatbuffersDir  "${projectDir}/contrib/flatbuffers")
-set(modelConvertDir "${projectDir}/modelConvert")
+set(projectMainDir  "${projectDir}/../..")
+set(sourceDir       "${projectDir}/sources")
+set(sourceMainDir   "${projectMainDir}/source")
+set(sourceCommonDir "${projectMainDir}/sourceCommon")
+set(targetName      "earthMoon")
+set(binDir          "${projectMainDir}/bin/tests/${targetName}")
+set(modelConvertDir "${projectMainDir}/modelConvert")
+set(flatbuffersDir  "${projectMainDir}/contrib/flatbuffers")
 
 # Define executable output dir.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${binDir}/${targetSystem}")
@@ -30,15 +33,14 @@ if(MINGW)
   set(VIDEO_OPENGLES OFF CACHE STRING "")
 endif()
 
-set(sdlDir "${projectDir}/contrib/SDL")
-add_subdirectory(${sdlDir} EXCLUDE_FROM_ALL)
+set(sdlDir "${projectMainDir}/contrib/SDL")
+add_subdirectory(${sdlDir} buildSdl)
 set(SDL2MAIN_LIBRARY SDL2main)
 set(SDL2_LIBRARY SDL2)
 
 #
 # bullet
 #
-# TODO remove this ???
 OPTION(BUILD_UNIT_TESTS "Build Unit Tests" ON)
 OPTION(BUILD_BULLET2_DEMOS "Set when you want to build the Bullet 2 demos" ON)
 OPTION(BUILD_OPENGL3_DEMOS "Set when you want to build Bullet 3 OpenGL3+ demos" ON)
@@ -52,14 +54,14 @@ set(BUILD_EXTRAS OFF)
 set(BUILD_SHARED_LIBS OFF)
 set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
 
-set(bulletDir "${projectDir}/contrib/bullet3")
-add_subdirectory(${bulletDir})
+set(bulletDir "${projectMainDir}/contrib/bullet3")
+add_subdirectory(${bulletDir} buildBullet)
 set(BULLET_DYNAMICS_LIBRARY BulletDynamics)
 set(BULLET_COLLISION_LIBRARY BulletCollision)
 set(BULLET_LINEAR_MATH_LIBRARY LinearMath)
 
 #
-# Sources (relative to the project root dir).
+# Sources
 #
 file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
   "${sourceDir}/*.h"
@@ -68,22 +70,42 @@ file(GLOB_RECURSE projectSources RELATIVE ${projectDir}
   "${sourceDir}/*.c"
 )
 
-file(GLOB_RECURSE projectCommonSources RELATIVE ${projectDir}
-  "${sourceCommonDir}/*.h"
-  "${sourceCommonDir}/*.hpp"
-  "${sourceCommonDir}/*.cpp"
-  "${sourceCommonDir}/*.c"
+#file(GLOB_RECURSE projectMainSources RELATIVE ${projectDir}
+#  "${sourceMainDir}/*.h"
+#  "${sourceMainDir}/*.hpp"
+#  "${sourceMainDir}/*.cpp"
+#  "${sourceMainDir}/*.c"
+#)
+
+file(GLOB_RECURSE projectImguiSources RELATIVE ${projectDir} "${sourceMainDir}/imgui/*.cpp")
+file(GLOB_RECURSE projectModelSources RELATIVE ${projectDir} "${sourceMainDir}/model/*.cpp")
+file(GLOB_RECURSE projectSceneSources RELATIVE ${projectDir} "${sourceMainDir}/scene/*.cpp")
+file(GLOB_RECURSE projectUtilsSources RELATIVE ${projectDir} "${sourceMainDir}/utils/*.cpp")
+
+set(projectMainSources
+  ${sourceMainDir}/Common.cpp
+  ${sourceMainDir}/EventDispatchers.cpp
+  ${sourceMainDir}/OpenGL.cpp
+  ${sourceMainDir}/Shapes.cpp
+  ${sourceMainDir}/DebugDraw.cpp
+  ${sourceMainDir}/Application.cpp
+  ${sourceCommonDir}/CommonProject.cpp
 )
 
-list(APPEND projectSources ${projectCommonSources})
+list(APPEND projectSources ${projectMainSources})
+list(APPEND projectSources ${projectImguiSources})
+list(APPEND projectSources ${projectModelSources})
+list(APPEND projectSources ${projectSceneSources})
+list(APPEND projectSources ${projectUtilsSources})
 
 # Include dirs.
 set(projectIncludeDirs ${projectIncludeDirs}
   "${sdlDir}/include"
-  "${flatbuffersDir}/include"
-  "${modelConvertDir}/include"
   "${bulletDir}/src"
+  "${modelConvertDir}/include"
+  "${flatbuffersDir}/include"
   "${sourceCommonDir}"
+  "${sourceMainDir}"
   "${sourceDir}"
 )
 
@@ -114,7 +136,7 @@ if(EMSCRIPTEN)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FULL_ES2=1 \
                                           -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
                                           -s \"EXTRA_EXPORTED_RUNTIME_METHODS=['Pointer_stringify']\" \
-                                          --embed-file ${projectDir}/data@/ \
+                                          --embed-file ${projectMainDir}/data@/ \
                                           --no-heap-copy \
                                           -s FORCE_FILESYSTEM=1 \
                                           -s ASSERTIONS=1 \
@@ -184,4 +206,4 @@ set_target_properties(LinearMath PROPERTIES FOLDER "Bullet")
 
 message("CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}")
 
-set_target_properties(SimpleExample PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/data")
+set_target_properties(earthMoon PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${projectMainDir}/data")

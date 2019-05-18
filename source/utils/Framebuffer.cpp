@@ -4,10 +4,7 @@
 #include "Texture.h"
 #include "EventDispatchers.h"
 
-namespace Application
-{
-    extern ResizeDispatcher g_resizeDispatcher;
-}
+#include "Application.h" // resize dispatcher
 
 void CheckRenderBufferSize(uint32_t width, uint32_t height)
 {

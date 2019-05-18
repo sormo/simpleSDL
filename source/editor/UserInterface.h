@@ -3,10 +3,11 @@
 #include <functional>
 #include "imgui/imgui.h"
 #include "model/ModelShader.h"
+#include "utils/Camera.h"
 
 struct UserInterface
 {
-    UserInterface();
+    UserInterface(CameraRotate & camera);
 
     bool wireframe = false;
     bool bulletDebug = false;
@@ -32,4 +33,6 @@ struct UserInterface
     glm::vec2 cameraPlanes;
 
     void Generate();
+
+    CameraRotate& m_camera;
 };
